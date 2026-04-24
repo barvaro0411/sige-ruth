@@ -41,9 +41,9 @@ export default function EstudiantesList() {
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingId) {
-        return EstudianteService.update(editingId, data, user!.id, sede.id);
+        return EstudianteService.update(editingId, data);
       } else {
-        return EstudianteService.create(data, user!.id, sede.id);
+        return EstudianteService.create(data, sede.id);
       }
     },
     onSuccess: () => {
@@ -53,7 +53,7 @@ export default function EstudiantesList() {
       setEditingId(null);
     },
     onError: (err: any) => {
-      addToast('Error al guardar estudiante: ' + err.message, 'error');
+      addToast('Error al guardar estudiante: ' + err.message, 'danger');
     }
   });
 

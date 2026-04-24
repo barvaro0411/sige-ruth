@@ -48,7 +48,7 @@ export default function DocumentManager({ estudianteId, nombreEstudiante, isOpen
 
     setUploading(true);
     try {
-      await DocumentoService.upload(file, estudianteId, user.id, sede.id);
+      await DocumentoService.upload(file, estudianteId, sede.id);
       addToast('Documento subido con éxito', 'success');
       loadDocuments();
     } catch (err: any) {
@@ -62,7 +62,7 @@ export default function DocumentManager({ estudianteId, nombreEstudiante, isOpen
     if (!user || !confirm('¿Estás seguro de eliminar este documento?')) return;
 
     try {
-      await DocumentoService.delete(id, url, user.id, sede.id);
+      await DocumentoService.delete(id, url);
       addToast('Documento eliminado', 'success');
       setDocuments(prev => prev.filter(d => d.id !== id));
     } catch (err: any) {

@@ -69,7 +69,7 @@ export default function EstudianteForm({ isOpen, onClose, onSubmit, estudiante, 
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (name === 'rut') {
-      setFormData(prev => ({ ...prev, rut: rutInputHandler(value) }));
+      setFormData(prev => ({ ...prev, rut: rutInputHandler(value).formatted }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
