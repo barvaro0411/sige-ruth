@@ -20,9 +20,27 @@ import BottomNav from './components/BottomNav';
 
 // Layout shared for all authenticated routes
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { sede } = useSede();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', background: 'var(--color-navy, #1B2A4A)',
+        color: 'white', flexDirection: 'column', gap: '16px'
+      }}>
+        <div style={{
+          width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.2)',
+          borderTopColor: 'var(--color-gold, #D4A843)', borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando SIGE Ruth...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   if (!user) return <LoginScreen />;
 
