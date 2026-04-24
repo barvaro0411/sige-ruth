@@ -5,7 +5,12 @@ import {
   Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap
 } from 'lucide-react';
 
-export default function Sidebar({ isOpen, onClose }) {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
 
   const menuItems = [
@@ -28,7 +33,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <GraduationCap size={28} className="text-gold" />
             <span>SIGE Ruth</span>
           </div>
-          <button className="sidebar-close" onClick={onClose}><X size={20} /></button>
+          <button className="sidebar-close" onClick={onClose} aria-label="Cerrar sidebar"><X size={20} /></button>
         </div>
 
         <nav className="sidebar-nav">
@@ -166,7 +171,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
         .btn-logout:hover { background: rgba(239, 68, 68, 0.1); }
 
-        .sidebar-close { display: none; background: none; border: none; color: white; }
+        .sidebar-close { display: none; background: none; border: none; color: white; cursor: pointer; }
 
         @media (max-width: 1024px) {
           .sidebar { position: fixed; transform: translateX(-100%); }

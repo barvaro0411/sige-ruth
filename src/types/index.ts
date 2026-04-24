@@ -16,6 +16,7 @@ export interface Tables {
     telefono_apoderado: string | null;
     activo: boolean;
     sede_id: string;
+    curso_id?: string | null;
     created_at: string;
   };
   asistencia: {
@@ -72,6 +73,14 @@ export interface Tables {
     sede_id: string | null;
     created_at: string;
   };
+  cursos: {
+    id: string;
+    nombre: string;
+    nivel: string;
+    profesor_jefe?: string;
+    sede_id: string;
+    created_at: string;
+  };
 }
 
 // App Mapped Types (Camel Case as in Frontend)
@@ -83,6 +92,7 @@ export interface Estudiante extends Omit<Tables['estudiantes'], 'apellido_patern
   nombreApoderado: string;
   telefonoApoderado: string | null;
   sedeId: string;
+  curso_id?: string | null;
 }
 
 export interface Asistencia extends Omit<Tables['asistencia'], 'estudiante_id' | 'registrado_por' | 'sede_id'> {
@@ -104,5 +114,5 @@ export interface User {
   email: string;
   rol: Tables['perfiles']['rol'];
   activo: boolean;
-  sedeId?: string;
+  sedeId?: string | null;
 }
