@@ -1,0 +1,29 @@
+{
+  "cursos": [
+    {
+      "curso_id": "MED_MAYOR_B_GAMBINO",
+      "nivel": "Nivel Medio Mayor B (Gambino)",
+      "profesor_jefe": "SANDOVAL HIDALGO DANITZA PAULINA"
+    },
+    {
+      "curso_id": "TRANS_1_A_GAMBINO",
+      "nivel": "Nivel de Transición 1 A (Gambino)",
+      "profesor_jefe": "SANDOVAL HIDALGO DANITZA PAULINA"
+    }
+  ],
+  "estudiantes": [
+    {"run": "27766481-K", "nombre": "CASTILLO ARENAS ANGELA DESIREE", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27957366-8", "nombre": "CORNEJO ARENAS JOAQUÍN ENOC", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27949767-8", "nombre": "HUENCHUMIL OPAZO MATEO JOSE", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27762371-4", "nombre": "MATURANA LAZEN ANGEL ANDRÉS", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "28035648-4", "nombre": "NAVARRO BERNACHEA ALISSON CHRISTINA", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27978162-7", "nombre": "SOTO DE LA FUENTE EMILIANO JEREMIAS", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "28056062-6", "nombre": "URBINA RIMMELİN RODRIGO SEBASTIAN", "curso_id": "MED_MAYOR_B_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27661212-3", "nombre": "LIZAMA MORALES ANTHONY CALEB", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27768132-3", "nombre": "MAILLARD MORALES IKER GAEL", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27696220-5", "nombre": "OLMOS CASTILLO WILLIAMS BRUCE ISRAEL", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27557091-5", "nombre": "RUBILAR BUSTAMANTE ANTONIA DOMINGA", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27557084-2", "nombre": "RUBILAR BUSTAMANTE FIORELLA ANDREA", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""},
+    {"run": "27736590-1", "nombre": "VASQUEZ ESPINOSA ISMAEL ALEJANDRO", "curso_id": "TRANS_1_A_GAMBINO", "fecha_inc": "01/03/2026", "obs": ""}
+  ]
+}
