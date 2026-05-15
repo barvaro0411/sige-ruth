@@ -1,0 +1,11 @@
+{
+  "cursos": [
+    { "curso_id": "MED_MAYOR_A", "nivel": "Nivel Medio Mayor A", "profesor_jefe": "Docente Demo A" },
+    { "curso_id": "MED_MAYOR_B", "nivel": "Nivel Medio Mayor B", "profesor_jefe": "Docente Demo B" },
+    { "curso_id": "TRANS_1_A", "nivel": "Nivel de Transicion 1 A", "profesor_jefe": "Docente Demo C" },
+    { "curso_id": "TRANS_1_B", "nivel": "Nivel de Transicion 1 B", "profesor_jefe": "Docente Demo D" },
+    { "curso_id": "TRANS_2_A", "nivel": "Nivel de Transicion 2 A", "profesor_jefe": "Docente Demo E" },
+    { "curso_id": "TRANS_2_B", "nivel": "Nivel de Transicion 2 B", "profesor_jefe": "Docente Demo F" }
+  ],
+  "estudiantes": []
+}

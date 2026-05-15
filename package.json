@@ -1,0 +1,41 @@
+{
+  "name": "sige-ruth",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "SIGE Ruth - Sistema Interno de Gestión Escolar",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "seed:demo": "node scripts/seed.js",
+    "seed:fixtures": "node scripts/seed_from_json.js"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^4.4.0",
+    "@supabase/supabase-js": "^2.103.0",
+    "lucide-react": "^1.8.0",
+    "pako": "^2.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.14.0",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.97.0",
+    "@tanstack/react-query-devtools": "^5.97.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.2",
+    "vite": "^6.3.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.6"
+  }
+}

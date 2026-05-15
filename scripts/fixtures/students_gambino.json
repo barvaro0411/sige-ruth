@@ -1,0 +1,7 @@
+{
+  "cursos": [
+    { "curso_id": "MED_MAYOR_B_GAMBINO", "nivel": "Nivel Medio Mayor B (Gambino)", "profesor_jefe": "Docente Demo G" },
+    { "curso_id": "TRANS_1_A_GAMBINO", "nivel": "Nivel de Transicion 1 A (Gambino)", "profesor_jefe": "Docente Demo H" }
+  ],
+  "estudiantes": []
+}
