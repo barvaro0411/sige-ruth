@@ -30,7 +30,8 @@ export const EstudianteService = {
       ...payload,
       rut: payload.rut?.replace(/\./g, '').replace(/-/g, '').toUpperCase(),
       sede_id: sedeId,
-      activo: true
+      activo: true,
+      curso_id: payload.curso_id || null
     };
 
     const { data, error } = await supabase
@@ -49,7 +50,8 @@ export const EstudianteService = {
   async update(id: number, payload: Partial<Tables['estudiantes']>): Promise<void> {
     const cleanPayload = {
       ...payload,
-      rut: payload.rut?.replace(/\./g, '').replace(/-/g, '').toUpperCase()
+      rut: payload.rut?.replace(/\./g, '').replace(/-/g, '').toUpperCase(),
+      curso_id: payload.curso_id || null
     };
 
     const { error } = await supabase

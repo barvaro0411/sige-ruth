@@ -10,6 +10,7 @@ interface EstudianteFormProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
   estudiante: Estudiante | null;
+  cursos: any[];
   isLoading?: boolean;
 }
 
@@ -22,13 +23,14 @@ const emptyForm = {
   diagnostico: '',
   nivel: '',
   jornada: '',
+  curso_id: '',
   nombre_apoderado: '',
   telefono_apoderado: '',
   anamnesis: false,
   prueba_inicial: false,
 };
 
-export default function EstudianteForm({ isOpen, onClose, onSubmit, estudiante, isLoading = false }: EstudianteFormProps) {
+export default function EstudianteForm({ isOpen, onClose, onSubmit, estudiante, cursos, isLoading = false }: EstudianteFormProps) {
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState<ValidationErrors>({});
 
@@ -43,6 +45,7 @@ export default function EstudianteForm({ isOpen, onClose, onSubmit, estudiante, 
         diagnostico: estudiante.diagnostico || '',
         nivel: estudiante.nivel || '',
         jornada: estudiante.jornada || '',
+        curso_id: estudiante.cursoId || '',
         nombre_apoderado: estudiante.nombreApoderado || '',
         telefono_apoderado: estudiante.telefonoApoderado || '',
         anamnesis: estudiante.anamnesis || false,
@@ -122,6 +125,15 @@ export default function EstudianteForm({ isOpen, onClose, onSubmit, estudiante, 
               {NIVELES.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
             {fieldError('nivel')}
+          </div>
+          <div>
+            <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Curso Específico</label>
+            <select name="curso_id" className="form-input" style={{ width: '100%', padding: '0.5rem' }} value={formData.curso_id} onChange={handleChange}>
+              <option value="">Asignar a un curso (Opcional)</option>
+              {cursos.map(c => (
+                <option key={c.id} value={c.id}>{c.nombre} ({c.nivel})</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Jornada</label>

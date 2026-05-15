@@ -203,6 +203,7 @@ export default function EstudiantesList() {
           onClose={() => { setShowForm(false); setEditingId(null); }} 
           onSubmit={(data) => mutation.mutate(data)} 
           estudiante={editingId ? estudiantes.find(e => e.id === editingId) || null : null}
+          cursos={cursos}
           isLoading={mutation.isPending}
         />
       )}
