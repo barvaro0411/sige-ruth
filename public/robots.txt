@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /dashboard
+Disallow: /estudiantes
+Disallow: /asistencia
+Disallow: /fonoaudiologia
+Disallow: /reportes
+Disallow: /auditoria
+
+Sitemap: https://sige-ruth.web.app/sitemap.xml

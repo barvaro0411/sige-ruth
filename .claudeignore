@@ -1,0 +1,30 @@
+# Dependencias y Blobs
+node_modules/
+package-lock.json
+*.lock
+
+# Build & Bundles
+dist/
+dev-dist/
+build/
+
+# Datos estáticos / Seeds pesados
+src/db/*.json
+src/db/seed_custom_data.js
+src/db/seed_from_json.js
+
+# Assets multimedia y estáticos
+public/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.ico
+*.pdf
+
+# Logs y temporales
+*.log
+.DS_Store
+Thumbs.db
+scratch/
+coverage/
