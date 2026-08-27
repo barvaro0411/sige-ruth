@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "deploy:admin-users": "npx supabase functions deploy admin-users",
-    "seed:data": "node src/db/seed_from_json.js",
+    "seed:data": "node scripts/seed_from_json.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

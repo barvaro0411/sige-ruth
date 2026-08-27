@@ -12,6 +12,7 @@ begin
     raise exception 'No puedes desactivar tu propia cuenta';
   end if;
 
+
   if old.rol = 'director'
      and old.activo = true
      and (new.rol <> 'director' or new.activo = false)

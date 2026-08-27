@@ -1,13 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-  || import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabasePublishableKey) {
-  throw new Error(
-    'Faltan la URL o la clave pública de Supabase en tu archivo .env'
-  );
-}
-
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+/**
+ * Compatibilidad. El cliente Supabase vive en `src/db/database.ts`.
+ * Se reexporta para evitar una segunda instancia de GoTrue compartiendo el
+ * mismo storage key (carreras al refrescar el token). No crear clientes aquí.
+ */
+export { supabase } from '../db/database';
