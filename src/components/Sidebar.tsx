@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PERMISSIONS } from '../auth/permissions';
 import { 
-  LayoutDashboard, Users, ClipboardCheck, 
-  Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap, UserCog
+  LayoutDashboard, Users,
+  Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap, UserCog, CalendarDays, Package
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,8 +17,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Panel Control', permission: PERMISSIONS.VIEW_DASHBOARD },
     { path: '/estudiantes', icon: Users, label: 'Matrícula', permission: PERMISSIONS.VIEW_STUDENTS },
-    { path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia', permission: PERMISSIONS.VIEW_ATTENDANCE },
     { path: '/fonoaudiologia', icon: Mic2, label: 'Fonoaudiología', permission: PERMISSIONS.VIEW_SESSIONS },
+    { path: '/permisos', icon: CalendarDays, label: 'Permisos', permission: PERMISSIONS.REQUEST_LEAVE },
+    { path: '/materiales', icon: Package, label: 'Materiales', permission: PERMISSIONS.REQUEST_MATERIALS },
     { path: '/reportes', icon: FileBarChart, label: 'Reportes', permission: PERMISSIONS.EXPORT_REPORTS },
     { path: '/auditoria', icon: ShieldAlert, label: 'Auditoría', permission: PERMISSIONS.VIEW_AUDIT },
     { path: '/usuarios', icon: UserCog, label: 'Usuarios', permission: PERMISSIONS.MANAGE_USERS },
@@ -33,7 +34,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <GraduationCap size={28} className="text-gold" />
-            <span>SIGE Ruth</span>
+            <span>Gestión Ruth</span>
           </div>
           <button className="sidebar-close" onClick={onClose} aria-label="Cerrar sidebar"><X size={20} /></button>
         </div>
