@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.svg', 'robots.txt', 'pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'SIGE Ruth — Gestión Escolar',
-        short_name: 'SIGE Ruth',
-        description: 'Sistema de Gestión Escolar para la Escuela de Lenguaje Ruth',
+        name: 'Gestión Ruth — Plataforma Interna',
+        short_name: 'Gestión Ruth',
+        description: 'Plataforma interna de gestión para la Escuela de Lenguaje Ruth',
         theme_color: '#1B2A4A',
         background_color: '#1B2A4A',
         display: 'standalone',

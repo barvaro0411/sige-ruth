@@ -223,7 +223,7 @@ export function MatriculaDocument({ estudiante, sede }) {
 
         {/* FOOTER AUTOMÁTICO */}
         <Text style={styles.footer} fixed>
-          Documento generado digitalmente por SIGE Ruth v6.0 el {formatDateTime(new Date().toISOString())}
+          Documento generado digitalmente por Gestión Ruth el {formatDateTime(new Date().toISOString())}
         </Text>
       </Page>
     </Document>

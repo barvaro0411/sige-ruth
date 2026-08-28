@@ -34,7 +34,7 @@ export default function LoginScreen() {
           <div className="login-logo">
             <ShieldCheck size={32} />
           </div>
-          <h1 className="login-title">SIGE Ruth</h1>
+          <h1 className="login-title">Gestión Ruth</h1>
           <p className="login-subtitle">Sistema de Gestión Escolar v6.0</p>
         </header>
 

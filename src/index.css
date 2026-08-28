@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* ========================================================================== */
-/* DESIGN SYSTEM TOKENS — SIGE RUTH PWA                                       */
+/* DESIGN SYSTEM TOKENS — GESTIÓN RUTH PWA                                       */
 /* ========================================================================== */
 :root {
   /* Navy Palette */
@@ -1101,3 +1101,16 @@ body {
 }
 
 .notification-item:hover { background: var(--bg-primary); }
+
+/* Etiqueta visible solo para lectores de pantalla. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
