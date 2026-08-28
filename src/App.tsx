@@ -17,6 +17,8 @@ import FonoaudiologiaModule from './features/fonoaudiologia/FonoaudiologiaModule
 import ReportesModule from './features/reportes/ReportesModule';
 import AuditLog from './features/auditoria/AuditLog';
 import UsuariosModule from './features/usuarios/UsuariosModule';
+import PermisosModule from './features/permisos/PermisosModule';
+import MaterialesModule from './features/materiales/MaterialesModule';
 import BottomNav from './components/BottomNav';
 import { PERMISSIONS, getDefaultRoute } from './auth/permissions';
 
@@ -44,7 +46,7 @@ function AppLayout() {
           borderTopColor: 'var(--color-gold, #D4A843)', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite'
         }} />
-        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando SIGE Ruth...</p>
+        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando Gestión Ruth...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -83,6 +85,8 @@ function AppLayout() {
             <Route path="/asistencia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_ATTENDANCE}><PaseDeLista /></ProtectedRoute>} />
             <Route path="/fonoaudiologia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_SESSIONS}><FonoaudiologiaModule /></ProtectedRoute>} />
             <Route path="/reportes" element={<ProtectedRoute permission={PERMISSIONS.EXPORT_REPORTS}><ReportesModule /></ProtectedRoute>} />
+            <Route path="/permisos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_LEAVE}><PermisosModule /></ProtectedRoute>} />
+            <Route path="/materiales" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><MaterialesModule /></ProtectedRoute>} />
             <Route path="/auditoria" element={<ProtectedRoute permission={PERMISSIONS.VIEW_AUDIT}><AuditLog /></ProtectedRoute>} />
             <Route path="/usuarios" element={<ProtectedRoute permission={PERMISSIONS.MANAGE_USERS}><UsuariosModule /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />

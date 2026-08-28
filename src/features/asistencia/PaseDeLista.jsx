@@ -80,6 +80,27 @@ export default function PaseDeLista() {
     return { p, a, j, missing, totalMissing };
   }, [filtered, estudiantes, asistencia]);
 
+  const puedeEditar = can(PERMISSIONS.RECORD_ATTENDANCE)
+    && (!cerrada || can(PERMISSIONS.MODIFY_CLOSED_ATTENDANCE));
+
+  // Completa como presentes solo a los que siguen sin marcar: asi da igual el
+  // orden de trabajo (marcar las ausencias primero y rellenar despues, o
+  // rellenar y corregir). Nunca pisa una marca hecha a mano.
+  function marcarPendientesPresentes() {
+    if (!puedeEditar) {
+      addToast(cerrada ? 'Jornada Cerrada' : 'Tu perfil tiene acceso de solo lectura', 'warning');
+      return;
+    }
+    const pendientes = filtered.filter(e => !asistencia[e.id]);
+    if (pendientes.length === 0) return;
+    setAsistencia(prev => {
+      const next = { ...prev };
+      pendientes.forEach(e => { next[e.id] = ESTADOS_ASISTENCIA.PRESENTE; });
+      return next;
+    });
+    addToast(`${pendientes.length} marcados como presentes`, 'success');
+  }
+
   function handleMark(id, estado) {
     if (!can(PERMISSIONS.RECORD_ATTENDANCE)) {
       addToast('Tu perfil tiene acceso de solo lectura', 'warning'); return;
@@ -211,6 +232,21 @@ export default function PaseDeLista() {
         ))}
       </section>
 
+      {/* Accion rapida: el registro nunca se autocompleta solo, lo dispara el usuario */}
+      {puedeEditar && stats.missing > 0 && (
+        <div className="card" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '16px', flexWrap: 'wrap', padding: '16px 20px', marginBottom: '24px'
+        }}>
+          <div style={{ fontSize: '13px', color: 'var(--navy-600)', fontWeight: 600 }}>
+            Marca primero las ausencias y completa el resto de un clic.
+          </div>
+          <button className="btn btn-outline" onClick={marcarPendientesPresentes}>
+            <UserCheck size={18} /> Marcar presentes a los {stats.missing} pendientes
+          </button>
+        </div>
+      )}
+
       {/* Grid Alumnos Asistencia */}
       <div className="grid grid-3">
           {filtered.map(est => {
@@ -239,7 +275,7 @@ export default function PaseDeLista() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                           <button 
                             onClick={() => handleMark(est.id, 'P')}
-                            disabled={!can(PERMISSIONS.RECORD_ATTENDANCE) || (cerrada && !can(PERMISSIONS.MODIFY_CLOSED_ATTENDANCE))}
+                            disabled={!puedeEditar}
                             style={{ 
                               padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
                               background: st === 'P' ? 'var(--color-success)' : 'white',
@@ -250,7 +286,7 @@ export default function PaseDeLista() {
                           
                           <button 
                             onClick={() => handleMark(est.id, 'A')}
-                            disabled={!can(PERMISSIONS.RECORD_ATTENDANCE) || (cerrada && !can(PERMISSIONS.MODIFY_CLOSED_ATTENDANCE))}
+                            disabled={!puedeEditar}
                             style={{ 
                               padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
                               background: st === 'A' ? 'var(--color-danger)' : 'white',
@@ -261,7 +297,7 @@ export default function PaseDeLista() {
                           
                           <button 
                             onClick={() => handleMark(est.id, 'J')}
-                            disabled={!can(PERMISSIONS.RECORD_ATTENDANCE) || (cerrada && !can(PERMISSIONS.MODIFY_CLOSED_ATTENDANCE))}
+                            disabled={!puedeEditar}
                             style={{ 
                               padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
                               background: st === 'J' ? 'var(--gold-500)' : 'white',
