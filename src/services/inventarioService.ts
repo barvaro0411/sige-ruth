@@ -229,6 +229,58 @@ export const InventarioService = {
     if (error) throw error;
   },
 
+  /**
+   * Lo que esta persona pide habitualmente, por su rol o por su nombre.
+   * La vista resuelve el alcance en la base: acá no se arma ningún filtro.
+   */
+  async getMisFrecuentes(sedeId: string): Promise<ProductoInventario[]> {
+    const { data, error } = await supabase
+      .from('mis_productos_frecuentes_vista')
+      .select('*')
+      .eq('sede_id', sedeId)
+      .eq('activo', true)
+      .order('orden')
+      .order('nombre');
+
+    if (error) throw error;
+    return (data ?? []).map(mapProducto);
+  },
+
+  /** Qué roles tienen marcado este producto como frecuente. */
+  async getRolesFrecuentes(itemId: number): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('productos_frecuentes')
+      .select('rol')
+      .eq('item_id', itemId)
+      .not('rol', 'is', null);
+
+    if (error) throw error;
+    return (data ?? []).map(f => f.rol as string);
+  },
+
+  /** Sincroniza los roles para los que este producto es frecuente. */
+  async setRolesFrecuentes(itemId: number, roles: string[]): Promise<void> {
+    const actuales = await this.getRolesFrecuentes(itemId);
+    const quitar = actuales.filter(r => !roles.includes(r));
+    const agregar = roles.filter(r => !actuales.includes(r));
+
+    if (quitar.length > 0) {
+      const { error } = await supabase
+        .from('productos_frecuentes')
+        .delete()
+        .eq('item_id', itemId)
+        .in('rol', quitar);
+      if (error) throw error;
+    }
+
+    if (agregar.length > 0) {
+      const { error } = await supabase
+        .from('productos_frecuentes')
+        .insert(agregar.map(rol => ({ item_id: itemId, rol })));
+      if (error) throw error;
+    }
+  },
+
   /** Reconstruye el stock desde los movimientos. Devuelve cuántos estaban mal. */
   async recalcularStock(itemId?: number): Promise<number> {
     const { data, error } = await supabase.rpc('recalcular_stock', {

@@ -223,6 +223,7 @@ export function getPermittedRoutes(role) {
   if (perms.includes(PERMISSIONS.RECORD_SESSIONS) || perms.includes(PERMISSIONS.VIEW_SESSIONS)) routes.push('/fonoaudiologia');
   if (perms.includes(PERMISSIONS.EXPORT_REPORTS)) routes.push('/reportes');
   if (perms.includes(PERMISSIONS.REQUEST_LEAVE)) routes.push('/permisos');
+  if (perms.includes(PERMISSIONS.REQUEST_MATERIALS)) routes.push('/insumos');
   if (perms.includes(PERMISSIONS.REQUEST_MATERIALS)) routes.push('/materiales');
   if (perms.includes(PERMISSIONS.VIEW_INVENTORY)) routes.push('/inventario');
   if (perms.includes(PERMISSIONS.VIEW_AUDIT)) routes.push('/auditoria');
@@ -237,6 +238,11 @@ export function getPermittedRoutes(role) {
  */
 export function getDefaultRoute(role) {
   const routes = getPermittedRoutes(role);
+
+  // Aseo entra directo a pedir: es lo único que viene a hacer, y lo hace de
+  // pie con el celular. Un panel de control le agrega un paso de más.
+  if (role === ROLES.ASEO) return '/insumos';
+
   const preferencia = ['/dashboard', '/estudiantes', '/materiales', '/permisos'];
   return preferencia.find(r => routes.includes(r)) || routes[0] || '/';
 }

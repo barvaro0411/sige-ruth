@@ -27,7 +27,19 @@ const FORM_VACIO = {
   unidad: 'unidad',
   stockMinimo: 0,
   ubicacion: '',
+  rolesFrecuentes: [] as string[],
 };
+
+/**
+ * Para quiénes tiene sentido marcar un producto como habitual. No están todos
+ * los roles: dirección y sostenedora no piden materiales para trabajar.
+ */
+const ROLES_CON_LISTA = [
+  { rol: 'aseo', label: 'Aseo' },
+  { rol: 'docente', label: 'Docentes' },
+  { rol: 'fonoaudiologo', label: 'Fonoaudiología' },
+  { rol: 'mantencion', label: 'Mantención' },
+];
 
 export default function InventarioModule() {
   const { can } = useAuth();
@@ -75,14 +87,21 @@ export default function InventarioModule() {
         stockMinimo: Number(form.stockMinimo) || 0,
         ubicacion: form.ubicacion || null,
       };
-      if (editandoId) return InventarioService.actualizarProducto(editandoId, payload);
-      return InventarioService.crearProducto({ ...payload, sedeId: sede.id });
+      let id: number;
+      if (editandoId) {
+        await InventarioService.actualizarProducto(editandoId, payload);
+        id = editandoId;
+      } else {
+        id = await InventarioService.crearProducto({ ...payload, sedeId: sede.id });
+      }
+      await InventarioService.setRolesFrecuentes(id, form.rolesFrecuentes);
     },
     onSuccess: () => {
       addToast(editandoId ? 'Producto actualizado' : 'Producto creado', 'success');
       setFormProducto(null);
       setEditandoId(null);
       refrescar();
+      queryClient.invalidateQueries({ queryKey: ['frecuentes'] });
     },
     onError: (e: Error) => setErrorForm(e.message),
   });
@@ -124,7 +143,7 @@ export default function InventarioModule() {
     setFormProducto({ ...FORM_VACIO, categoriaId: categorias[0]?.id ?? 0 });
   }
 
-  function abrirEdicion(p: ProductoInventario) {
+  async function abrirEdicion(p: ProductoInventario) {
     setErrorForm('');
     setEditandoId(p.id);
     setFormProducto({
@@ -134,7 +153,15 @@ export default function InventarioModule() {
       unidad: p.unidad,
       stockMinimo: p.stockMinimo,
       ubicacion: p.ubicacion ?? '',
+      rolesFrecuentes: [],
     });
+    // Se cargan aparte para no demorar la apertura del formulario.
+    try {
+      const roles = await InventarioService.getRolesFrecuentes(p.id);
+      setFormProducto(prev => (prev ? { ...prev, rolesFrecuentes: roles } : prev));
+    } catch {
+      // Si falla, el formulario sirve igual; solo no precarga las marcas.
+    }
   }
 
   if (isLoading) {
@@ -409,6 +436,42 @@ function FormularioProducto({
               value={form.descripcion}
               onChange={e => onChange({ ...form, descripcion: e.target.value })}
             />
+          </div>
+
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label className="form-label">Aparece primero al pedir para</label>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {ROLES_CON_LISTA.map(r => {
+                const marcado = form.rolesFrecuentes.includes(r.rol);
+                return (
+                  <label
+                    key={r.rol}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '10px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                      border: `1.5px solid ${marcado ? 'var(--color-gold)' : 'var(--border-medium)'}`,
+                      background: marcado ? 'var(--gold-50)' : 'white',
+                      fontWeight: 700, fontSize: '13.5px',
+                    }}
+                  >
+                    <input
+                      type="checkbox" checked={marcado} disabled={guardando}
+                      onChange={() => onChange({
+                        ...form,
+                        rolesFrecuentes: marcado
+                          ? form.rolesFrecuentes.filter(x => x !== r.rol)
+                          : [...form.rolesFrecuentes, r.rol],
+                      })}
+                    />
+                    {r.label}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-muted" style={{ fontSize: '12.5px', marginTop: '8px' }}>
+              Quien tenga ese rol verá este producto de entrada en «Pedir insumos»,
+              sin tener que buscarlo.
+            </p>
           </div>
         </div>
 
