@@ -21,10 +21,8 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const notifRef = useRef<HTMLDivElement>(null);
   const sedeRef = useRef<HTMLDivElement>(null);
 
-  const authorizedSedes = user?.rol === 'director'
-    ? availableSedes
-    : availableSedes.filter(item => user?.sedeIds.includes(item.id));
-  const canChangeSede = authorizedSedes.length > 1;
+  // El contexto ya entrega solo las sedes autorizadas para este perfil.
+  const canChangeSede = availableSedes.length > 1;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -60,7 +58,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           {showSedeSelector && (
             <div className="dropdown-menu sede-dropdown animate-in">
               <div className="dropdown-header">Cambiar de Sede</div>
-              {authorizedSedes.map(s => (
+              {availableSedes.map(s => (
                 <button 
                   key={s.id} 
                   className={`dropdown-item ${s.id === sede.id ? 'active' : ''}`}

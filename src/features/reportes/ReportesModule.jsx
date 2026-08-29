@@ -2,15 +2,14 @@ import { useState, useMemo } from 'react';
 import { supabase } from '../../db/database';
 import { getMonthName, formatDate } from '../../utils/dates';
 import { useSede } from '../../config/SedeContext';
-import { 
-  Download, FileSpreadsheet, Users, 
-  ClipboardList, Mic2, Calendar, LayoutGrid 
+import {
+  Download, FileSpreadsheet, Users,
+  Mic2, Calendar, LayoutGrid
 } from 'lucide-react';
 import { mapEstudiante } from '../../utils/mappers';
 
 const REPORT_TYPES = [
   { id: 'matricula', title: 'Libro de Matrícula', icon: Users, color: '#3B82F6', desc: 'Listado completo de alumnos activos, RUT y datos de contacto.' },
-  { id: 'asistencia', title: 'Registro de Asistencia', icon: ClipboardList, color: '#10B981', desc: 'Porcentajes de asistencia mensual y diaria por nivel.' },
   { id: 'sesiones_fono', title: 'Intervenciones Fono', icon: Mic2, color: '#D4A853', desc: 'Detalle clínico de sesiones y evolución por estudiante.' },
 ];
 
@@ -33,14 +32,6 @@ export default function ReportesModule() {
           csv += `${e.rut},"${e.nombre}","${e.apellidoPaterno}","${e.apellidoMaterno}","${e.nivel}","${e.jornada}","${e.nombreApoderado}","${e.telefonoApoderado}"\n`;
         });
         filename = `matricula_${sede.id}.csv`;
-      } else if (type === 'asistencia') {
-        const { data: allAsistencia } = await supabase.from('asistencia').select('*').eq('sede_id', sede.id);
-        csv = 'Fecha,RUT,Alumno,Estado,Observacion\n';
-        (allAsistencia || []).forEach(a => {
-          const e = alumnos.find(est => est.id === a.estudiante_id);
-          csv += `${a.fecha},"${e?.rut || ''}","${e?.nombre || ''} ${e?.apellidoPaterno || ''}","${a.estado}","${a.observacion || ''}"\n`;
-        });
-        filename = `reporte_asistencia_${sede.id}.csv`;
       } else if (type === 'sesiones_fono') {
         const { data: allSesiones } = await supabase.from('sesiones_fono').select('*').eq('sede_id', sede.id);
         csv = 'Fecha,Alumno,Nivel Fonético,Nivel Semántico,Nivel Morfosintáctico,Nivel Pragmático,Actividad\n';

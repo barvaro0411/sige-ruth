@@ -19,22 +19,11 @@ export interface Tables {
     curso_id?: string | null;
     created_at: string;
   };
-  asistencia: {
-    id: number;
-    estudiante_id: number;
-    fecha: string;
-    estado: 'P' | 'A' | 'J';
-    observacion: string | null;
-    registrado_por: string | null;
-    cerrada: boolean;
-    sede_id: string;
-    created_at: string;
-  };
   perfiles: {
     id: string;
     email: string;
     nombre: string;
-    rol: 'director' | 'secretaria' | 'docente' | 'fonoaudiologo' | 'jefe_utp';
+    rol: 'director' | 'secretaria' | 'docente' | 'fonoaudiologo' | 'jefe_utp' | 'sostenedor';
     activo: boolean;
     sede_id: string | null;
     created_at: string;
@@ -187,12 +176,6 @@ export interface Estudiante extends Omit<Tables['estudiantes'], 'apellido_patern
   curso_id?: string | null;
 }
 
-export interface Asistencia extends Omit<Tables['asistencia'], 'estudiante_id' | 'registrado_por' | 'sede_id'> {
-  estudianteId: number;
-  registradoPor: string;
-  sedeId: string;
-}
-
 export interface SolicitudPermiso extends Omit<Tables['solicitudes_permiso'],
   'solicitante_id' | 'sede_id' | 'fecha_inicio' | 'fecha_fin' | 'dias_habiles'
   | 'resuelta_por' | 'resuelta_en' | 'comentario_resolucion' | 'updated_at'> {
@@ -264,7 +247,9 @@ export interface Sede {
   id: string;
   nombre: string;
   direccion: string;
-  rbd?: string;
+  comuna?: string | null;
+  region?: string | null;
+  rbd?: string | null;
 }
 
 export interface User {

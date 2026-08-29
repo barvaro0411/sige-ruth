@@ -28,7 +28,20 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Aumentar límite a 5MB
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // El generador de PDF sale del precarga: son ~1,5 MB que se descargaban
+        // en el celular de cada persona aunque nunca abriera una matrícula.
+        // Se guarda en caché la primera vez que alguien la usa.
+        globIgnores: ['**/vendor-pdf-*.js'],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/vendor-pdf-.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vendor-pdf',
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
             handler: 'CacheFirst',

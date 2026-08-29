@@ -20,8 +20,13 @@ function buildCorsHeaders(origin: string | null) {
 }
 
 const allowedRoles = new Set([
-  'director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'director', 'sostenedor', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
 ]);
+
+// Transversales a la institución: acceden a todas las sedes, no se les asigna
+// ninguna. Debe coincidir con ROLES_TRANSVERSALES del frontend y con la RPC
+// update_user_profile de la base.
+const rolesTransversales = new Set(['director', 'sostenedor']);
 
 function json(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
@@ -115,7 +120,7 @@ Deno.serve(async (request) => {
   if (!allowedRoles.has(rol)) {
     return json({ success: false, error: 'Rol inválido' }, 400, corsHeaders);
   }
-  if (rol !== 'director' && sedeIds.length === 0) {
+  if (!rolesTransversales.has(rol) && sedeIds.length === 0) {
     return json({ success: false, error: 'El usuario debe tener al menos una sede' }, 400, corsHeaders);
   }
   if (sedeIds.length > 0) {
@@ -130,7 +135,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  const authorizedSedes = rol === 'director' ? [] : sedeIds;
+  const authorizedSedes = rolesTransversales.has(rol) ? [] : sedeIds;
   const primarySede = authorizedSedes[0] || null;
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({

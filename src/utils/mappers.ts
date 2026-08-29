@@ -1,5 +1,5 @@
 import {
-  Estudiante, Asistencia, User, Tables, SolicitudPermiso, SaldoPermiso,
+  Estudiante, User, Tables, SolicitudPermiso, SaldoPermiso,
   SolicitudMaterial, ItemMaterial, EventoHistorial, Notificacion,
 } from '../types';
 
@@ -19,17 +19,6 @@ export function mapEstudiante(d: Tables['estudiantes']): Estudiante {
     pruebaInicial: d.prueba_inicial,
     nombreApoderado: d.nombre_apoderado,
     telefonoApoderado: d.telefono_apoderado,
-    sedeId: d.sede_id,
-  };
-}
-
-// ─── Asistencia ─────────────────────────────────────────────────
-export function mapAsistencia(d: Tables['asistencia']): Asistencia {
-  if (!d) return {} as Asistencia;
-  return {
-    ...d,
-    estudianteId: d.estudiante_id,
-    registradoPor: d.registrado_por || 'Desconocido',
     sedeId: d.sede_id,
   };
 }

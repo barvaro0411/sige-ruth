@@ -1,31 +1,44 @@
 import { supabase } from '../db/database';
+import { SCHOOL } from '../config/sedes';
 
 /**
  * DashboardService
- * Calcula estadísticas y métricas para la pantalla principal.
+ * Métricas de la pantalla principal.
+ *
+ * Ya no calcula asistencia: ese registro vive en el libro de clases y en el
+ * SIGE del MINEDUC. La versión anterior consultaba una tabla inexistente,
+ * descartaba el error y mostraba «0 %», que se lee como un dato y no como
+ * una falla.
  */
+export interface DashboardStats {
+  totalEstudiantes: number;
+  cuposOcupados: number;
+  porNivel: { mm: number; nt1: number; nt2: number };
+}
+
 export const DashboardService = {
-  async getStats(sedeId: string) {
-    const today = new Date().toISOString().split('T')[0];
+  async getStats(sedeId: string): Promise<DashboardStats> {
+    const { data, error } = await supabase
+      .from('estudiantes')
+      .select('id, nivel')
+      .eq('sede_id', sedeId)
+      .eq('activo', true);
 
-    const [resEst, resAsist] = await Promise.all([
-      supabase.from('estudiantes').select('id, nivel, activo').eq('sede_id', sedeId).eq('activo', true),
-      supabase.from('asistencia').select('estado').eq('sede_id', sedeId).eq('fecha', today)
-    ]);
+    if (error) throw error;
 
-    const estudiantes = resEst.data || [];
-    const asistencias = resAsist.data || [];
+    const estudiantes = data ?? [];
+    const capacidad = SCHOOL.capacidadTotal;
 
     return {
       totalEstudiantes: estudiantes.length,
-      asistenciaHoy: (asistencias.length > 0 && estudiantes.length > 0) 
-        ? Math.round((asistencias.filter(a => a.estado === 'P').length / estudiantes.length) * 100) 
+      cuposOcupados: capacidad > 0
+        ? Math.round((estudiantes.length / capacidad) * 100)
         : 0,
       porNivel: {
         mm: estudiantes.filter(e => e.nivel === 'Medio Mayor').length,
         nt1: estudiantes.filter(e => e.nivel === 'NT1').length,
         nt2: estudiantes.filter(e => e.nivel === 'NT2').length,
-      }
+      },
     };
-  }
+  },
 };

@@ -18,6 +18,17 @@ export const ROLE_LABELS = {
   [ROLES.SOSTENEDOR]: 'Sostenedora',
 };
 
+/**
+ * Roles transversales a la institución: acceden a todas las sedes y no se les
+ * asigna ninguna en particular. La sostenedora lo es porque debe poder resolver
+ * las solicitudes del director, que no puede resolver las propias.
+ */
+export const ROLES_TRANSVERSALES = [ROLES.DIRECTOR, ROLES.SOSTENEDOR];
+
+export function esRolTransversal(rol) {
+  return ROLES_TRANSVERSALES.includes(rol);
+}
+
 export const ROLE_COLORS = {
   [ROLES.DIRECTOR]: '#D4A853',
   [ROLES.SECRETARIA]: '#3B82F6',
@@ -32,9 +43,6 @@ export const PERMISSIONS = {
   MANAGE_USERS: 'manage_users',
   ENROLL_STUDENTS: 'enroll_students',
   VIEW_STUDENTS: 'view_students',
-  RECORD_ATTENDANCE: 'record_attendance',
-  VIEW_ATTENDANCE: 'view_attendance',
-  MODIFY_CLOSED_ATTENDANCE: 'modify_closed_attendance',
   RECORD_SESSIONS: 'record_sessions',
   VIEW_SESSIONS: 'view_sessions',
   EXPORT_REPORTS: 'export_reports',
@@ -64,9 +72,6 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.MANAGE_USERS,
     PERMISSIONS.ENROLL_STUDENTS,
     PERMISSIONS.VIEW_STUDENTS,
-    PERMISSIONS.RECORD_ATTENDANCE,
-    PERMISSIONS.VIEW_ATTENDANCE,
-    PERMISSIONS.MODIFY_CLOSED_ATTENDANCE,
     PERMISSIONS.VIEW_SESSIONS,
     PERMISSIONS.EXPORT_REPORTS,
     PERMISSIONS.VIEW_AUDIT,
@@ -101,7 +106,6 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.ENROLL_STUDENTS,
     PERMISSIONS.VIEW_STUDENTS,
-    PERMISSIONS.VIEW_ATTENDANCE,
     PERMISSIONS.EXPORT_REPORTS,
     PERMISSIONS.REQUEST_LEAVE,
     PERMISSIONS.REQUEST_MATERIALS,
@@ -110,8 +114,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.DOCENTE]: [
     PERMISSIONS.VIEW_STUDENTS,
-    PERMISSIONS.RECORD_ATTENDANCE,
-    PERMISSIONS.VIEW_ATTENDANCE,
     PERMISSIONS.REQUEST_LEAVE,
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
@@ -119,8 +121,6 @@ export const ROLE_PERMISSIONS = {
   [ROLES.FONOAUDIOLOGO]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_STUDENTS,
-    PERMISSIONS.RECORD_ATTENDANCE,
-    PERMISSIONS.VIEW_ATTENDANCE,
     PERMISSIONS.RECORD_SESSIONS,
     PERMISSIONS.VIEW_SESSIONS,
     PERMISSIONS.EXPORT_REPORTS,
@@ -132,9 +132,6 @@ export const ROLE_PERMISSIONS = {
   [ROLES.JEFE_UTP]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_STUDENTS,
-    PERMISSIONS.RECORD_ATTENDANCE,
-    PERMISSIONS.VIEW_ATTENDANCE,
-    PERMISSIONS.MODIFY_CLOSED_ATTENDANCE,
     PERMISSIONS.VIEW_SESSIONS,
     PERMISSIONS.EXPORT_REPORTS,
     PERMISSIONS.VIEW_AUDIT,
@@ -155,9 +152,8 @@ export function getPermittedRoutes(role) {
   
   if (perms.includes(PERMISSIONS.VIEW_DASHBOARD)) routes.push('/dashboard');
   if (perms.includes(PERMISSIONS.VIEW_STUDENTS) || perms.includes(PERMISSIONS.ENROLL_STUDENTS)) routes.push('/estudiantes');
-  // La asistencia de estudiantes sigue accesible por URL directa, pero fuera del
-  // menú: no reemplaza al libro de clases ni al SIGE del MINEDUC.
-  if (perms.includes(PERMISSIONS.RECORD_ATTENDANCE) || perms.includes(PERMISSIONS.VIEW_ATTENDANCE)) routes.push('/asistencia');
+  // La asistencia de estudiantes se lleva en el libro de clases y se sube al
+  // SIGE del MINEDUC. Duplicarla acá era doble trabajo sin valor: se retiró.
   if (perms.includes(PERMISSIONS.RECORD_SESSIONS) || perms.includes(PERMISSIONS.VIEW_SESSIONS)) routes.push('/fonoaudiologia');
   if (perms.includes(PERMISSIONS.EXPORT_REPORTS)) routes.push('/reportes');
   if (perms.includes(PERMISSIONS.REQUEST_LEAVE)) routes.push('/permisos');

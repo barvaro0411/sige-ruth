@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSede } from '../../config/SedeContext';
 import { DashboardService } from '../../services/dashboardService';
-import { 
-  Users, CheckCircle, Activity, 
+import {
+  Users, Activity,
   ArrowUpRight, TrendingUp
 } from 'lucide-react';
 import { 
@@ -67,7 +67,7 @@ export default function Dashboard() {
       </header>
 
       {/* Stats Cards */}
-      <section className="grid grid-3" style={{ marginBottom: '32px' }}>
+      <section className="grid grid-2" style={{ marginBottom: '32px' }}>
         <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ padding: '12px', background: 'var(--color-gold-soft)', color: 'var(--color-gold)', borderRadius: '12px' }}><Users size={28} /></div>
           <div>
@@ -77,18 +77,10 @@ export default function Dashboard() {
         </div>
 
         <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ padding: '12px', background: 'var(--color-success-soft)', color: 'var(--color-success)', borderRadius: '12px' }}><CheckCircle size={28} /></div>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Asistencia Hoy</div>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-success)' }}>{stats.asistenciaHoy}%</div>
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ padding: '12px', background: 'var(--color-navy-soft)', color: 'var(--color-navy)', borderRadius: '12px' }}><Activity size={28} /></div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cupos Ocupados</div>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-navy)' }}>{Math.round((stats.totalEstudiantes / 98) * 100)}%</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-navy)' }}>{stats.cuposOcupados}%</div>
           </div>
         </div>
       </section>
