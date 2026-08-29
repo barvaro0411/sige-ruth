@@ -21,6 +21,7 @@ function buildCorsHeaders(origin: string | null) {
 
 const allowedRoles = new Set([
   'director', 'sostenedor', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'aseo', 'bodega', 'mantencion',
 ]);
 
 // Transversales a la institución: acceden a todas las sedes, no se les asigna

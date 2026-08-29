@@ -23,7 +23,8 @@ export interface Tables {
     id: string;
     email: string;
     nombre: string;
-    rol: 'director' | 'secretaria' | 'docente' | 'fonoaudiologo' | 'jefe_utp' | 'sostenedor';
+    rol: 'director' | 'sostenedor' | 'secretaria' | 'docente' | 'fonoaudiologo'
+       | 'jefe_utp' | 'aseo' | 'bodega' | 'mantencion';
     activo: boolean;
     sede_id: string | null;
     created_at: string;

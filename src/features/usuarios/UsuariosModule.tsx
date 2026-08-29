@@ -11,6 +11,7 @@ import { ActualizarUsuario, NuevoUsuario, PerfilUsuario, UsuarioService } from '
 
 const ROLES: PerfilUsuario['rol'][] = [
   'director', 'sostenedor', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'aseo', 'bodega', 'mantencion',
 ];
 
 const EMPTY_CREATE: NuevoUsuario = {

@@ -7,6 +7,9 @@ export const ROLES = {
   FONOAUDIOLOGO: 'fonoaudiologo',
   JEFE_UTP: 'jefe_utp',
   SOSTENEDOR: 'sostenedor',
+  ASEO: 'aseo',
+  BODEGA: 'bodega',
+  MANTENCION: 'mantencion',
 };
 
 export const ROLE_LABELS = {
@@ -16,6 +19,9 @@ export const ROLE_LABELS = {
   [ROLES.FONOAUDIOLOGO]: 'Coordinadora Técnica / Fonoaudióloga',
   [ROLES.JEFE_UTP]: 'Jefe UTP',
   [ROLES.SOSTENEDOR]: 'Sostenedora',
+  [ROLES.ASEO]: 'Aseo',
+  [ROLES.BODEGA]: 'Encargado(a) de bodega',
+  [ROLES.MANTENCION]: 'Mantención',
 };
 
 /**
@@ -36,6 +42,9 @@ export const ROLE_COLORS = {
   [ROLES.FONOAUDIOLOGO]: '#8B5CF6',
   [ROLES.JEFE_UTP]: '#EF4444',
   [ROLES.SOSTENEDOR]: '#0EA5E9',
+  [ROLES.ASEO]: '#14B8A6',
+  [ROLES.BODEGA]: '#F97316',
+  [ROLES.MANTENCION]: '#64748B',
 };
 
 export const PERMISSIONS = {
@@ -64,6 +73,15 @@ export const PERMISSIONS = {
 
   // Informes de personal
   VIEW_PERSONNEL_REPORTS: 'view_personnel_reports',
+
+  // Recursos y bodega
+  VIEW_INVENTORY: 'view_inventory',
+  MANAGE_INVENTORY: 'manage_inventory',
+  RECORD_MOVEMENT: 'record_movement',
+
+  // Mantenciones
+  REPORT_MAINTENANCE: 'report_maintenance',
+  MANAGE_MAINTENANCE: 'manage_maintenance',
 };
 
 export const ROLE_PERMISSIONS = {
@@ -86,6 +104,11 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
     PERMISSIONS.VIEW_MATERIAL_REPORTS,
     PERMISSIONS.VIEW_PERSONNEL_REPORTS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.MANAGE_INVENTORY,
+    PERMISSIONS.RECORD_MOVEMENT,
+    PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.MANAGE_MAINTENANCE,
   ],
   // La sostenedora revisa y autoriza gasto; no administra datos académicos.
   [ROLES.SOSTENEDOR]: [
@@ -100,8 +123,12 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.MANAGE_PURCHASES,
     PERMISSIONS.VIEW_MATERIAL_REPORTS,
     PERMISSIONS.VIEW_PERSONNEL_REPORTS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.MANAGE_MAINTENANCE,
   ],
   // Secretaría ejecuta la compra, pero no autoriza el gasto ni resuelve permisos.
+  // En una escuela chica suele ser además quien administra la bodega.
   [ROLES.SECRETARIA]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.ENROLL_STUDENTS,
@@ -111,12 +138,17 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.MANAGE_PURCHASES,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.MANAGE_INVENTORY,
+    PERMISSIONS.RECORD_MOVEMENT,
+    PERMISSIONS.REPORT_MAINTENANCE,
   ],
   [ROLES.DOCENTE]: [
     PERMISSIONS.VIEW_STUDENTS,
     PERMISSIONS.REQUEST_LEAVE,
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
+    PERMISSIONS.REPORT_MAINTENANCE,
   ],
   [ROLES.FONOAUDIOLOGO]: [
     PERMISSIONS.VIEW_DASHBOARD,
@@ -128,6 +160,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_LEAVE,
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
+    PERMISSIONS.REPORT_MAINTENANCE,
   ],
   [ROLES.JEFE_UTP]: [
     PERMISSIONS.VIEW_DASHBOARD,
@@ -138,6 +171,39 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_LEAVE,
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
+    PERMISSIONS.REPORT_MAINTENANCE,
+  ],
+
+  // Aseo: pide insumos y avisa lo que se rompe. Nada más, a propósito —
+  // su pantalla tiene que abrirse y resolverse en el celular en 30 segundos.
+  [ROLES.ASEO]: [
+    PERMISSIONS.REQUEST_MATERIALS,
+    PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
+    PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.REQUEST_LEAVE,
+  ],
+
+  // Bodega: administra el stock y prepara las entregas. No aprueba gasto
+  // ni resuelve permisos: recibe, entrega y deja registro.
+  [ROLES.BODEGA]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.MANAGE_INVENTORY,
+    PERMISSIONS.RECORD_MOVEMENT,
+    PERMISSIONS.VIEW_MATERIAL_REPORTS,
+    PERMISSIONS.REQUEST_MATERIALS,
+    PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.REQUEST_LEAVE,
+  ],
+
+  // Mantención: recibe las incidencias, las trabaja y las cierra con su costo.
+  [ROLES.MANTENCION]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.MANAGE_MAINTENANCE,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.REQUEST_MATERIALS,
+    PERMISSIONS.REQUEST_LEAVE,
   ],
 };
 
@@ -164,10 +230,12 @@ export function getPermittedRoutes(role) {
   return routes;
 }
 
+/**
+ * Dónde cae cada persona al entrar: lo que hace todos los días, no lo primero
+ * de la lista. Aseo entra a pedir insumos; una docente, a ver sus alumnos.
+ */
 export function getDefaultRoute(role) {
   const routes = getPermittedRoutes(role);
-  if (routes.includes('/dashboard')) return '/dashboard';
-  if (routes.includes('/permisos')) return '/permisos';
-  if (routes.includes('/materiales')) return '/materiales';
-  return routes[0] || '/';
+  const preferencia = ['/dashboard', '/estudiantes', '/materiales', '/permisos'];
+  return preferencia.find(r => routes.includes(r)) || routes[0] || '/';
 }
