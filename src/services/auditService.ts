@@ -8,7 +8,7 @@ import { mapAuditLog } from '../utils/mappers';
 export const AuditService = {
   async getAll(sedeId: string) {
     const { data, error } = await supabase
-      .from('auditoria')
+      .from('auditoria_vista')
       .select('*, perfiles(nombre)')
       .eq('sede_id', sedeId)
       .order('created_at', { ascending: false })

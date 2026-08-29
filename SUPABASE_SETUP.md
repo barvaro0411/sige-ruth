@@ -1,4 +1,4 @@
-# Configuración de Supabase para SIGE Ruth
+# Configuración de Supabase para Gestión Ruth
 
 ## 1. Crear el esquema
 
@@ -103,3 +103,35 @@ sedes para coordinadoras, fonoaudiólogas u otros trabajadores compartidos.
 Los directores tienen acceso global automáticamente. Los demás roles solo pueden
 consultar las sedes marcadas en su perfil y verán un selector cuando tengan más
 de una asignada.
+
+## Parches SQL, en orden
+
+Los archivos se aplican una sola vez, desde **Supabase > SQL Editor**. Son idempotentes: volver a correrlos no cambia nada.
+
+| Archivo | Estado | Qué hace |
+|---|---|---|
+| `supabase_schema.sql` | aplicado | Esquema base, RLS y storage. |
+| `supabase_security_patch.sql` | aplicado | `can_access_sede` por sede asignada. |
+| `supabase_multi_sede_patch.sql` | aplicado | Varias sedes por perfil. |
+| `supabase_user_admin_patch.sql` | aplicado | Protecciones de perfiles. |
+| `supabase_hardening_patch.sql` | aplicado | Privilegios de `anon` y funciones internas. |
+| `supabase_permisos_patch.sql` | aplicado | Módulo de permisos. |
+| **`supabase_gestion_patch.sql`** | **pendiente** | Rol `sostenedor`, feriados, correcciones de permisos, materiales, notificaciones. |
+
+`supabase_gestion_patch.sql` va envuelto en `begin ... commit`: si algo falla, no queda aplicado a medias.
+
+### Después de aplicar `supabase_gestion_patch.sql`
+
+1. **Cargar los feriados del año** en la tabla `feriados`. Sin datos, el cálculo de días hábiles solo descuenta sábados y domingos.
+2. **Configurar el cupo anual de cada trabajador** en `cupos_permiso`. Ya no hay valor por defecto: sin fila, la persona no ve saldo. El número depende del contrato o estatuto de cada uno, por eso no se fija uno solo para todos.
+3. **Crear la cuenta de la sostenedora** desde Usuarios, con rol `sostenedor`. Es quien resuelve los permisos del director, porque nadie resuelve los propios.
+4. Opcional: si se instala `pg_cron`, programar `notificar_solicitudes_atrasadas()` para avisar de solicitudes vencidas.
+
+Los cuatro pasos están detallados al final del propio archivo SQL.
+
+### Avisos esperados del linter
+
+Después de aplicar el parche, los *advisors* de Supabase van a marcar dos vistas `SECURITY DEFINER` (advisor 0010). Es intencional en ambos casos y está documentado en el SQL:
+
+- `calendario_ausencias_vista`: tiene que saltarse la RLS para que el equipo vea quién está ausente y poder cubrir. Expone solo quién y cuándo, nunca el tipo ni el motivo del permiso.
+- `perfiles_directorio` (opcional, sección 9 de `supabase_permisos_patch.sql`): expone id, nombre y rol, nunca el correo.

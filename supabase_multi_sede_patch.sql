@@ -54,16 +54,9 @@ declare
   requested_role text;
   requested_sede text;
 begin
-  requested_role := coalesce(new.raw_user_meta_data ->> 'rol', 'docente');
-  if requested_role not in ('director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp') then
-    requested_role := 'docente';
-  end if;
-
-  requested_sede := new.raw_user_meta_data ->> 'sede_id';
-  if requested_sede is not null
-     and not exists (select 1 from public.sedes where id = requested_sede) then
-    requested_sede := null;
-  end if;
+  -- SEGURIDAD: rol y sede nunca provienen de raw_user_meta_data.
+  requested_role := 'docente';
+  requested_sede := null;
 
   insert into public.perfiles (id, email, nombre, rol, sede_id)
   values (

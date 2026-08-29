@@ -1,16 +1,35 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Origenes autorizados. Configurar con `supabase secrets set APP_ORIGINS=...`
+// (lista separada por comas). Sin la variable solo se admite desarrollo local.
+const allowedOrigins = (Deno.env.get('APP_ORIGINS') || 'http://localhost:5173')
+  .split(',')
+  .map(value => value.trim())
+  .filter(Boolean);
+
+function buildCorsHeaders(origin: string | null) {
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    Vary: 'Origin',
+  };
+  if (origin && allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
+}
 
 const allowedRoles = new Set([
-  'director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'director', 'sostenedor', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'aseo', 'bodega', 'mantencion',
 ]);
-const allowedSedes = new Set(['gambino', 'vascongados']);
 
-function json(body: Record<string, unknown>, status = 200) {
+// Transversales a la institución: acceden a todas las sedes, no se les asigna
+// ninguna. Debe coincidir con ROLES_TRANSVERSALES del frontend y con la RPC
+// update_user_profile de la base.
+const rolesTransversales = new Set(['director', 'sostenedor']);
+
+function json(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -32,18 +51,24 @@ function getSecretKey() {
 }
 
 Deno.serve(async (request) => {
+  const origin = request.headers.get('Origin');
+  const corsHeaders = buildCorsHeaders(origin);
+
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  if (request.method !== 'POST') return json({ success: false, error: 'Método no permitido' }, 405);
+  if (origin && !allowedOrigins.includes(origin)) {
+    return json({ success: false, error: 'Origen no autorizado' }, 403, corsHeaders);
+  }
+  if (request.method !== 'POST') return json({ success: false, error: 'Método no permitido' }, 405, corsHeaders);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const secretKey = getSecretKey();
   const authorization = request.headers.get('Authorization');
 
   if (!supabaseUrl || !secretKey) {
-    return json({ success: false, error: 'La función no tiene configurada su clave administrativa' }, 500);
+    return json({ success: false, error: 'La función no tiene configurada su clave administrativa' }, 500, corsHeaders);
   }
   if (!authorization?.startsWith('Bearer ')) {
-    return json({ success: false, error: 'Sesión requerida' }, 401);
+    return json({ success: false, error: 'Sesión requerida' }, 401, corsHeaders);
   }
 
   const admin = createClient(supabaseUrl, secretKey, {
@@ -53,7 +78,7 @@ Deno.serve(async (request) => {
   const { data: authData, error: authError } = await admin.auth.getUser(accessToken);
 
   if (authError || !authData.user) {
-    return json({ success: false, error: 'Sesión inválida o vencida' }, 401);
+    return json({ success: false, error: 'Sesión inválida o vencida' }, 401, corsHeaders);
   }
 
   const { data: caller } = await admin
@@ -63,18 +88,18 @@ Deno.serve(async (request) => {
     .single();
 
   if (!caller?.activo || caller.rol !== 'director') {
-    return json({ success: false, error: 'Solo el director puede crear usuarios' }, 403);
+    return json({ success: false, error: 'Solo el director puede crear usuarios' }, 403, corsHeaders);
   }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
-    return json({ success: false, error: 'Solicitud inválida' }, 400);
+    return json({ success: false, error: 'Solicitud inválida' }, 400, corsHeaders);
   }
 
   if (body.action !== 'create') {
-    return json({ success: false, error: 'Acción no permitida' }, 400);
+    return json({ success: false, error: 'Acción no permitida' }, 400, corsHeaders);
   }
 
   const nombre = String(body.nombre || '').trim();
@@ -88,29 +113,39 @@ Deno.serve(async (request) => {
   )];
 
   if (nombre.length < 3 || !/^\S+@\S+\.\S+$/.test(email)) {
-    return json({ success: false, error: 'Nombre o correo inválido' }, 400);
+    return json({ success: false, error: 'Nombre o correo inválido' }, 400, corsHeaders);
   }
   if (password.length < 8) {
-    return json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' }, 400);
+    return json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' }, 400, corsHeaders);
   }
   if (!allowedRoles.has(rol)) {
-    return json({ success: false, error: 'Rol inválido' }, 400);
+    return json({ success: false, error: 'Rol inválido' }, 400, corsHeaders);
   }
-  if (rol !== 'director' && sedeIds.length === 0) {
-    return json({ success: false, error: 'El usuario debe tener al menos una sede' }, 400);
+  if (!rolesTransversales.has(rol) && sedeIds.length === 0) {
+    return json({ success: false, error: 'El usuario debe tener al menos una sede' }, 400, corsHeaders);
   }
-  if (sedeIds.some(sedeId => !allowedSedes.has(sedeId))) {
-    return json({ success: false, error: 'Una de las sedes no es válida' }, 400);
+  if (sedeIds.length > 0) {
+    const { data: sedesValidas, error: sedesError } = await admin
+      .from('sedes')
+      .select('id')
+      .eq('activo', true)
+      .in('id', sedeIds);
+
+    if (sedesError || (sedesValidas?.length ?? 0) !== sedeIds.length) {
+      return json({ success: false, error: 'Una de las sedes no es válida' }, 400, corsHeaders);
+    }
   }
 
-  const authorizedSedes = rol === 'director' ? [] : sedeIds;
+  const authorizedSedes = rolesTransversales.has(rol) ? [] : sedeIds;
   const primarySede = authorizedSedes[0] || null;
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { nombre, rol, sede_id: primarySede, sede_ids: authorizedSedes },
+    // El rol y las sedes NO viajan en user_metadata: es un campo editable por el
+    // propio usuario. La fuente de verdad es public.perfiles/perfiles_sedes.
+    user_metadata: { nombre },
   });
 
   if (createError || !created.user) {
@@ -118,7 +153,7 @@ Deno.serve(async (request) => {
     return json({
       success: false,
       error: duplicated ? 'Ya existe una cuenta con ese correo' : 'No se pudo crear la cuenta',
-    }, duplicated ? 409 : 400);
+    }, duplicated ? 409 : 400, corsHeaders);
   }
 
   const { error: profileError } = await admin
@@ -128,7 +163,7 @@ Deno.serve(async (request) => {
 
   if (profileError) {
     await admin.auth.admin.deleteUser(created.user.id);
-    return json({ success: false, error: 'No se pudo configurar el perfil del usuario' }, 500);
+    return json({ success: false, error: 'No se pudo configurar el perfil del usuario' }, 500, corsHeaders);
   }
 
   if (authorizedSedes.length > 0) {
@@ -138,9 +173,9 @@ Deno.serve(async (request) => {
 
     if (sedeError) {
       await admin.auth.admin.deleteUser(created.user.id);
-      return json({ success: false, error: 'No se pudieron asignar las sedes del usuario' }, 500);
+      return json({ success: false, error: 'No se pudieron asignar las sedes del usuario' }, 500, corsHeaders);
     }
   }
 
-  return json({ success: true, userId: created.user.id }, 201);
+  return json({ success: true, userId: created.user.id }, 201, corsHeaders);
 });

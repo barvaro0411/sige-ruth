@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.svg', 'robots.txt', 'pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'SIGE Ruth — Gestión Escolar',
-        short_name: 'SIGE Ruth',
-        description: 'Sistema de Gestión Escolar para la Escuela de Lenguaje Ruth',
+        name: 'Gestión Ruth — Plataforma Interna',
+        short_name: 'Gestión Ruth',
+        description: 'Plataforma interna de gestión para la Escuela de Lenguaje Ruth',
         theme_color: '#1B2A4A',
         background_color: '#1B2A4A',
         display: 'standalone',
@@ -28,7 +28,20 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Aumentar límite a 5MB
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // El generador de PDF sale del precarga: son ~1,5 MB que se descargaban
+        // en el celular de cada persona aunque nunca abriera una matrícula.
+        // Se guarda en caché la primera vez que alguien la usa.
+        globIgnores: ['**/vendor-pdf-*.js'],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/vendor-pdf-.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vendor-pdf',
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
             handler: 'CacheFirst',

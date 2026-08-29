@@ -2,14 +2,16 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit2, Plus, ShieldCheck, UserCheck, UserX, Users } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
-import { ROLE_LABELS } from '../../auth/permissions';
+import { ROLE_LABELS, esRolTransversal } from '../../auth/permissions';
 import Modal from '../../components/Modal';
 import { useToast } from '../../components/Toast';
-import { SEDES } from '../../config/sedes';
+import { useSede } from '../../config/SedeContext';
+import { Sede } from '../../types';
 import { ActualizarUsuario, NuevoUsuario, PerfilUsuario, UsuarioService } from '../../services/usuarioService';
 
 const ROLES: PerfilUsuario['rol'][] = [
-  'director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'director', 'sostenedor', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp',
+  'aseo', 'bodega', 'mantencion',
 ];
 
 const EMPTY_CREATE: NuevoUsuario = {
@@ -17,11 +19,12 @@ const EMPTY_CREATE: NuevoUsuario = {
   email: '',
   password: '',
   rol: 'docente',
-  sede_ids: ['gambino'],
+  sede_ids: [],
 };
 
 export default function UsuariosModule() {
   const { user } = useAuth();
+  const { availableSedes } = useSede();
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -89,7 +92,7 @@ export default function UsuariosModule() {
       ...createForm,
       nombre: createForm.nombre.trim(),
       email: createForm.email.trim().toLowerCase(),
-      sede_ids: createForm.rol === 'director' ? [] : createForm.sede_ids,
+      sede_ids: esRolTransversal(createForm.rol) ? [] : createForm.sede_ids,
     });
   }
 
@@ -136,9 +139,9 @@ export default function UsuariosModule() {
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{perfil.email}</div>
                   </td>
                   <td><span className="badge badge-navy"><ShieldCheck size={13} /> {ROLE_LABELS[perfil.rol]}</span></td>
-                  <td>{perfil.rol === 'director'
+                  <td>{esRolTransversal(perfil.rol)
                     ? 'Todas las sedes'
-                    : perfil.sede_ids.map(id => SEDES.find(s => s.id === id)?.nombre || id).join(', ') || 'Sin sede'}</td>
+                    : perfil.sede_ids.map(id => availableSedes.find(s => s.id === id)?.nombre || id).join(', ') || 'Sin sede'}</td>
                   <td>
                     <span className={`badge ${perfil.activo ? 'badge-success' : 'badge-danger'}`}>
                       {perfil.activo ? <UserCheck size={13} /> : <UserX size={13} />}
@@ -167,9 +170,10 @@ export default function UsuariosModule() {
             nombre={createForm.nombre}
             rol={createForm.rol}
             sedeIds={createForm.sede_ids}
+            sedes={availableSedes}
             disabled={createMutation.isPending}
             onNombre={nombre => setCreateForm(prev => ({ ...prev, nombre }))}
-            onRol={rol => setCreateForm(prev => ({ ...prev, rol, sede_ids: rol === 'director' ? [] : prev.sede_ids.length ? prev.sede_ids : ['gambino'] }))}
+            onRol={rol => setCreateForm(prev => ({ ...prev, rol, sede_ids: esRolTransversal(rol) ? [] : prev.sede_ids }))}
             onSedes={sede_ids => setCreateForm(prev => ({ ...prev, sede_ids }))}
           />
           <div className="grid grid-2" style={{ gap: '16px', marginTop: '16px' }}>
@@ -194,10 +198,11 @@ export default function UsuariosModule() {
               nombre={editForm.nombre}
               rol={editForm.rol}
               sedeIds={editForm.sede_ids}
+              sedes={availableSedes}
               disabled={updateMutation.isPending}
               lockAccess={editing.id === user?.id}
               onNombre={nombre => setEditForm(prev => prev && ({ ...prev, nombre }))}
-              onRol={rol => setEditForm(prev => prev && ({ ...prev, rol, sede_ids: rol === 'director' ? [] : prev.sede_ids.length ? prev.sede_ids : ['gambino'] }))}
+              onRol={rol => setEditForm(prev => prev && ({ ...prev, rol, sede_ids: esRolTransversal(rol) ? [] : prev.sede_ids }))}
               onSedes={sede_ids => setEditForm(prev => prev && ({ ...prev, sede_ids }))}
             />
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', fontWeight: 700 }}>
@@ -221,6 +226,7 @@ interface UserFieldsProps {
   nombre: string;
   rol: PerfilUsuario['rol'];
   sedeIds: string[];
+  sedes: Sede[];
   disabled: boolean;
   lockAccess?: boolean;
   onNombre: (value: string) => void;
@@ -228,7 +234,7 @@ interface UserFieldsProps {
   onSedes: (value: string[]) => void;
 }
 
-function UserFields({ nombre, rol, sedeIds, disabled, lockAccess = false, onNombre, onRol, onSedes }: UserFieldsProps) {
+function UserFields({ nombre, rol, sedeIds, sedes, disabled, lockAccess = false, onNombre, onRol, onSedes }: UserFieldsProps) {
   const toggleSede = (sedeId: string) => {
     onSedes(sedeIds.includes(sedeId)
       ? sedeIds.filter(id => id !== sedeId)
@@ -249,13 +255,13 @@ function UserFields({ nombre, rol, sedeIds, disabled, lockAccess = false, onNomb
       </div>
       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
         <label className="form-label">Sedes autorizadas *</label>
-        {rol === 'director' ? (
+        {esRolTransversal(rol) ? (
           <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--bg-main)', fontWeight: 700 }}>
-            El rol director tiene acceso a todas las sedes.
+            {ROLE_LABELS[rol]} tiene acceso a todas las sedes.
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {SEDES.map(item => (
+            {sedes.map(item => (
               <label key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', border: '1px solid var(--border-medium)', borderRadius: '12px', fontWeight: 700 }}>
                 <input
                   type="checkbox"

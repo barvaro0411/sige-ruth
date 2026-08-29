@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SedeProvider, useSede } from './config/SedeContext';
+import { SedeProvider, useSedeStatus } from './config/SedeContext';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -12,25 +12,22 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './features/dashboard/Dashboard';
 import EstudiantesList from './features/estudiantes/EstudiantesList';
-import PaseDeLista from './features/asistencia/PaseDeLista';
 import FonoaudiologiaModule from './features/fonoaudiologia/FonoaudiologiaModule';
 import ReportesModule from './features/reportes/ReportesModule';
 import AuditLog from './features/auditoria/AuditLog';
 import UsuariosModule from './features/usuarios/UsuariosModule';
+import PermisosModule from './features/permisos/PermisosModule';
+import MaterialesModule from './features/materiales/MaterialesModule';
+import InventarioModule from './features/inventario/InventarioModule';
+import PedirInsumos from './features/insumos/PedirInsumos';
 import BottomNav from './components/BottomNav';
 import { PERMISSIONS, getDefaultRoute } from './auth/permissions';
 
 // Layout shared for all authenticated routes
 function AppLayout() {
   const { user, loading } = useAuth();
-  const { sede, setSede, availableSedes } = useSede();
+  const { sede, loading: sedesLoading, error: sedesError } = useSedeStatus();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
-
-  useEffect(() => {
-    if (!user || user.rol === 'director' || user.sedeIds.includes(sede.id)) return;
-    const assignedSede = availableSedes.find(item => user.sedeIds.includes(item.id));
-    if (assignedSede) setSede(assignedSede);
-  }, [availableSedes, sede.id, setSede, user]);
 
   if (loading) {
     return (
@@ -44,7 +41,7 @@ function AppLayout() {
           borderTopColor: 'var(--color-gold, #D4A843)', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite'
         }} />
-        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando SIGE Ruth...</p>
+        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando Gestión Ruth...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -52,21 +49,34 @@ function AppLayout() {
 
   if (!user) return <LoginScreen />;
 
-  // Evita consultar accidentalmente la sede guardada de otro usuario durante
-  // el instante en que se sincroniza la sede asignada al perfil actual.
-  if (user.rol !== 'director' && user.sedeIds.length === 0) {
+  if (sedesLoading) {
+    return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+  }
+
+  if (sedesError) {
     return (
       <div className="page-container">
         <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
-          <h2>Usuario sin sede asignada</h2>
-          <p className="text-muted">Solicita al director que asigne al menos una sede a tu perfil.</p>
+          <h2>No se pudieron cargar las sedes</h2>
+          <p className="text-muted">{sedesError}</p>
+          <button className="btn btn-outline" onClick={() => window.location.reload()} style={{ marginTop: '20px' }}>
+            Reintentar
+          </button>
         </div>
       </div>
     );
   }
 
-  if (user.rol !== 'director' && !user.sedeIds.includes(sede.id)) {
-    return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+  // Sin sede resuelta no hay nada que consultar: toda la app filtra por sede.
+  if (!sede) {
+    return (
+      <div className="page-container">
+        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+          <h2>Usuario sin sede asignada</h2>
+          <p className="text-muted">Pide al director que asigne al menos una sede a tu perfil.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -80,9 +90,12 @@ function AppLayout() {
           <Routes>
             <Route path="/dashboard" element={<ProtectedRoute permission={PERMISSIONS.VIEW_DASHBOARD}><Dashboard /></ProtectedRoute>} />
             <Route path="/estudiantes" element={<ProtectedRoute permission={PERMISSIONS.VIEW_STUDENTS}><EstudiantesList /></ProtectedRoute>} />
-            <Route path="/asistencia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_ATTENDANCE}><PaseDeLista /></ProtectedRoute>} />
             <Route path="/fonoaudiologia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_SESSIONS}><FonoaudiologiaModule /></ProtectedRoute>} />
             <Route path="/reportes" element={<ProtectedRoute permission={PERMISSIONS.EXPORT_REPORTS}><ReportesModule /></ProtectedRoute>} />
+            <Route path="/permisos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_LEAVE}><PermisosModule /></ProtectedRoute>} />
+            <Route path="/materiales" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><MaterialesModule /></ProtectedRoute>} />
+            <Route path="/insumos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><PedirInsumos /></ProtectedRoute>} />
+            <Route path="/inventario" element={<ProtectedRoute permission={PERMISSIONS.VIEW_INVENTORY}><InventarioModule /></ProtectedRoute>} />
             <Route path="/auditoria" element={<ProtectedRoute permission={PERMISSIONS.VIEW_AUDIT}><AuditLog /></ProtectedRoute>} />
             <Route path="/usuarios" element={<ProtectedRoute permission={PERMISSIONS.MANAGE_USERS}><UsuariosModule /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />
@@ -110,13 +123,14 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <BrowserRouter>
-          <SedeProvider>
-            <AuthProvider>
+          {/* SedeProvider va por dentro: la RLS de `sedes` exige sesión activa. */}
+          <AuthProvider>
+            <SedeProvider>
               <ToastProvider>
                 <AppLayout />
               </ToastProvider>
-            </AuthProvider>
-          </SedeProvider>
+            </SedeProvider>
+          </AuthProvider>
         </BrowserRouter>
       </ErrorBoundary>
       <ReactQueryDevtools initialIsOpen={false} />

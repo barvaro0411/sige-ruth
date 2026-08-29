@@ -1,5 +1,5 @@
 /**
- * SIGE RUTH - Constantes Globales
+ * Gestión Ruth - Constantes Globales
  * Centraliza las opciones del sistema para facilitar cambios futuros.
  */
 

@@ -40,6 +40,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    async function syncSession(userId: string) {
+      const profile = await fetchUserProfile(userId);
+      if (!active) return;
+      if (profile) {
+        setUser(profile);
+      } else {
+        setUser(null);
+        await supabase.auth.signOut();
+      }
+    }
+
     async function init() {
       setLoading(true);
       setError(null);
@@ -50,47 +63,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          if (profile) {
-            setUser(profile);
-          } else {
-            // Si el perfil no existe, cerrar sesión por consistencia
-            await supabase.auth.signOut();
-            setUser(null);
-          }
+          // Si el perfil no existe o fue desactivado, se cierra la sesión.
+          await syncSession(session.user.id);
         }
       } catch (err: any) {
         console.error('[AuthContext] Critical error during initialization:', err);
-        setError('Error crítico al conectar con el servidor.');
+        if (active) setError('Error crítico al conectar con el servidor.');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-
-      // 2. Escuchar cambios en el estado de autenticación
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Se difiere para no ejecutar otra llamada Supabase dentro del lock de Auth.
-          setTimeout(() => {
-            void (async () => {
-              const profile = await fetchUserProfile(session.user.id);
-              if (profile) {
-                setUser(profile);
-              } else {
-                setUser(null);
-                await supabase.auth.signOut();
-              }
-            })();
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
     }
+
+    // 2. Escuchar cambios en el estado de autenticación. La suscripción vive en
+    // el efecto para que su limpieza se ejecute realmente al desmontar.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')
+          && session?.user) {
+        // Se difiere para no ejecutar otra llamada Supabase dentro del lock de Auth.
+        // Revalida `activo` en cada refresco: una cuenta desactivada pierde la sesión.
+        setTimeout(() => { void syncSession(session.user.id); }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
     init();
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [fetchUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -102,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (authError) {
         console.warn('[Auth] Intento de login fallido:', authError.message);
-        return { success: false, error: authError.message };
+        return { success: false, error: 'Correo o contraseña incorrectos.' };
       }
 
       if (data.user) {

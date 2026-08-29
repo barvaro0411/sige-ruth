@@ -1,5 +1,7 @@
 import { supabase } from '../db/database';
 
+const EXTENSIONES_PERMITIDAS = ['pdf', 'png', 'jpg', 'jpeg'];
+
 /**
  * DocumentoService
  * Gestiona la subida de archivos al Storage y su registro en la DB.
@@ -35,7 +37,12 @@ export const DocumentoService = {
    * Nota: La auditoría se realiza automáticamente vía Triggers en la DB.
    */
   async upload(file: File, estudianteId: number, sedeId: string) {
-    const fileExt = file.name.split('.').pop();
+    // El nombre lo controla el usuario: se acepta solo una extensión conocida
+    // para que nunca forme parte arbitraria de la ruta del objeto.
+    const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+    if (!EXTENSIONES_PERMITIDAS.includes(fileExt)) {
+      throw new Error('Formato no permitido. Solo se aceptan PDF, PNG o JPG.');
+    }
     const filePath = `${sedeId}/${estudianteId}/${crypto.randomUUID()}.${fileExt}`;
 
     // 1. Subir al Storage (Cubo 'documentos_estudiantes')

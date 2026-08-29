@@ -203,16 +203,12 @@ declare
   requested_role text;
   requested_sede text;
 begin
-  requested_role := coalesce(new.raw_user_meta_data ->> 'rol', 'docente');
-  if requested_role not in ('director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp') then
-    requested_role := 'docente';
-  end if;
-
-  requested_sede := new.raw_user_meta_data ->> 'sede_id';
-  if requested_sede is not null
-     and not exists (select 1 from public.sedes where id = requested_sede) then
-    requested_sede := null;
-  end if;
+  -- SEGURIDAD: el rol y la sede NUNCA se toman de raw_user_meta_data (el propio
+  -- usuario puede escribirla en signUp/updateUser). Todo perfil nace sin
+  -- privilegios; la asignacion real ocurre en la Edge Function admin-users o en
+  -- public.update_user_profile, ambas restringidas al director.
+  requested_role := 'docente';
+  requested_sede := null;
 
   insert into public.perfiles (id, email, nombre, rol, sede_id)
   values (
@@ -245,16 +241,8 @@ select
   u.id,
   coalesce(u.email, u.id::text || '@sin-email.local'),
   coalesce(nullif(trim(u.raw_user_meta_data ->> 'nombre'), ''), split_part(coalesce(u.email, 'Usuario'), '@', 1)),
-  case
-    when u.raw_user_meta_data ->> 'rol' in ('director', 'secretaria', 'docente', 'fonoaudiologo', 'jefe_utp')
-      then u.raw_user_meta_data ->> 'rol'
-    else 'docente'
-  end,
-  case
-    when exists (select 1 from public.sedes s where s.id = u.raw_user_meta_data ->> 'sede_id')
-      then u.raw_user_meta_data ->> 'sede_id'
-    else null
-  end
+  'docente',
+  null
 from auth.users u
 on conflict (id) do nothing;
 
@@ -495,6 +483,9 @@ drop policy if exists "sedes_select_authenticated" on public.sedes;
 drop policy if exists "sedes_manage_director" on public.sedes;
 drop policy if exists "perfiles_select_same_scope" on public.perfiles;
 drop policy if exists "perfiles_manage_director" on public.perfiles;
+drop policy if exists "perfiles_select_own_or_director" on public.perfiles;
+drop policy if exists "perfiles_insert_director" on public.perfiles;
+drop policy if exists "perfiles_delete_director" on public.perfiles;
 drop policy if exists "perfiles_sedes_select" on public.perfiles_sedes;
 drop policy if exists "perfiles_sedes_manage_director" on public.perfiles_sedes;
 drop policy if exists "cursos_select_scope" on public.cursos;
@@ -522,11 +513,14 @@ create policy "sedes_manage_director" on public.sedes
   for all to authenticated using (public.has_role(array['director']))
   with check (public.has_role(array['director']));
 
-create policy "perfiles_select_same_scope" on public.perfiles
-  for select to authenticated using (id = auth.uid() or public.can_access_sede(sede_id));
-create policy "perfiles_manage_director" on public.perfiles
-  for all to authenticated using (public.has_role(array['director']))
-  with check (public.has_role(array['director']));
+create policy "perfiles_select_own_or_director" on public.perfiles
+  for select to authenticated using (id = auth.uid() or public.has_role(array['director']));
+-- Los UPDATE pasan obligatoriamente por public.update_user_profile (security
+-- definer) para que no se puedan saltar sus validaciones de rol y sede.
+create policy "perfiles_insert_director" on public.perfiles
+  for insert to authenticated with check (public.has_role(array['director']));
+create policy "perfiles_delete_director" on public.perfiles
+  for delete to authenticated using (public.has_role(array['director']));
 
 create policy "perfiles_sedes_select" on public.perfiles_sedes
   for select to authenticated
@@ -570,6 +564,7 @@ create policy "asistencia_update_staff" on public.asistencia
   using (
     public.can_access_sede(sede_id)
     and public.has_role(array['director', 'docente', 'fonoaudiologo', 'jefe_utp'])
+    and (cerrada = false or public.has_role(array['director', 'jefe_utp']))
   )
   with check (
     public.can_access_sede(sede_id)
@@ -609,7 +604,11 @@ create policy "documentos_select_scope" on public.estudiantes_documentos
   for select to authenticated using (public.can_access_sede(sede_id));
 create policy "documentos_insert_staff" on public.estudiantes_documentos
   for insert to authenticated
-  with check (public.can_access_sede(sede_id) and subido_por = auth.uid());
+  with check (
+    public.can_access_sede(sede_id)
+    and subido_por = auth.uid()
+    and public.has_role(array['director', 'secretaria', 'fonoaudiologo'])
+  );
 create policy "documentos_delete_staff" on public.estudiantes_documentos
   for delete to authenticated
   using (
@@ -621,16 +620,37 @@ create policy "auditoria_select_authorized" on public.auditoria
   for select to authenticated
   using (
     public.can_access_sede(sede_id)
-    and public.has_role(array['director', 'fonoaudiologo', 'jefe_utp'])
+    and (
+      public.has_role(array['director'])
+      or (
+        public.has_role(array['fonoaudiologo', 'jefe_utp'])
+        and entidad not in ('perfiles', 'perfiles_sedes')
+      )
+    )
   );
+
+-- Vista consumida por la app: los valores completos (RUT, apoderados, perfiles)
+-- solo se materializan para el director.
+drop view if exists public.auditoria_vista;
+create view public.auditoria_vista
+with (security_invoker = true) as
+select
+  a.id, a.accion, a.entidad, a.entidad_id, a.usuario_id, a.sede_id, a.created_at,
+  case when public.has_role(array['director']) then a.valor_anterior end as valor_anterior,
+  case when public.has_role(array['director']) then a.valor_nuevo end as valor_nuevo
+from public.auditoria a;
+grant select on public.auditoria_vista to authenticated;
 
 grant usage on schema public to authenticated;
 grant select on public.sedes, public.perfiles, public.cursos, public.estudiantes,
   public.asistencia, public.sesiones_fono, public.estudiantes_documentos,
   public.auditoria to authenticated;
-grant insert, update, delete on public.sedes, public.perfiles, public.cursos,
-  public.estudiantes, public.asistencia, public.sesiones_fono,
-  public.estudiantes_documentos to authenticated;
+grant insert, update, delete on public.sedes, public.cursos,
+  public.estudiantes, public.asistencia, public.sesiones_fono to authenticated;
+grant insert, delete on public.perfiles to authenticated;
+revoke update on public.perfiles from authenticated;
+grant insert, delete on public.estudiantes_documentos to authenticated;
+revoke update on public.estudiantes_documentos from authenticated;
 grant select, insert, delete on public.perfiles_sedes to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
 
@@ -674,6 +694,11 @@ create policy "storage_documentos_delete_scope" on storage.objects
   using (
     bucket_id = 'documentos_estudiantes'
     and public.can_access_sede(split_part(name, '/', 1))
+    and exists (
+      select 1 from public.estudiantes_documentos d
+      where d.ruta_archivo = storage.objects.name
+        and (d.subido_por = auth.uid() or public.has_role(array['director', 'secretaria']))
+    )
   );
 
 do $$

@@ -31,7 +31,7 @@ export default function RecentActivity() {
   useEffect(() => {
     async function loadRecent() {
       const { data, error } = await supabase
-        .from('auditoria')
+        .from('auditoria_vista')
         .select('*')
         .eq('sede_id', sede.id)
         .order('created_at', { ascending: false })
@@ -48,8 +48,11 @@ export default function RecentActivity() {
     // Suscripción en tiempo real para actualizaciones automáticas
     const channel = supabase
       .channel('auditoria-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auditoria' }, (payload) => {
-        setActivities(prev => [mapAuditLog(payload.new), ...prev.slice(0, 5)]);
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auditoria' }, () => {
+        // El payload de realtime viene de la tabla cruda, sin la redaccion de
+        // valor_anterior/valor_nuevo que aplica auditoria_vista: se recarga
+        // desde la vista en vez de usarlo directamente.
+        loadRecent();
       })
       .subscribe();
 

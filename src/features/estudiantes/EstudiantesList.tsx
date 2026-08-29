@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { EstudianteService } from '../../services/estudianteService';
 import { useSede } from '../../config/SedeContext';
@@ -10,7 +10,9 @@ import { Estudiante } from '../../types';
 import {
   Plus, Search, Edit2, Eye, Trash2, FolderOpen, FileText, Filter
 } from 'lucide-react';
-import MatriculaPreviewModal from '../matricula/MatriculaPreviewModal';
+// El generador de PDF pesa ~1,5 MB. Se carga al abrir la matrícula, no en
+// cada visita a la app: la mayoría del personal nunca la imprime.
+const MatriculaPreviewModal = lazy(() => import('../matricula/MatriculaPreviewModal'));
 import DocumentManager from './DocumentManager';
 import EstudianteForm from './EstudianteForm';
 import Modal from '../../components/Modal';
@@ -256,12 +258,20 @@ export default function EstudiantesList() {
       )}
 
       {showMatricula && (
-        <MatriculaPreviewModal 
-          isOpen={!!showMatricula} 
-          onClose={() => setShowMatricula(null)} 
-          estudiante={showMatricula} 
-          sede={sede} 
-        />
+        <Suspense fallback={
+          <div className="modal-overlay">
+            <div className="modal-box md" style={{ padding: '40px', textAlign: 'center' }}>
+              <p className="text-muted">Preparando la matrícula…</p>
+            </div>
+          </div>
+        }>
+          <MatriculaPreviewModal
+            isOpen={!!showMatricula}
+            onClose={() => setShowMatricula(null)}
+            estudiante={showMatricula}
+            sede={sede}
+          />
+        </Suspense>
       )}
 
       <Modal
