@@ -5,6 +5,7 @@ import { useSede } from '../../config/SedeContext';
 import { useToast } from '../../components/Toast';
 import { PERMISSIONS } from '../../auth/permissions';
 import { MaterialService, NuevoItem } from '../../services/materialService';
+import { InventarioService } from '../../services/inventarioService';
 import { supabase } from '../../db/database';
 import { EstadoMaterial, PrioridadMaterial, SolicitudMaterial } from '../../types';
 import { formatDate } from '../../utils/dates';
@@ -15,7 +16,7 @@ import { Package, PackagePlus, Inbox, Plus, Trash2, AlertTriangle, Filter } from
 
 interface Curso { id: string; nombre: string }
 
-const ITEM_VACIO: NuevoItem = { nombre: '', cantidad: 1, unidad: 'unidad', costoEstimado: null };
+const ITEM_VACIO: NuevoItem = { nombre: '', cantidad: 1, unidad: 'unidad', costoEstimado: null, itemId: null };
 
 export default function MaterialesModule() {
   const { user, can } = useAuth();
@@ -46,6 +47,14 @@ export default function MaterialesModule() {
     queryKey: ['materiales', 'bandeja', sede.id],
     queryFn: () => MaterialService.getBandejaSede(sede.id),
     enabled: puedeGestionar,
+  });
+
+  // Para enlazar lo que se pide con lo que hay en bodega: si el nombre coincide
+  // con un producto, la entrega descuenta el stock sola. Quien pide no tiene que
+  // saber nada de esto.
+  const productosBodega = useQuery({
+    queryKey: ['inventario', sede.id],
+    queryFn: () => InventarioService.getProductos(sede.id),
   });
 
   const cursos = useQuery({
@@ -97,6 +106,20 @@ export default function MaterialesModule() {
 
   function actualizarItem(indice: number, cambios: Partial<NuevoItem>) {
     setItems(prev => prev.map((item, i) => (i === indice ? { ...item, ...cambios } : item)));
+  }
+
+  /**
+   * Al escribir el nombre, busca si existe ese producto en bodega. Si coincide,
+   * lo enlaza y adopta su unidad; si no, queda como material suelto y la
+   * solicitud funciona igual.
+   */
+  function escribirNombreMaterial(indice: number, nombre: string) {
+    const coincide = (productosBodega.data ?? []).find(
+      p => p.nombre.trim().toLowerCase() === nombre.trim().toLowerCase()
+    );
+    actualizarItem(indice, coincide
+      ? { nombre, itemId: coincide.id, unidad: coincide.unidad }
+      : { nombre, itemId: null });
   }
 
   function validarYEnviar(enviarAhora: boolean) {
@@ -261,12 +284,20 @@ export default function MaterialesModule() {
           {/* Materiales */}
           <div>
             <label className="form-label">Materiales</label>
+            <datalist id="productos-bodega">
+              {(productosBodega.data ?? []).map(p => (
+                <option key={p.id} value={p.nombre}>
+                  {p.stockActual > 0 ? `hay ${p.stockActual} ${p.unidadNombre.toLowerCase()}` : 'sin stock'}
+                </option>
+              ))}
+            </datalist>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {items.map((item, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 70px 1fr 1fr 36px', gap: '6px', alignItems: 'center' }}>
                   <input className="form-input" placeholder="Nombre" value={item.nombre}
                     aria-label={`Material ${i + 1}`}
-                    onChange={e => actualizarItem(i, { nombre: e.target.value })} />
+                    list="productos-bodega"
+                    onChange={e => escribirNombreMaterial(i, e.target.value)} />
                   <input className="form-input" type="number" min="0.01" step="0.01" value={item.cantidad}
                     aria-label={`Cantidad del material ${i + 1}`}
                     onChange={e => actualizarItem(i, { cantidad: Number(e.target.value) })} />
@@ -291,6 +322,11 @@ export default function MaterialesModule() {
               onClick={() => setItems(prev => [...prev, { ...ITEM_VACIO }])}>
               <Plus size={16} /> Agregar material
             </button>
+            {items.some(i => i.itemId) && (
+              <p className="text-muted" style={{ fontSize: '12.5px', marginTop: '8px' }}>
+                Los materiales que hay en bodega se descuentan solos al entregarlos.
+              </p>
+            )}
           </div>
 
           {totalEstimado > 0 && (

@@ -133,6 +133,9 @@ export interface Tables {
     costo_estimado: number | null;
     costo_real: number | null;
     cantidad_comprada: number;
+    /** Producto de bodega enlazado. Null si se pidió algo que no está en inventario. */
+    item_id: number | null;
+    cantidad_entregada: number;
     comentario: string | null;
     created_at: string;
     updated_at: string;
@@ -159,7 +162,8 @@ export type PrioridadMaterial = 'baja' | 'normal' | 'alta' | 'urgente';
 
 export type EstadoMaterial =
   | 'borrador' | 'pendiente' | 'observada' | 'aprobada' | 'rechazada'
-  | 'en_compra' | 'compra_parcial' | 'comprada' | 'entregada' | 'cancelada';
+  | 'en_compra' | 'compra_parcial' | 'comprada'
+  | 'preparando' | 'entregada_parcial' | 'entregada' | 'cancelada';
 
 export type TipoPermiso = 'administrativo' | 'licencia_medica' | 'sin_goce' | 'capacitacion' | 'otro';
 export type JornadaPermiso = 'completa' | 'manana' | 'tarde';
@@ -193,11 +197,17 @@ export interface SolicitudPermiso extends Omit<Tables['solicitudes_permiso'],
 }
 
 export interface ItemMaterial extends Omit<Tables['solicitudes_materiales_items'],
-  'solicitud_id' | 'costo_estimado' | 'costo_real' | 'cantidad_comprada' | 'updated_at'> {
+  'solicitud_id' | 'costo_estimado' | 'costo_real' | 'cantidad_comprada'
+  | 'item_id' | 'cantidad_entregada' | 'updated_at'> {
   solicitudId: number;
   costoEstimado: number | null;
   costoReal: number | null;
   cantidadComprada: number;
+  /** Producto de bodega enlazado. Null si no está en inventario. */
+  itemId: number | null;
+  cantidadEntregada: number;
+  /** Lo que todavía falta entregar. */
+  pendiente: number;
 }
 
 export interface SolicitudMaterial extends Omit<Tables['solicitudes_materiales'],

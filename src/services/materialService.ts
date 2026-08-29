@@ -19,7 +19,14 @@ const SELECT_LISTA =
 /** Estados que siguen requiriendo acción de alguien. */
 export const ESTADOS_ABIERTOS: EstadoMaterial[] = [
   'pendiente', 'observada', 'aprobada', 'en_compra', 'compra_parcial', 'comprada',
+  'preparando', 'entregada_parcial',
 ];
+
+/** Lo que se entrega de una sola vez: un material y cuánto sale. */
+export interface EntregaItem {
+  itemId: number;
+  cantidad: number;
+}
 
 export interface NuevaSolicitudMaterial {
   solicitanteId: string;
@@ -37,6 +44,11 @@ export interface NuevoItem {
   cantidad: number;
   unidad: string;
   costoEstimado: number | null;
+  /**
+   * Producto de bodega, si lo que se pide está en el inventario. Al enlazarlo,
+   * la entrega descuenta el stock sola.
+   */
+  itemId?: number | null;
 }
 
 export const MaterialService = {
@@ -116,6 +128,7 @@ export const MaterialService = {
         cantidad: i.cantidad,
         unidad: i.unidad,
         costo_estimado: i.costoEstimado,
+        item_id: i.itemId ?? null,
       }))
     );
     if (error) throw error;
@@ -176,6 +189,25 @@ export const MaterialService = {
 
   async confirmarEntrega(id: number): Promise<void> {
     const { error } = await supabase.rpc('confirmar_entrega_material', { p_id: id });
+    if (error) throw error;
+  },
+
+  /** Bodega avisa que está juntando el pedido. Paso opcional. */
+  async preparar(id: number): Promise<void> {
+    const { error } = await supabase.rpc('preparar_solicitud_material', { p_id: id });
+    if (error) throw error;
+  },
+
+  /**
+   * Entrega desde bodega. Descuenta el inventario de los materiales enlazados
+   * a un producto, todo en una sola transacción: si falta stock de uno solo,
+   * no se entrega nada.
+   */
+  async entregar(id: number, entregas: EntregaItem[]): Promise<void> {
+    const { error } = await supabase.rpc('entregar_solicitud_material', {
+      p_id: id,
+      p_entregas: entregas.map(e => ({ item_id: e.itemId, cantidad: e.cantidad })),
+    });
     if (error) throw error;
   },
 

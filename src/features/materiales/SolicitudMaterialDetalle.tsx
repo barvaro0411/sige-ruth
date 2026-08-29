@@ -8,7 +8,8 @@ import { SolicitudMaterial } from '../../types';
 import { formatDate, formatDateTime } from '../../utils/dates';
 import { ESTADOS_MATERIAL, PRIORIDADES, formatCLP } from './constants';
 import Modal from '../../components/Modal';
-import { Check, X, MessageSquare, ShoppingCart, PackageCheck, Ban, Send } from 'lucide-react';
+import EntregaMaterialesModal from './EntregaMaterialesModal';
+import { Check, X, MessageSquare, ShoppingCart, PackageCheck, Ban, Send, Boxes, ClipboardList } from 'lucide-react';
 
 interface Props {
   solicitud: SolicitudMaterial;
@@ -22,6 +23,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
 
   const [comentario, setComentario] = useState('');
   const [presupuesto, setPresupuesto] = useState<string>('');
+  const [entregando, setEntregando] = useState(false);
 
   const esPropia = solicitud.solicitanteId === user?.id;
   const estado = solicitud.estado;
@@ -35,6 +37,14 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
   const puedeEnviar = esPropia && (estado === 'borrador' || estado === 'observada');
   const puedeCancelar = (esPropia || can(PERMISSIONS.REVIEW_MATERIALS))
     && !['entregada', 'rechazada', 'cancelada'].includes(estado);
+
+  // Entregar desde bodega descuenta stock: lo hace quien administra la bodega,
+  // nunca quien pidió. La regla vive en la RPC; esto solo oculta el botón.
+  const gestionaBodega = can(PERMISSIONS.RECORD_MOVEMENT);
+  const puedePreparar = gestionaBodega && estado === 'aprobada';
+  const puedeEntregar = gestionaBodega
+    && ['aprobada', 'preparando', 'comprada', 'compra_parcial', 'entregada_parcial'].includes(estado)
+    && solicitud.items.some(i => i.pendiente > 0);
 
   const { data: historial = [] } = useQuery({
     queryKey: ['material-historial', solicitud.id],
@@ -86,8 +96,14 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
     onError: alFallar,
   });
 
+  const preparar = useMutation({
+    mutationFn: () => MaterialService.preparar(solicitud.id),
+    onSuccess: () => alTerminar('Bodega está preparando el pedido'),
+    onError: alFallar,
+  });
+
   const trabajando = enviar.isPending || revisar.isPending || compra.isPending
-    || entrega.isPending || cancelar.isPending;
+    || entrega.isPending || cancelar.isPending || preparar.isPending;
 
   function pedirComentario(): boolean {
     if (comentario.trim()) return true;
@@ -129,6 +145,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
               <tr style={{ textAlign: 'left', color: 'var(--navy-600)' }}>
                 <th style={{ padding: '8px 4px' }}>Material</th>
                 <th style={{ padding: '8px 4px' }}>Cantidad</th>
+                <th style={{ padding: '8px 4px' }}>Entregado</th>
                 <th style={{ padding: '8px 4px' }}>Estimado</th>
                 <th style={{ padding: '8px 4px' }}>Real</th>
               </tr>
@@ -136,8 +153,29 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
             <tbody>
               {solicitud.items.map(item => (
                 <tr key={item.id} style={{ borderTop: '1px solid var(--border-medium)' }}>
-                  <td style={{ padding: '8px 4px', fontWeight: 600 }}>{item.nombre}</td>
-                  <td style={{ padding: '8px 4px' }}>{item.cantidad} {item.unidad}</td>
+                  <td style={{ padding: '8px 4px', fontWeight: 600 }}>
+                    {item.nombre}
+                    {item.itemId && (
+                      <Boxes
+                        size={13}
+                        style={{ marginLeft: '6px', verticalAlign: '-2px', color: 'var(--color-success)' }}
+                        aria-label="Se descuenta de bodega"
+                      />
+                    )}
+                  </td>
+                  <td style={{ padding: '8px 4px', fontVariantNumeric: 'tabular-nums' }}>
+                    {item.cantidad} {item.unidad}
+                  </td>
+                  <td style={{ padding: '8px 4px', fontVariantNumeric: 'tabular-nums' }}>
+                    {item.cantidadEntregada > 0 ? (
+                      <span style={{ color: item.pendiente > 0 ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 700 }}>
+                        {item.cantidadEntregada}
+                        {item.pendiente > 0 && <span style={{ fontWeight: 500 }}> · faltan {item.pendiente}</span>}
+                      </span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
                   <td style={{ padding: '8px 4px' }}>{formatCLP(item.costoEstimado)}</td>
                   <td style={{ padding: '8px 4px' }}>{formatCLP(item.costoReal)}</td>
                 </tr>
@@ -246,6 +284,22 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
           </button>
         )}
 
+        {/* Entrega desde bodega: descuenta el stock de lo que está enlazado */}
+        {(puedePreparar || puedeEntregar) && (
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {puedePreparar && (
+              <button className="btn btn-outline" disabled={trabajando} onClick={() => preparar.mutate()}>
+                <ClipboardList size={17} /> Estoy preparando el pedido
+              </button>
+            )}
+            {puedeEntregar && (
+              <button className="btn btn-gold" disabled={trabajando} onClick={() => setEntregando(true)}>
+                <Boxes size={18} /> Entregar desde bodega
+              </button>
+            )}
+          </div>
+        )}
+
         {puedeConfirmarEntrega && (
           <button className="btn btn-gold" style={{ width: '100%' }} disabled={trabajando}
             onClick={() => entrega.mutate()}>
@@ -260,6 +314,14 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
           </button>
         )}
       </div>
+
+      {entregando && (
+        <EntregaMaterialesModal
+          solicitud={solicitud}
+          onClose={() => setEntregando(false)}
+          onEntregado={() => { setEntregando(false); alTerminar('Materiales entregados'); }}
+        />
+      )}
     </Modal>
   );
 }

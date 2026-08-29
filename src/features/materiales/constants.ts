@@ -15,6 +15,8 @@ export const ESTADOS_MATERIAL: Record<EstadoMaterial, {
   en_compra:      { label: 'En compra',       color: 'var(--color-info)',    bg: 'var(--color-info-soft)',      icono: '🛒' },
   compra_parcial: { label: 'Compra parcial',  color: 'var(--color-warning)', bg: 'var(--color-warning-soft)',   icono: '◐' },
   comprada:       { label: 'Comprada',        color: 'var(--color-success)', bg: 'var(--color-success-soft)',   icono: '📦' },
+  preparando:     { label: 'Preparando',      color: 'var(--color-info)',    bg: 'var(--color-info-soft)',      icono: '🧺' },
+  entregada_parcial: { label: 'Entregada en parte', color: 'var(--color-warning)', bg: 'var(--color-warning-soft)', icono: '◐' },
   entregada:      { label: 'Entregada',       color: 'var(--navy-900)',      bg: 'var(--color-navy-soft)',      icono: '✓✓' },
   cancelada:      { label: 'Cancelada',       color: 'var(--navy-600)',      bg: 'var(--bg-main)',              icono: '—' },
 };
@@ -36,7 +38,10 @@ export function formatCLP(monto: number | null): string {
 /** Una solicitud está atrasada si pasó su fecha de necesidad y sigue abierta. */
 export function estaAtrasada(fechaNecesidad: string | null, estado: EstadoMaterial): boolean {
   if (!fechaNecesidad) return false;
-  const abierta: EstadoMaterial[] = ['pendiente', 'observada', 'aprobada', 'en_compra', 'compra_parcial'];
+  const abierta: EstadoMaterial[] = [
+    'pendiente', 'observada', 'aprobada', 'en_compra', 'compra_parcial',
+    'preparando', 'entregada_parcial',
+  ];
   if (!abierta.includes(estado)) return false;
   const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
   return fechaNecesidad < hoy;

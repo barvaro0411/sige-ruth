@@ -110,13 +110,18 @@ export function mapSaldoPermiso(d: any): SaldoPermiso {
 
 // ─── Materiales ─────────────────────────────────────────────────────────
 export function mapItemMaterial(d: any): ItemMaterial {
+  const cantidad = Number(d.cantidad);
+  const entregada = Number(d.cantidad_entregada ?? 0);
   return {
     ...d,
     solicitudId: d.solicitud_id,
     costoEstimado: d.costo_estimado === null ? null : Number(d.costo_estimado),
     costoReal: d.costo_real === null ? null : Number(d.costo_real),
     cantidadComprada: Number(d.cantidad_comprada),
-    cantidad: Number(d.cantidad),
+    itemId: d.item_id ?? null,
+    cantidadEntregada: entregada,
+    pendiente: Math.max(cantidad - entregada, 0),
+    cantidad,
   };
 }
 
