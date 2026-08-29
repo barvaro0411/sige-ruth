@@ -224,6 +224,7 @@ export function getPermittedRoutes(role) {
   if (perms.includes(PERMISSIONS.EXPORT_REPORTS)) routes.push('/reportes');
   if (perms.includes(PERMISSIONS.REQUEST_LEAVE)) routes.push('/permisos');
   if (perms.includes(PERMISSIONS.REQUEST_MATERIALS)) routes.push('/materiales');
+  if (perms.includes(PERMISSIONS.VIEW_INVENTORY)) routes.push('/inventario');
   if (perms.includes(PERMISSIONS.VIEW_AUDIT)) routes.push('/auditoria');
   if (perms.includes(PERMISSIONS.MANAGE_USERS)) routes.push('/usuarios');
   

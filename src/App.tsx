@@ -18,6 +18,7 @@ import AuditLog from './features/auditoria/AuditLog';
 import UsuariosModule from './features/usuarios/UsuariosModule';
 import PermisosModule from './features/permisos/PermisosModule';
 import MaterialesModule from './features/materiales/MaterialesModule';
+import InventarioModule from './features/inventario/InventarioModule';
 import BottomNav from './components/BottomNav';
 import { PERMISSIONS, getDefaultRoute } from './auth/permissions';
 
@@ -92,6 +93,7 @@ function AppLayout() {
             <Route path="/reportes" element={<ProtectedRoute permission={PERMISSIONS.EXPORT_REPORTS}><ReportesModule /></ProtectedRoute>} />
             <Route path="/permisos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_LEAVE}><PermisosModule /></ProtectedRoute>} />
             <Route path="/materiales" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><MaterialesModule /></ProtectedRoute>} />
+            <Route path="/inventario" element={<ProtectedRoute permission={PERMISSIONS.VIEW_INVENTORY}><InventarioModule /></ProtectedRoute>} />
             <Route path="/auditoria" element={<ProtectedRoute permission={PERMISSIONS.VIEW_AUDIT}><AuditLog /></ProtectedRoute>} />
             <Route path="/usuarios" element={<ProtectedRoute permission={PERMISSIONS.MANAGE_USERS}><UsuariosModule /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />

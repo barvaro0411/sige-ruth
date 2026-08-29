@@ -3,7 +3,8 @@ import { useAuth } from '../auth/AuthContext';
 import { PERMISSIONS } from '../auth/permissions';
 import { 
   LayoutDashboard, Users,
-  Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap, UserCog, CalendarDays, Package
+  Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap, UserCog, CalendarDays,
+  Package, Boxes
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,6 +21,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { path: '/fonoaudiologia', icon: Mic2, label: 'Fonoaudiología', permission: PERMISSIONS.VIEW_SESSIONS },
     { path: '/permisos', icon: CalendarDays, label: 'Permisos', permission: PERMISSIONS.REQUEST_LEAVE },
     { path: '/materiales', icon: Package, label: 'Materiales', permission: PERMISSIONS.REQUEST_MATERIALS },
+    { path: '/inventario', icon: Boxes, label: 'Bodega', permission: PERMISSIONS.VIEW_INVENTORY },
     { path: '/reportes', icon: FileBarChart, label: 'Reportes', permission: PERMISSIONS.EXPORT_REPORTS },
     { path: '/auditoria', icon: ShieldAlert, label: 'Auditoría', permission: PERMISSIONS.VIEW_AUDIT },
     { path: '/usuarios', icon: UserCog, label: 'Usuarios', permission: PERMISSIONS.MANAGE_USERS },

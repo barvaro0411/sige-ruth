@@ -244,6 +244,54 @@ export interface SaldoPermiso {
   disponibles: number;
 }
 
+// ─── Inventario ─────────────────────────────────────────────────
+export type EstadoStock = 'ok' | 'bajo' | 'agotado';
+
+export type TipoMovimiento =
+  | 'ingreso' | 'compra' | 'devolucion' | 'entrega' | 'baja' | 'ajuste';
+
+export interface UnidadInventario {
+  codigo: string;
+  nombre: string;
+}
+
+export interface CategoriaInventario {
+  id: number;
+  nombre: string;
+  activo: boolean;
+}
+
+/** Fila de `inventario_estado_vista`: el producto con su estado ya calculado. */
+export interface ProductoInventario {
+  id: number;
+  sedeId: string;
+  categoriaId: number;
+  categoria: string;
+  nombre: string;
+  descripcion: string | null;
+  unidad: string;
+  unidadNombre: string;
+  stockActual: number;
+  stockMinimo: number;
+  ubicacion: string | null;
+  activo: boolean;
+  estadoStock: EstadoStock;
+  /** Cuánto falta para llegar al mínimo. 0 si está por sobre. */
+  faltante: number;
+}
+
+export interface MovimientoInventario {
+  id: number;
+  itemId: number;
+  tipo: TipoMovimiento;
+  cantidad: number;
+  motivo: string | null;
+  observaciones: string | null;
+  solicitudId: number | null;
+  actorNombre: string | null;
+  createdAt: string;
+}
+
 export interface Sede {
   id: string;
   nombre: string;
