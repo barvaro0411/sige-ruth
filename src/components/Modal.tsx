@@ -25,8 +25,10 @@ export default function Modal({
       <div className={`modal-box ${size}`}>
         <div className="modal-header">
           <h3 className="modal-title">{title}</h3>
-          <button className="modal-close" onClick={onClose}>
-            <X size={20} />
+          {/* Es el unico contenido del boton, asi que sin `aria-label` un
+              lector de pantalla lo anuncia como «boton», sin decir cual. */}
+          <button className="modal-close" onClick={onClose} aria-label={`Cerrar ${title}`}>
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
         <div className="modal-body">{children}</div>

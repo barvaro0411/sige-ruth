@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useSede } from '../../auth/SedeContext';
 import { DashboardService } from '../../services/dashboardService';
 import {
   Users, Activity,
   ArrowUpRight, TrendingUp
 } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Cell 
-} from 'recharts';
+
+// `recharts` pesa ~400 KB. Se descarga solo al abrir esta pantalla, no en el
+// bundle que baja todo el personal.
+const MatriculaPorNivelChart = lazy(() => import('./MatriculaPorNivelChart'));
 
 export default function Dashboard() {
   const { sede } = useSede();
@@ -93,22 +93,9 @@ export default function Dashboard() {
             <div className="badge badge-navy">Libro Matrícula</div>
           </div>
           <div style={{ width: '100%' }}>
-            <ResponsiveContainer width="100%" height={300} minWidth={0}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-                <Tooltip 
-                  cursor={{fill: 'rgba(0,0,0,0.02)'}}
-                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: 'var(--shadow-lg)', padding: '12px'}}
-                />
-                <Bar dataKey="alumnos" radius={[8, 8, 0, 0]} barSize={50}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<div className="skeleton" style={{ height: 300 }} />}>
+              <MatriculaPorNivelChart data={chartData} />
+            </Suspense>
           </div>
         </div>
 

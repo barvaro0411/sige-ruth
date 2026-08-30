@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1B2A4A" />
     
+    <!-- Esto es una plataforma interna: no debe aparecer en buscadores.
+         `robots.txt` por si solo NO alcanza — bloquea el rastreo, no la
+         indexacion, y una URL enlazada desde fuera puede figurar igual. Por eso
+         el rastreo se permite y se responde `noindex`: es la unica forma de que
+         un buscador lea la directiva y la obedezca. -->
+    <meta name="robots" content="noindex, nofollow" />
+
     <!-- Primary Meta Tags -->
     <title>Gestión Ruth | Plataforma Interna</title>
     <meta name="title" content="Gestión Ruth | Plataforma Interna" />
@@ -15,13 +22,20 @@
     <meta property="og:title" content="Gestión Ruth | Plataforma Interna" />
     <meta property="og:description" content="Plataforma interna de gestión para la Escuela de Lenguaje Ruth." />
     <meta property="og:locale" content="es_CL" />
+    <meta property="og:url" content="https://sige-ruth.vercel.app/" />
+    <meta property="og:image" content="https://sige-ruth.vercel.app/pwa-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="summary" />
     <meta property="twitter:title" content="Gestión Ruth | Plataforma Interna" />
     <meta property="twitter:description" content="Plataforma interna de gestión para la Escuela de Lenguaje Ruth." />
+    <meta property="twitter:image" content="https://sige-ruth.vercel.app/pwa-512x512.png" />
 
     <!-- Performance & Security -->
+    <link rel="canonical" href="https://sige-ruth.vercel.app/" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://iltrnhrmshsjfwokcpia.supabase.co" />
@@ -34,23 +48,6 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23D4A853'/><text x='50%25' y='55%25' font-family='Arial' font-size='20' font-weight='bold' fill='%231B2A4A' text-anchor='middle' dominant-baseline='middle'>R</text></svg>" />
 
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "Escuela de Lenguaje Ruth",
-      "alternateName": "Gestión Ruth",
-      "identifier": "RBD 10375-6",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Conchalí",
-        "addressRegion": "Región Metropolitana",
-        "addressCountry": "CL"
-      },
-      "description": "Plataforma interna de gestión para la Escuela de Lenguaje Ruth. No es el SIGE del MINEDUC ni lo reemplaza."
-    }
-    </script>
   </head>
   <body>
     <div id="root"></div>

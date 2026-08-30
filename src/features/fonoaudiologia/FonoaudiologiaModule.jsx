@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { EstudianteService } from '../../services/estudianteService';
 import { FonoService } from '../../services/fonoService';
@@ -10,8 +10,11 @@ import { buildIdMap } from '../../utils/mappers';
 import { 
     Plus, Calendar, TrendingUp, Edit, ChevronRight, Activity 
 } from 'lucide-react';
-import FonoEvolutionChart from './FonoEvolutionChart';
+
 import { PERMISSIONS } from '../../auth/permissions';
+
+// Mismo motivo que en el panel: el grafico trae `recharts` consigo.
+const FonoEvolutionChart = lazy(() => import('./FonoEvolutionChart'));
 
 const ESCALA_EVALUACION = [
   { valor: 1, etiqueta: 'Inicial', color: '#F43F5E' },
@@ -252,7 +255,9 @@ export default function FonoaudiologiaModule() {
       {/* Modal Evolución */}
       {alumnoParaEvolucion && (
         <Modal isOpen={!!alumnoParaEvolucion} onClose={() => setAlumnoParaEvolucion(null)} title={`Evolución: ${alumnoParaEvolucion.nombre} ${alumnoParaEvolucion.apellidoPaterno}`} size="xl">
-            <FonoEvolutionChart data={sesionesAlumnoEvolucion} />
+            <Suspense fallback={<div className="skeleton" style={{ height: 260 }} />}>
+              <FonoEvolutionChart data={sesionesAlumnoEvolucion} />
+            </Suspense>
         </Modal>
       )}
     </div>

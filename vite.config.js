@@ -31,8 +31,17 @@ export default defineConfig({
         // El generador de PDF sale del precarga: son ~1,5 MB que se descargaban
         // en el celular de cada persona aunque nunca abriera una matrícula.
         // Se guarda en caché la primera vez que alguien la usa.
-        globIgnores: ['**/vendor-pdf-*.js'],
+        globIgnores: ['**/vendor-pdf-*.js', '**/vendor-charts-*.js'],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/vendor-charts-.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vendor-charts',
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
           {
             urlPattern: /\/assets\/vendor-pdf-.*\.js$/,
             handler: 'CacheFirst',
@@ -78,7 +87,8 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-pdf': ['@react-pdf/renderer'],
-          'vendor-ui': ['lucide-react', 'recharts'],
+          'vendor-ui': ['lucide-react'],
+          'vendor-charts': ['recharts'],
         }
       }
     },

@@ -1,2 +1,14 @@
+# Esta es una plataforma interna: no debe aparecer en buscadores.
+#
+# Antes decía `Disallow: /`, que parece lo correcto pero es lo contrario de lo
+# que hace falta. `Disallow` bloquea el RASTREO, no la INDEXACIÓN: una URL
+# enlazada desde cualquier parte puede figurar igual en los resultados, como
+# entrada sin descripción. Y al impedir el rastreo, el buscador nunca llega a
+# leer el `noindex` — así que la directiva que sí manda queda invisible.
+#
+# La forma que funciona: se permite rastrear, y cada respuesta trae
+# `noindex, nofollow`, tanto en el <meta> del HTML como en la cabecera
+# `X-Robots-Tag` que define vercel.json.
+
 User-agent: *
-Disallow: /
+Allow: /
