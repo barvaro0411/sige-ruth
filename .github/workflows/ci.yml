@@ -1,0 +1,79 @@
+# =============================================================================
+# CI — lo mínimo que nadie debería tener que acordarse de correr a mano.
+#
+# Existe por un caso concreto: se publicó un package.json sin regenerar el
+# lockfile. `npm ci` local lo toleró y el fallo habría aparecido recién en el
+# despliegue. El paso `npm ci` de acá lo detecta antes de que llegue a main.
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Un push nuevo cancela la corrida anterior de la misma rama: no tiene sentido
+# esperar el resultado de un commit que ya quedó atrás.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Tipos y compilación
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` falla si package.json y package-lock.json no coinciden.
+      # Ese es medio punto del trabajo de este job.
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Comprobar tipos
+        run: npm run type-check
+
+      # Compila en Linux, que distingue mayúsculas — a diferencia de Windows.
+      # Un import con la caja equivocada revienta acá y no en producción.
+      - name: Compilar
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ejemplo.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
+
+  reglas:
+    name: Reglas de la base (RLS)
+    runs-on: ubuntu-latest
+    # Solo corre si el secreto está configurado. Sin él, el job se salta en
+    # vez de fallar: un fork o un clon nuevo no tienen por qué tener acceso a
+    # la base.
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar que haya conexión configurada
+        id: check
+        run: |
+          if [ -n "${{ secrets.SUPABASE_DB_URL }}" ]; then
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+            echo "SUPABASE_DB_URL no está configurado: se omiten las pruebas de RLS."
+          fi
+
+      - name: Instalar cliente de PostgreSQL
+        if: steps.check.outputs.hay == 'si'
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Las pruebas revierten su transacción: no dejan filas en la base.
+      - name: Correr pruebas de reglas
+        if: steps.check.outputs.hay == 'si'
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash scripts/test-rls.sh

@@ -84,6 +84,15 @@ ahorra tiempo, no evita errores ni entrega información útil, no se agrega.**
 - `npm run dev` — servidor de desarrollo.
 - `npm run type-check` — TypeScript sin emitir. Correr antes de dar por terminada una tarea.
 - `npm run build` — compilación de producción (`tsc && vite build`).
+- `npm run test:rls` — pruebas de las reglas de la base. Necesita `DATABASE_URL`.
+  Cada archivo revierte su transacción: se puede apuntar a producción.
+
+## Al tocar la base
+**Toda migration que cambie una política, un trigger o una RPC lleva su prueba**
+en `supabase/tests/`. Una regla de autorización sin prueba es una regla que
+alguien va a romper sin enterarse: el modo de fallo es silencioso, no revienta
+nada. Ya pasó una vez con `perfiles_select_colegas` (ver el README de esa
+carpeta).
 
 ## Al trabajar con Claude Code
 1. **Edición quirúrgica**: modificar solo lo necesario, sin reescribir componentes enteros.

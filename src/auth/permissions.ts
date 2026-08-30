@@ -1,4 +1,17 @@
-// Role-Based Access Control permissions map
+/**
+ * Mapa de roles y permisos.
+ *
+ * Es la unica fuente de estos nombres en el proyecto: no hay una segunda copia
+ * en `constants.ts` ni en ningun otro lado.
+ *
+ * Esta tipado a proposito. Un permiso mal escrito no lanza ningun error en
+ * tiempo de ejecucion — `hasPermission` simplemente devuelve `false` y el boton
+ * desaparece para siempre, sin que nadie se entere. Con `Permiso` y `Rol`
+ * derivados de estos objetos, ese error lo caza el compilador.
+ *
+ * La autorizacion de verdad vive en la base (RLS, triggers y RPC). Esto decide
+ * que se muestra, no que se permite.
+ */
 
 export const ROLES = {
   DIRECTOR: 'director',
@@ -10,9 +23,12 @@ export const ROLES = {
   ASEO: 'aseo',
   BODEGA: 'bodega',
   MANTENCION: 'mantencion',
-};
+} as const;
 
-export const ROLE_LABELS = {
+/** Los roles validos, derivados del objeto de arriba. */
+export type Rol = typeof ROLES[keyof typeof ROLES];
+
+export const ROLE_LABELS: Record<Rol, string> = {
   [ROLES.DIRECTOR]: 'Director(a)',
   [ROLES.SECRETARIA]: 'Secretaría',
   [ROLES.DOCENTE]: 'Docente',
@@ -29,13 +45,13 @@ export const ROLE_LABELS = {
  * asigna ninguna en particular. La sostenedora lo es porque debe poder resolver
  * las solicitudes del director, que no puede resolver las propias.
  */
-export const ROLES_TRANSVERSALES = [ROLES.DIRECTOR, ROLES.SOSTENEDOR];
+export const ROLES_TRANSVERSALES: Rol[] = [ROLES.DIRECTOR, ROLES.SOSTENEDOR];
 
-export function esRolTransversal(rol) {
+export function esRolTransversal(rol: Rol): boolean {
   return ROLES_TRANSVERSALES.includes(rol);
 }
 
-export const ROLE_COLORS = {
+export const ROLE_COLORS: Record<Rol, string> = {
   [ROLES.DIRECTOR]: '#D4A853',
   [ROLES.SECRETARIA]: '#3B82F6',
   [ROLES.DOCENTE]: '#10B981',
@@ -89,9 +105,16 @@ export const PERMISSIONS = {
 
   // Panel de operaciones: el estado del conjunto, no el de un módulo
   VIEW_OPERATIONS: 'view_operations',
-};
+} as const;
 
-export const ROLE_PERMISSIONS = {
+/** Los permisos validos, derivados del objeto de arriba. */
+export type Permiso = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+
+/**
+ * `Record<Rol, Permiso[]>` es lo que hace util este archivo: si falta un rol o
+ * se cuela un permiso inventado, no compila.
+ */
+export const ROLE_PERMISSIONS: Record<Rol, Permiso[]> = {
   [ROLES.DIRECTOR]: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.MANAGE_USERS,
@@ -231,14 +254,14 @@ export const ROLE_PERMISSIONS = {
   ],
 };
 
-export function hasPermission(role, permission) {
+export function hasPermission(role: Rol, permission: Permiso): boolean {
   const perms = ROLE_PERMISSIONS[role];
   return perms ? perms.includes(permission) : false;
 }
 
-export function getPermittedRoutes(role) {
-  const perms = ROLE_PERMISSIONS[role] || [];
-  const routes = [];
+export function getPermittedRoutes(role: Rol): string[] {
+  const perms: Permiso[] = ROLE_PERMISSIONS[role] || [];
+  const routes: string[] = [];
   
   if (perms.includes(PERMISSIONS.VIEW_DASHBOARD)) routes.push('/dashboard');
   if (perms.includes(PERMISSIONS.VIEW_STUDENTS) || perms.includes(PERMISSIONS.ENROLL_STUDENTS)) routes.push('/estudiantes');
@@ -263,7 +286,7 @@ export function getPermittedRoutes(role) {
  * Dónde cae cada persona al entrar: lo que hace todos los días, no lo primero
  * de la lista. Aseo entra a pedir insumos; una docente, a ver sus alumnos.
  */
-export function getDefaultRoute(role) {
+export function getDefaultRoute(role: Rol): string {
   const routes = getPermittedRoutes(role);
 
   // Aseo entra directo a pedir: es lo único que viene a hacer, y lo hace de

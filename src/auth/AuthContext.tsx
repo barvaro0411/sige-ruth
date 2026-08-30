@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '../db/database';
-import { hasPermission, getDefaultRoute, ROLE_LABELS, ROLE_COLORS } from './permissions';
+import { hasPermission, getDefaultRoute, ROLE_LABELS, ROLE_COLORS, Permiso } from './permissions';
 import { User } from '../types';
 import { mapPerfil } from '../utils/mappers';
 
@@ -10,7 +10,8 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; defaultRoute?: string }>;
   logout: () => Promise<void>;
-  can: (permission: string) => boolean;
+  /** `Permiso` y no `string`: un permiso mal escrito no compila. */
+  can: (permission: Permiso) => boolean;
   isAuthenticated: boolean;
   roleLabel: string;
   roleColor: string;
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const can = useCallback((permission: string) => {
+  const can = useCallback((permission: Permiso) => {
     if (!user) return false;
     return hasPermission(user.rol, permission);
   }, [user]);

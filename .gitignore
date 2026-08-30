@@ -40,3 +40,7 @@ coverage/
 scratch/
 supabase/.temp/
 .vercel/
+.vercel
+.env*
+# La plantilla si se versiona: es la que dice que variables hacen falta.
+!.env.example

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "deploy:admin-users": "npx supabase functions deploy admin-users",
     "seed:data": "node scripts/seed_from_json.js",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:rls": "bash scripts/test-rls.sh"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.4.0",
