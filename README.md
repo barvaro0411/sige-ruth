@@ -7,11 +7,15 @@ Cubre la gestión administrativa del establecimiento:
 - **Permisos y días administrativos** del personal, con aprobación y saldo anual.
 - **Solicitudes de materiales**, desde el pedido hasta la entrega.
 - **Notificaciones internas** del estado de cada solicitud.
+- **Inventario de bodega**, con stock derivado de movimientos y alertas de mínimo.
+- **Mantenciones** correctivas y preventivas, reportables desde el celular con foto.
+- **Préstamos** de equipos, con atrasos visibles.
+- **Panel de operaciones**: qué necesita atención hoy, gasto mensual y lista de compra sugerida.
 - **Matrícula** y **seguimiento fonoaudiológico**.
 
 ## Qué NO es esta plataforma
 
-**No reemplaza al SIGE del MINEDUC.** La asistencia de estudiantes se sigue declarando en el SIGE, y el registro oficial sigue siendo el libro de clases. El módulo de asistencia existe en el código pero está fuera del menú justamente por eso (ver más abajo cómo volver a habilitarlo).
+**No reemplaza al SIGE del MINEDUC.** La asistencia de estudiantes se sigue declarando en el SIGE, y el registro oficial sigue siendo el libro de clases. Por eso acá no hay módulo de asistencia: duplicarla era doble trabajo, riesgo de inconsistencia y ningún valor. La tabla se eliminó y el código se retiró.
 
 **No es un sistema de control de asistencia laboral.** Ver "Integración futura de marcaje".
 
@@ -55,19 +59,11 @@ El proyecto incluye `vercel.json` con el enrutamiento de SPA y cabeceras de segu
 | `jefe_utp` | Gestión académica, solicita permisos y materiales. |
 | `docente` | Solicita permisos y materiales, confirma entregas. |
 | `fonoaudiologo` | Coordinación técnica, sesiones fonoaudiológicas. |
+| `aseo` | Pide insumos y reporta lo que se rompe. Nada más, a propósito. |
+| `bodega` | Administra el stock, prepara entregas y presta equipos. |
+| `mantencion` | Recibe las incidencias, las trabaja y las cierra con su costo. |
 
 Nadie resuelve su propia solicitud, ni siquiera el director: por eso existe el rol `sostenedor`. La regla se aplica en la base de datos, no solo en la interfaz.
-
-## Módulo de asistencia de estudiantes
-
-El módulo sigue en `src/features/asistencia/` y su ruta `/asistencia` sigue registrada: solo se sacó del menú. Para volver a mostrarlo:
-
-1. En `src/components/Sidebar.tsx`, agregar al arreglo `menuItems`:
-   `{ path: '/asistencia', icon: ClipboardCheck, label: 'Asistencia', permission: PERMISSIONS.VIEW_ATTENDANCE }`
-   (reponiendo el ícono `ClipboardCheck` en el import de `lucide-react`).
-2. Opcionalmente, agregarlo también a `NAV_ITEMS` en `src/components/BottomNav.tsx`, que muestra como máximo cinco entradas.
-
-Ni las tablas ni los datos se tocaron.
 
 ## Integración futura de marcaje
 

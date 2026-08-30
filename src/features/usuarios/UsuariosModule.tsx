@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { ROLE_LABELS, esRolTransversal } from '../../auth/permissions';
 import Modal from '../../components/Modal';
 import { useToast } from '../../components/Toast';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { Sede } from '../../types';
 import { ActualizarUsuario, NuevoUsuario, PerfilUsuario, UsuarioService } from '../../services/usuarioService';
 

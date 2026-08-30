@@ -3,7 +3,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { EstudianteService } from '../../services/estudianteService';
 import { FonoService } from '../../services/fonoService';
 import { getToday, getMonthName } from '../../utils/dates';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import Modal from '../../components/Modal';
 import { buildIdMap } from '../../utils/mappers';

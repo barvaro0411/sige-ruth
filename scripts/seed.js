@@ -1,6 +1,6 @@
-import { supabase } from './database';
-import { calculateDV } from '../utils/rut';
-import { formatRut } from '../utils/rut';
+import { supabase } from '../src/db/database';
+import { calculateDV } from '../src/utils/rut';
+import { formatRut } from '../src/utils/rut';
 
 const NOMBRES = ['Sofía','Matías','Valentina','Benjamín','Isidora','Martín','Catalina','Agustín','Florencia','Tomás','Antonia','Lucas','Emilia','Joaquín','Amanda','Sebastián','Maite','Felipe','Camila','Vicente','Josefa','Maximiliano','Trinidad','Diego','Fernanda','Ignacio','Isabella','Nicolás','Constanza','Gabriel'];
 const AP_PATERNOS = ['González','Muñoz','Rojas','Díaz','Pérez','Soto','Contreras','Silva','Martínez','Sepülveda','Morales','Rodríguez','López','Fuentes','Hernández','García','Garrido','Bravo','Reyes','Núñez'];

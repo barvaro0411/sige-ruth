@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { supabase } from '../../db/database';
 import { getMonthName, formatDate } from '../../utils/dates';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import {
   Download, FileSpreadsheet, Users,
   Mic2, Calendar, LayoutGrid

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../auth/AuthContext';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import { PERMISSIONS } from '../../auth/permissions';
 import { PermisoService } from '../../services/permisoService';

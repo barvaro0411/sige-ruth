@@ -2,7 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { hasPermission, PERMISSIONS } from '../auth/permissions';
 import {
-  LayoutDashboard, GraduationCap, CalendarDays, Package, Boxes, ShoppingBasket, FileText
+  LayoutDashboard, GraduationCap, CalendarDays, Package, Boxes, ShoppingBasket,
+  FileText, Wrench
 } from 'lucide-react';
 
 // El orden importa: solo caben cinco en el celular, y se corta por el final.
@@ -11,6 +12,9 @@ const NAV_ITEMS = [
   { path: '/dashboard',   label: 'Inicio',     icon: LayoutDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
   { path: '/insumos',     label: 'Pedir',      icon: ShoppingBasket,  permission: PERMISSIONS.REQUEST_MATERIALS },
   { path: '/materiales',  label: 'Solicitudes', icon: Package,        permission: PERMISSIONS.REQUEST_MATERIALS },
+  // Reportar lo que se rompe se hace desde el celular, en el momento: va antes
+  // que cualquier pantalla de consulta.
+  { path: '/mantenciones', label: 'Arreglos',  icon: Wrench,          permission: PERMISSIONS.REPORT_MAINTENANCE },
   { path: '/inventario',  label: 'Bodega',     icon: Boxes,           permission: PERMISSIONS.VIEW_INVENTORY },
   { path: '/permisos',    label: 'Permisos',   icon: CalendarDays,    permission: PERMISSIONS.REQUEST_LEAVE },
   { path: '/estudiantes', label: 'Alumnos',    icon: GraduationCap,   permission: PERMISSIONS.VIEW_STUDENTS },

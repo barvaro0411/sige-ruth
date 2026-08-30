@@ -2,16 +2,23 @@
 
 ## 1. Crear el esquema
 
-1. Abre el proyecto nuevo en Supabase.
-2. Entra a **SQL Editor** y crea una consulta nueva.
-3. Copia todo el contenido de `supabase_schema.sql` y ejecútalo una sola vez.
-4. La ejecución debe terminar sin errores. El script crea:
-   - sedes y cursos base;
-   - perfiles vinculados a Supabase Auth;
-   - estudiantes, asistencia, sesiones fonoaudiológicas y documentos;
-   - auditoría automática;
-   - políticas RLS por rol y sede;
-   - el bucket privado `documentos_estudiantes`.
+Todo el esquema vive en `supabase/migrations/`, versionado y en orden. No hay
+SQL suelto que aplicar a mano.
+
+```bash
+npx supabase link --project-ref <ref-del-proyecto>
+npx supabase db push
+```
+
+Las migrations crean, en este orden: sedes y cursos, perfiles vinculados a
+Supabase Auth, estudiantes y sesiones fonoaudiológicas, auditoría por trigger,
+permisos y feriados, materiales con ítems e historial, inventario y
+movimientos, mantenciones correctivas y preventivas, préstamos de recursos, el
+panel de operaciones, las políticas RLS de cada tabla y los buckets privados
+`documentos_estudiantes` y `adjuntos_solicitudes`.
+
+> **No hay módulo de asistencia de estudiantes.** Se lleva en el libro de clases
+> y se sube al SIGE del MINEDUC. La tabla se eliminó y el código se retiró.
 
 ## 2. Configurar las variables locales
 
@@ -39,8 +46,8 @@ where email = 'directora@escuelaruth.cl';
 ```
 
 Un director con `sede_id = null` puede trabajar con ambas sedes. Para el resto
-del personal usa `gambino` o `vascongados` y uno de estos roles:
-`secretaria`, `docente`, `fonoaudiologo` o `jefe_utp`.
+del personal usa `gambino` o `vascongados` y uno de estos roles: `secretaria`,
+`docente`, `fonoaudiologo`, `jefe_utp`, `aseo`, `bodega` o `mantencion`.
 
 ## 4. Cargar estudiantes y cursos existentes
 
@@ -70,21 +77,22 @@ Luego inicia la aplicación:
 npm run dev
 ```
 
-Inicia sesión con el usuario director y comprueba matrícula, asistencia,
-fonoaudiología, documentos y auditoría.
+Inicia sesión con el usuario director y comprueba matrícula, fonoaudiología,
+documentos y auditoría.
 
 ## 6. Habilitar administración de usuarios
 
-1. Ejecuta `supabase_user_admin_patch.sql` en **SQL Editor**. Esto protege al
-   último director activo y registra los cambios de usuarios en auditoría.
-2. Instala/inicia sesión en la CLI y vincula este directorio al proyecto:
+Las migrations ya protegen al último director activo y registran los cambios de
+usuarios en auditoría. Falta solo desplegar la función que crea cuentas:
+
+1. Instala/inicia sesión en la CLI y vincula este directorio al proyecto:
 
 ```bash
 npx supabase login
 npx supabase link --project-ref TU_PROJECT_REF
 ```
 
-3. Despliega la función segura que crea cuentas en Supabase Auth:
+2. Despliega la función segura que crea cuentas en Supabase Auth:
 
 ```bash
 npm run deploy:admin-users
@@ -96,42 +104,39 @@ se incluye en el frontend.
 
 ## 7. Usuarios que trabajan en varias sedes
 
-Ejecuta `supabase_multi_sede_patch.sql` si la base fue creada antes de incorporar
-el acceso multi-sede. La administración de usuarios permite marcar una o ambas
-sedes para coordinadoras, fonoaudiólogas u otros trabajadores compartidos.
+La administración de usuarios permite marcar una o ambas sedes para
+coordinadoras, fonoaudiólogas u otros trabajadores compartidos.
 
-Los directores tienen acceso global automáticamente. Los demás roles solo pueden
+Director y sostenedora son transversales: acceden a todas las sedes y no se les
+asigna ninguna. Los demás roles solo pueden
 consultar las sedes marcadas en su perfil y verán un selector cuando tengan más
 de una asignada.
 
-## Parches SQL, en orden
+## Migrations
 
-Los archivos se aplican una sola vez, desde **Supabase > SQL Editor**. Son idempotentes: volver a correrlos no cambia nada.
+Todas las migrations de `supabase/migrations/` están aplicadas en producción.
+Se corren con `npx supabase db push` y su orden es el del nombre del archivo.
 
-| Archivo | Estado | Qué hace |
-|---|---|---|
-| `supabase_schema.sql` | aplicado | Esquema base, RLS y storage. |
-| `supabase_security_patch.sql` | aplicado | `can_access_sede` por sede asignada. |
-| `supabase_multi_sede_patch.sql` | aplicado | Varias sedes por perfil. |
-| `supabase_user_admin_patch.sql` | aplicado | Protecciones de perfiles. |
-| `supabase_hardening_patch.sql` | aplicado | Privilegios de `anon` y funciones internas. |
-| `supabase_permisos_patch.sql` | aplicado | Módulo de permisos. |
-| **`supabase_gestion_patch.sql`** | **pendiente** | Rol `sostenedor`, feriados, correcciones de permisos, materiales, notificaciones. |
+Los antiguos parches sueltos de la raíz (`supabase_schema.sql`,
+`supabase_gestion_patch.sql` y los demás) **se eliminaron**: fueron
+reemplazados por migrations que parten del estado real de la base. El de
+gestión, además, ya no se podía aplicar — asumía una base limpia y chocaba con
+tablas que ya existían con otra forma.
 
-`supabase_gestion_patch.sql` va envuelto en `begin ... commit`: si algo falla, no queda aplicado a medias.
-
-### Después de aplicar `supabase_gestion_patch.sql`
+### Pasos manuales que siguen pendientes
 
 1. **Cargar los feriados del año** en la tabla `feriados`. Sin datos, el cálculo de días hábiles solo descuenta sábados y domingos.
 2. **Configurar el cupo anual de cada trabajador** en `cupos_permiso`. Ya no hay valor por defecto: sin fila, la persona no ve saldo. El número depende del contrato o estatuto de cada uno, por eso no se fija uno solo para todos.
 3. **Crear la cuenta de la sostenedora** desde Usuarios, con rol `sostenedor`. Es quien resuelve los permisos del director, porque nadie resuelve los propios.
 4. Opcional: si se instala `pg_cron`, programar `notificar_solicitudes_atrasadas()` para avisar de solicitudes vencidas.
 
-Los cuatro pasos están detallados al final del propio archivo SQL.
+El SQL para cargar los cupos quedó al pie de la migration `...160100_permisos_historial_y_transiciones.sql`.
 
 ### Avisos esperados del linter
 
-Después de aplicar el parche, los *advisors* de Supabase van a marcar dos vistas `SECURITY DEFINER` (advisor 0010). Es intencional en ambos casos y está documentado en el SQL:
+Los *advisors* de Supabase marcan una vista `SECURITY DEFINER` (advisor 0010) y varias funciones `SECURITY DEFINER` ejecutables por usuarios con sesión. Las dos cosas son deliberadas:
 
-- `calendario_ausencias_vista`: tiene que saltarse la RLS para que el equipo vea quién está ausente y poder cubrir. Expone solo quién y cuándo, nunca el tipo ni el motivo del permiso.
-- `perfiles_directorio` (opcional, sección 9 de `supabase_permisos_patch.sql`): expone id, nombre y rol, nunca el correo.
+- `calendario_ausencias_vista` tiene que saltarse la RLS para que el equipo vea quién está ausente y pueda cubrir. Expone solo quién y cuándo, nunca el tipo ni el motivo — un permiso puede ser una licencia médica.
+- Las funciones señaladas son las RPC del flujo de materiales y los helpers de autorización (`can_access_sede`, `has_role`, `gestiona_bodega`, `gestiona_mantencion`, `comparte_sede_conmigo`). Ser llamables es su propósito, y cada una valida por dentro quién es quien llama. Las funciones internas de trigger sí tienen el `EXECUTE` revocado.
+
+Queda un aviso real por resolver: **la protección de contraseñas filtradas está desactivada**. Se activa en el panel, en Authentication → Policies.

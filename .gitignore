@@ -17,6 +17,9 @@ build/
 src/db/students_data.json
 src/db/students_gambino.json
 
+# Ajustes locales de Claude Code (por maquina, no del proyecto)
+.claude/settings.local.json
+
 # IDE & OS
 .vscode/
 .idea/

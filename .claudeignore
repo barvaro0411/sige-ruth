@@ -10,8 +10,7 @@ build/
 
 # Datos estáticos / Seeds pesados
 src/db/*.json
-src/db/seed_custom_data.js
-src/db/seed_from_json.js
+scripts/*.json
 
 # Assets multimedia y estáticos
 public/

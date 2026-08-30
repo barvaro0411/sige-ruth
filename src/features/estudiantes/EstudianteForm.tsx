@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
-import { NIVELES, JORNADAS, DIAGNOSTICOS } from '../../config/constants';
+import { NIVELES, JORNADAS, DIAGNOSTICOS } from '../../constants';
 import { rutInputHandler, validateRut } from '../../utils/rut';
 import { Estudiante } from '../../types';
 

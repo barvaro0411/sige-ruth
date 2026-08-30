@@ -1,6 +1,8 @@
 import {
   Estudiante, User, Tables, SolicitudPermiso, SaldoPermiso,
   SolicitudMaterial, ItemMaterial, EventoHistorial, Notificacion,
+  Mantencion, Preventiva, EjecucionPreventiva, Recurso, Prestamo,
+  PanelOperaciones, GastoMensual, CompraSugerida, Adjunto,
 } from '../types';
 
 /**
@@ -20,24 +22,6 @@ export function mapEstudiante(d: Tables['estudiantes']): Estudiante {
     nombreApoderado: d.nombre_apoderado,
     telefonoApoderado: d.telefono_apoderado,
     sedeId: d.sede_id,
-  };
-}
-
-// ─── Sesiones Fonoaudiológicas ──────────────────────────────────
-export function mapSesionFono(d: any, estudiantesMap: Record<number, Estudiante> = {}) {
-  if (!d) return null;
-
-  return {
-    ...d,
-    estudianteId: d.estudiante_id,
-    fonoaudiologoId: d.fonoaudiologo_id,
-    actividadRealizada: d.actividad_realizada,
-    nivelFonetico: d.nivel_fonetico,
-    nivelSemantico: d.nivel_semantico,
-    nivelMorfosintactico: d.nivel_morfosintactico,
-    nivelPragmatico: d.nivel_pragmatico,
-    sedeId: d.sede_id,
-    estudiante: d.estudiante_id ? estudiantesMap[d.estudiante_id] : null,
   };
 }
 
@@ -161,4 +145,156 @@ export function mapEventoHistorial(d: any): EventoHistorial {
 
 export function mapNotificacion(d: any): Notificacion {
   return { ...d, destinatarioId: d.destinatario_id, leidaEn: d.leida_en };
+}
+
+// ─── Mantenciones ───────────────────────────────────────────────
+export function mapMantencion(d: any): Mantencion {
+  return {
+    ...d,
+    sedeId: d.sede_id,
+    categoriaId: d.categoria_id,
+    categoria: d.categoria?.nombre ?? null,
+    reportadoPor: d.reportado_por,
+    reportadoPorNombre: d.reportante?.nombre ?? null,
+    asignadoA: d.asignado_a,
+    asignadoANombre: d.asignado?.nombre ?? null,
+    fechaProgramada: d.fecha_programada,
+    costo: d.costo === null || d.costo === undefined ? null : Number(d.costo),
+    trabajoRealizado: d.trabajo_realizado,
+    resueltaPor: d.resuelta_por,
+    resueltaEn: d.resuelta_en,
+    cerradaEn: d.cerrada_en,
+    createdAt: d.created_at,
+    updatedAt: d.updated_at,
+  };
+}
+
+export function mapPreventiva(d: any): Preventiva {
+  return {
+    id: d.id,
+    sedeId: d.sede_id,
+    categoriaId: d.categoria_id,
+    categoria: d.categoria,
+    nombre: d.nombre,
+    ubicacion: d.ubicacion,
+    observaciones: d.observaciones,
+    frecuenciaDias: Number(d.frecuencia_dias),
+    fechaInicio: d.fecha_inicio,
+    ultimaFecha: d.ultima_fecha,
+    proximaFecha: d.proxima_fecha,
+    responsableId: d.responsable_id,
+    responsableNombre: d.responsable_nombre,
+    activo: d.activo,
+    diasRestantes: Number(d.dias_restantes),
+    estadoPreventiva: d.estado_preventiva,
+  };
+}
+
+export function mapEjecucionPreventiva(d: any): EjecucionPreventiva {
+  return {
+    id: d.id,
+    preventivaId: d.preventiva_id,
+    fecha: d.fecha,
+    realizadaPor: d.realizada_por,
+    realizadaPorNombre: d.responsable?.nombre ?? null,
+    proveedor: d.proveedor,
+    costo: d.costo === null || d.costo === undefined ? null : Number(d.costo),
+    observaciones: d.observaciones,
+    createdAt: d.created_at,
+  };
+}
+
+// ─── Préstamos ──────────────────────────────────────────────────
+export function mapRecurso(d: any): Recurso {
+  return { ...d, sedeId: d.sede_id, createdAt: d.created_at };
+}
+
+export function mapPrestamo(d: any): Prestamo {
+  return {
+    id: d.id,
+    recursoId: d.recurso_id,
+    recurso: d.recurso,
+    codigo: d.codigo,
+    tipo: d.tipo,
+    sedeId: d.sede_id,
+    prestadoA: d.prestado_a,
+    prestadoANombre: d.prestado_a_nombre,
+    fechaEntrega: d.fecha_entrega,
+    fechaDevolucionEsperada: d.fecha_devolucion_esperada,
+    fechaDevolucionReal: d.fecha_devolucion_real,
+    estadoAlEntregar: d.estado_al_entregar,
+    estadoAlDevolver: d.estado_al_devolver,
+    observaciones: d.observaciones,
+    diasRestantes: Number(d.dias_restantes),
+    situacion: d.situacion,
+  };
+}
+
+// ─── Panel de operaciones ───────────────────────────────────────
+export function mapPanelOperaciones(d: any): PanelOperaciones {
+  return {
+    sedeId: d.sede_id,
+    sedeNombre: d.sede_nombre,
+    materialesPorRevisar: Number(d.materiales_por_revisar),
+    materialesPorComprar: Number(d.materiales_por_comprar),
+    materialesPorEntregar: Number(d.materiales_por_entregar),
+    permisosPorResolver: Number(d.permisos_por_resolver),
+    productosAgotados: Number(d.productos_agotados),
+    productosBajoMinimo: Number(d.productos_bajo_minimo),
+    mantencionesAbiertas: Number(d.mantenciones_abiertas),
+    mantencionesUrgentes: Number(d.mantenciones_urgentes),
+    mantencionesPorCerrar: Number(d.mantenciones_por_cerrar),
+    preventivasVencidas: Number(d.preventivas_vencidas),
+    preventivasProximas: Number(d.preventivas_proximas),
+    prestamosAtrasados: Number(d.prestamos_atrasados),
+  };
+}
+
+export function mapGastoMensual(d: any): GastoMensual {
+  return {
+    sedeId: d.sede_id,
+    mes: d.mes,
+    origen: d.origen,
+    cantidad: Number(d.cantidad),
+    total: Number(d.total),
+  };
+}
+
+export function mapCompraSugerida(d: any): CompraSugerida {
+  return {
+    id: d.id,
+    sedeId: d.sede_id,
+    categoriaId: d.categoria_id,
+    categoria: d.categoria,
+    nombre: d.nombre,
+    unidad: d.unidad,
+    unidadNombre: d.unidad_nombre,
+    ubicacion: d.ubicacion,
+    stockActual: Number(d.stock_actual),
+    stockMinimo: Number(d.stock_minimo),
+    estadoStock: d.estado_stock,
+    faltante: Number(d.faltante),
+    consumo90d: Number(d.consumo_90d),
+    consumoMensual: Number(d.consumo_mensual),
+    sugerido: Number(d.sugerido),
+    ultimaCompra: d.ultima_compra,
+  };
+}
+
+// ─── Adjuntos ───────────────────────────────────────────────────
+export function mapAdjunto(d: any): Adjunto {
+  return {
+    id: d.id,
+    origen: d.origen,
+    origenId: d.origen_id,
+    sedeId: d.sede_id,
+    nombreArchivo: d.nombre_archivo,
+    rutaArchivo: d.ruta_archivo,
+    tipoMime: d.tipo_mime,
+    tamanoBytes: d.tamano_bytes === null || d.tamano_bytes === undefined
+      ? null : Number(d.tamano_bytes),
+    momento: d.momento,
+    subidoPor: d.subido_por,
+    createdAt: d.created_at,
+  };
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../auth/AuthContext';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import { PERMISSIONS } from '../../auth/permissions';
 import { MaterialService, NuevoItem } from '../../services/materialService';

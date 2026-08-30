@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { DashboardService } from '../../services/dashboardService';
 import {
   Users, Activity,

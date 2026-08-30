@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuditService } from '../../services/auditService';
 import { formatDateTime } from '../../utils/dates';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { Shield, Search, ChevronDown } from 'lucide-react';
 
 const ACTION_LABELS = {

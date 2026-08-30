@@ -1,5 +1,5 @@
 import { supabase } from '../db/database';
-import { SCHOOL } from '../config/sedes';
+import { SCHOOL } from '../constants';
 
 /**
  * DashboardService

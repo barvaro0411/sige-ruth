@@ -1,0 +1,14 @@
+# Normaliza los finales de línea: en el repositorio siempre LF, en el disco lo
+# que corresponda al sistema. Sin esto, un mismo archivo tocado desde Windows y
+# desde otro sistema aparece como «cambiado entero» en el diff y las revisiones
+# se vuelven ilegibles.
+* text=auto eol=lf
+
+# Binarios: que Git no intente convertir nada.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

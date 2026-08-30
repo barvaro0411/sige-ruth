@@ -39,6 +39,23 @@ export const UsuarioService = {
     }));
   },
 
+  /**
+   * Las personas a las que se les puede asignar algo: prestar un notebook,
+   * derivar una reparación. Devuelve mi propio perfil, los roles transversales
+   * y quienes comparten sede conmigo — el alcance lo resuelve la RLS de
+   * `perfiles`, no un filtro escrito acá.
+   */
+  async getColegas(): Promise<Array<Pick<Tables['perfiles'], 'id' | 'nombre' | 'rol'>>> {
+    const { data, error } = await supabase
+      .from('perfiles')
+      .select('id, nombre, rol')
+      .eq('activo', true)
+      .order('nombre');
+
+    if (error) throw error;
+    return data ?? [];
+  },
+
   async create(payload: NuevoUsuario): Promise<void> {
     const { data, error } = await supabase.functions.invoke('admin-users', {
       body: { action: 'create', ...payload },

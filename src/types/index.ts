@@ -156,6 +156,72 @@ export interface Tables {
     irrenunciable: boolean;
     created_at: string;
   };
+  mantenciones: {
+    id: number;
+    sede_id: string;
+    categoria_id: number;
+    lugar: string;
+    descripcion: string;
+    prioridad: PrioridadMantencion;
+    estado: EstadoMantencion;
+    reportado_por: string;
+    asignado_a: string | null;
+    fecha_programada: string | null;
+    proveedor: string | null;
+    costo: number | null;
+    trabajo_realizado: string | null;
+    resuelta_por: string | null;
+    resuelta_en: string | null;
+    cerrada_en: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  mantenciones_preventivas: {
+    id: number;
+    sede_id: string;
+    categoria_id: number;
+    nombre: string;
+    ubicacion: string | null;
+    observaciones: string | null;
+    frecuencia_dias: number;
+    fecha_inicio: string;
+    ultima_fecha: string | null;
+    /** Columna generada: última ejecución (o el inicio) más la frecuencia. */
+    proxima_fecha: string;
+    responsable_id: string | null;
+    activo: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  recursos: {
+    id: number;
+    sede_id: string;
+    nombre: string;
+    tipo: string | null;
+    descripcion: string | null;
+    codigo: string | null;
+    ubicacion: string | null;
+    estado: EstadoRecurso;
+    activo: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  recursos_prestamos: {
+    id: number;
+    recurso_id: number;
+    sede_id: string;
+    prestado_a: string;
+    entregado_por: string | null;
+    recibido_por: string | null;
+    fecha_entrega: string;
+    fecha_devolucion_esperada: string;
+    fecha_devolucion_real: string | null;
+    estado_al_entregar: string | null;
+    estado_al_devolver: string | null;
+    observaciones: string | null;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export type PrioridadMaterial = 'baja' | 'normal' | 'alta' | 'urgente';
@@ -319,4 +385,178 @@ export interface User {
   activo: boolean;
   sedeId?: string | null;
   sedeIds: string[];
+}
+
+// ─── Mantenciones ───────────────────────────────────────────────
+export type PrioridadMantencion = 'baja' | 'media' | 'alta' | 'urgente';
+
+/**
+ * Los estados existen todos, pero la base no obliga a recorrerlos:
+ * `reportada → resuelta` es un camino válido en una escuela chica.
+ */
+export type EstadoMantencion =
+  | 'reportada' | 'revisando' | 'pendiente' | 'cotizando' | 'programada'
+  | 'en_reparacion' | 'resuelta' | 'cerrada' | 'cancelada';
+
+export interface CategoriaMantencion {
+  id: number;
+  nombre: string;
+  activo: boolean;
+}
+
+export interface Mantencion extends Omit<Tables['mantenciones'],
+  'sede_id' | 'categoria_id' | 'reportado_por' | 'asignado_a' | 'fecha_programada'
+  | 'trabajo_realizado' | 'resuelta_por' | 'resuelta_en' | 'cerrada_en'
+  | 'created_at' | 'updated_at'> {
+  sedeId: string;
+  categoriaId: number;
+  /** Llega por join con `mantencion_categorias`. */
+  categoria: string | null;
+  reportadoPor: string;
+  reportadoPorNombre: string | null;
+  asignadoA: string | null;
+  asignadoANombre: string | null;
+  fechaProgramada: string | null;
+  trabajoRealizado: string | null;
+  resueltaPor: string | null;
+  resueltaEn: string | null;
+  cerradaEn: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EstadoPreventiva = 'vencida' | 'proxima' | 'al_dia';
+
+/** Fila de `preventivas_estado_vista`: la rutina con su vencimiento calculado. */
+export interface Preventiva {
+  id: number;
+  sedeId: string;
+  categoriaId: number;
+  categoria: string;
+  nombre: string;
+  ubicacion: string | null;
+  observaciones: string | null;
+  frecuenciaDias: number;
+  fechaInicio: string;
+  ultimaFecha: string | null;
+  proximaFecha: string;
+  responsableId: string | null;
+  responsableNombre: string | null;
+  activo: boolean;
+  /** Negativo si ya venció. */
+  diasRestantes: number;
+  estadoPreventiva: EstadoPreventiva;
+}
+
+export interface EjecucionPreventiva {
+  id: number;
+  preventivaId: number;
+  fecha: string;
+  realizadaPor: string | null;
+  realizadaPorNombre: string | null;
+  proveedor: string | null;
+  costo: number | null;
+  observaciones: string | null;
+  createdAt: string;
+}
+
+// ─── Préstamos ──────────────────────────────────────────────────
+export type EstadoRecurso = 'disponible' | 'prestado' | 'mantencion' | 'no_disponible';
+export type SituacionPrestamo = 'prestado' | 'atrasado' | 'devuelto';
+
+export interface Recurso extends Omit<Tables['recursos'], 'sede_id' | 'created_at' | 'updated_at'> {
+  sedeId: string;
+  createdAt: string;
+}
+
+/** Fila de `prestamos_vista`: el préstamo con el recurso y la persona ya resueltos. */
+export interface Prestamo {
+  id: number;
+  recursoId: number;
+  recurso: string;
+  codigo: string | null;
+  tipo: string | null;
+  sedeId: string;
+  prestadoA: string;
+  prestadoANombre: string;
+  fechaEntrega: string;
+  fechaDevolucionEsperada: string;
+  fechaDevolucionReal: string | null;
+  estadoAlEntregar: string | null;
+  estadoAlDevolver: string | null;
+  observaciones: string | null;
+  /** Negativo si ya se pasó del plazo. */
+  diasRestantes: number;
+  situacion: SituacionPrestamo;
+}
+
+// ─── Panel de operaciones ───────────────────────────────────────
+/** Fila de `panel_operaciones_vista`: una cola de trabajo por columna. */
+export interface PanelOperaciones {
+  sedeId: string;
+  sedeNombre: string;
+  materialesPorRevisar: number;
+  materialesPorComprar: number;
+  materialesPorEntregar: number;
+  permisosPorResolver: number;
+  productosAgotados: number;
+  productosBajoMinimo: number;
+  mantencionesAbiertas: number;
+  mantencionesUrgentes: number;
+  mantencionesPorCerrar: number;
+  preventivasVencidas: number;
+  preventivasProximas: number;
+  prestamosAtrasados: number;
+}
+
+export type OrigenGasto = 'materiales' | 'mantenciones' | 'preventivas';
+
+export interface GastoMensual {
+  sedeId: string;
+  /** Primer día del mes. */
+  mes: string;
+  origen: OrigenGasto;
+  cantidad: number;
+  total: number;
+}
+
+/** Fila de `lista_compra_sugerida_vista`. */
+export interface CompraSugerida {
+  id: number;
+  sedeId: string;
+  categoriaId: number;
+  categoria: string;
+  nombre: string;
+  unidad: string;
+  unidadNombre: string;
+  ubicacion: string | null;
+  stockActual: number;
+  stockMinimo: number;
+  estadoStock: EstadoStock;
+  faltante: number;
+  consumo90d: number;
+  consumoMensual: number;
+  /** Lo que falta para el mínimo más un mes de consumo. */
+  sugerido: number;
+  ultimaCompra: string | null;
+}
+
+// ─── Adjuntos ───────────────────────────────────────────────────
+export type OrigenAdjunto = 'permiso' | 'material' | 'mantencion';
+export type MomentoAdjunto = 'antes' | 'despues';
+
+export interface Adjunto {
+  id: string;
+  origen: OrigenAdjunto;
+  origenId: number;
+  sedeId: string;
+  nombreArchivo: string;
+  rutaArchivo: string;
+  tipoMime: string | null;
+  tamanoBytes: number | null;
+  momento: MomentoAdjunto | null;
+  subidoPor: string | null;
+  createdAt: string;
+  /** URL firmada, resuelta al leer. El bucket es privado. */
+  url?: string;
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DocumentoService } from '../../services/documentoService';
 import { useAuth } from '../../auth/AuthContext';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import Modal from '../../components/Modal';
 import { FileText, Upload, Trash2, Download, Loader2 } from 'lucide-react';

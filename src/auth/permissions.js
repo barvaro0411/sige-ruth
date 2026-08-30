@@ -82,6 +82,13 @@ export const PERMISSIONS = {
   // Mantenciones
   REPORT_MAINTENANCE: 'report_maintenance',
   MANAGE_MAINTENANCE: 'manage_maintenance',
+
+  // Préstamos de equipos
+  VIEW_LOANS: 'view_loans',
+  MANAGE_LOANS: 'manage_loans',
+
+  // Panel de operaciones: el estado del conjunto, no el de un módulo
+  VIEW_OPERATIONS: 'view_operations',
 };
 
 export const ROLE_PERMISSIONS = {
@@ -109,6 +116,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.RECORD_MOVEMENT,
     PERMISSIONS.REPORT_MAINTENANCE,
     PERMISSIONS.MANAGE_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
+    PERMISSIONS.MANAGE_LOANS,
+    PERMISSIONS.VIEW_OPERATIONS,
   ],
   // La sostenedora revisa y autoriza gasto; no administra datos académicos.
   [ROLES.SOSTENEDOR]: [
@@ -126,6 +136,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_INVENTORY,
     PERMISSIONS.REPORT_MAINTENANCE,
     PERMISSIONS.MANAGE_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
+    PERMISSIONS.MANAGE_LOANS,
+    PERMISSIONS.VIEW_OPERATIONS,
   ],
   // Secretaría ejecuta la compra, pero no autoriza el gasto ni resuelve permisos.
   // En una escuela chica suele ser además quien administra la bodega.
@@ -142,6 +155,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.MANAGE_INVENTORY,
     PERMISSIONS.RECORD_MOVEMENT,
     PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
+    PERMISSIONS.MANAGE_LOANS,
+    PERMISSIONS.VIEW_OPERATIONS,
   ],
   [ROLES.DOCENTE]: [
     PERMISSIONS.VIEW_STUDENTS,
@@ -149,6 +165,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
     PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
   ],
   [ROLES.FONOAUDIOLOGO]: [
     PERMISSIONS.VIEW_DASHBOARD,
@@ -161,6 +178,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
     PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
   ],
   [ROLES.JEFE_UTP]: [
     PERMISSIONS.VIEW_DASHBOARD,
@@ -172,6 +190,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.CONFIRM_MATERIAL_DELIVERY,
     PERMISSIONS.REPORT_MAINTENANCE,
+    PERMISSIONS.VIEW_LOANS,
   ],
 
   // Aseo: pide insumos y avisa lo que se rompe. Nada más, a propósito —
@@ -194,6 +213,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.REPORT_MAINTENANCE,
     PERMISSIONS.REQUEST_LEAVE,
+    PERMISSIONS.VIEW_LOANS,
+    PERMISSIONS.MANAGE_LOANS,
+    PERMISSIONS.VIEW_OPERATIONS,
   ],
 
   // Mantención: recibe las incidencias, las trabaja y las cierra con su costo.
@@ -204,6 +226,8 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_INVENTORY,
     PERMISSIONS.REQUEST_MATERIALS,
     PERMISSIONS.REQUEST_LEAVE,
+    PERMISSIONS.VIEW_LOANS,
+    PERMISSIONS.VIEW_OPERATIONS,
   ],
 };
 
@@ -226,9 +250,12 @@ export function getPermittedRoutes(role) {
   if (perms.includes(PERMISSIONS.REQUEST_MATERIALS)) routes.push('/insumos');
   if (perms.includes(PERMISSIONS.REQUEST_MATERIALS)) routes.push('/materiales');
   if (perms.includes(PERMISSIONS.VIEW_INVENTORY)) routes.push('/inventario');
+  if (perms.includes(PERMISSIONS.REPORT_MAINTENANCE)) routes.push('/mantenciones');
+  if (perms.includes(PERMISSIONS.VIEW_LOANS)) routes.push('/prestamos');
+  if (perms.includes(PERMISSIONS.VIEW_OPERATIONS)) routes.push('/operaciones');
   if (perms.includes(PERMISSIONS.VIEW_AUDIT)) routes.push('/auditoria');
   if (perms.includes(PERMISSIONS.MANAGE_USERS)) routes.push('/usuarios');
-  
+
   return routes;
 }
 
@@ -243,6 +270,9 @@ export function getDefaultRoute(role) {
   // pie con el celular. Un panel de control le agrega un paso de más.
   if (role === ROLES.ASEO) return '/insumos';
 
-  const preferencia = ['/dashboard', '/estudiantes', '/materiales', '/permisos'];
+  // Mantención entra a su bandeja: lo que tiene que arreglar hoy.
+  if (role === ROLES.MANTENCION) return '/mantenciones';
+
+  const preferencia = ['/dashboard', '/operaciones', '/estudiantes', '/materiales', '/permisos'];
   return preferencia.find(r => routes.includes(r)) || routes[0] || '/';
 }

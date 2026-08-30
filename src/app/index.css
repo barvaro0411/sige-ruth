@@ -843,39 +843,11 @@ body {
 /* ========================================================================== */
 /* OFFLINE INDICATOR (PWA)                                                     */
 /* ========================================================================== */
-.offline-indicator {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10000;
-  background: linear-gradient(135deg, var(--navy-800), var(--navy-900));
-  color: white;
-  text-align: center;
-  padding: 8px 16px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  animation: slideDown 0.3s ease;
-}
-
-.offline-indicator .pulse-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--color-warning);
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
 
 @keyframes slideDown {
   from { transform: translateY(-100%); }
   to   { transform: translateY(0); }
 }
-
 
 /* ========================================================================== */
 /* HEADER & NAVIGATION COMPONENTS                                              */

@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PERMISSIONS } from '../auth/permissions';
-import { 
+import {
   LayoutDashboard, Users,
   Mic2, FileBarChart, ShieldAlert, LogOut, X, GraduationCap, UserCog, CalendarDays,
-  Package, Boxes, ShoppingBasket
+  Package, Boxes, ShoppingBasket, Wrench, ArrowLeftRight, Activity
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,6 +23,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { path: '/insumos', icon: ShoppingBasket, label: 'Pedir insumos', permission: PERMISSIONS.REQUEST_MATERIALS },
     { path: '/materiales', icon: Package, label: 'Mis solicitudes', permission: PERMISSIONS.REQUEST_MATERIALS },
     { path: '/inventario', icon: Boxes, label: 'Bodega', permission: PERMISSIONS.VIEW_INVENTORY },
+    { path: '/mantenciones', icon: Wrench, label: 'Mantenciones', permission: PERMISSIONS.REPORT_MAINTENANCE },
+    { path: '/prestamos', icon: ArrowLeftRight, label: 'Préstamos', permission: PERMISSIONS.VIEW_LOANS },
+    { path: '/operaciones', icon: Activity, label: 'Operaciones', permission: PERMISSIONS.VIEW_OPERATIONS },
     { path: '/reportes', icon: FileBarChart, label: 'Reportes', permission: PERMISSIONS.EXPORT_REPORTS },
     { path: '/auditoria', icon: ShieldAlert, label: 'Auditoría', permission: PERMISSIONS.VIEW_AUDIT },
     { path: '/usuarios', icon: UserCog, label: 'Usuarios', permission: PERMISSIONS.MANAGE_USERS },

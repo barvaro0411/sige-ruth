@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Minus, Plus, Search, Send, PackageCheck, Info } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { ROLE_LABELS } from '../../auth/permissions';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import { InventarioService } from '../../services/inventarioService';
 import { MaterialService } from '../../services/materialService';

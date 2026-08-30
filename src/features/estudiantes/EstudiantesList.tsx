@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { EstudianteService } from '../../services/estudianteService';
-import { useSede } from '../../config/SedeContext';
+import { useSede } from '../../auth/SedeContext';
 import { PERMISSIONS } from '../../auth/permissions';
 import { useToast } from '../../components/Toast';
 import { supabase } from '../../db/database';
