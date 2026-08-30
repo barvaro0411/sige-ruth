@@ -36,12 +36,14 @@ Vercel ni compartirse.
 
 1. En Supabase abre **Authentication > Users**.
 2. Crea un usuario con correo y contraseña.
-3. El trigger del esquema creará automáticamente su fila en `public.perfiles`.
+3. El trigger creará su fila en `public.perfiles`, **inactiva y sin rol
+   efectivo**: el alta nunca confía en datos que manda el cliente. Por eso el
+   paso siguiente incluye `activo = true`.
 4. En SQL Editor ejecuta, reemplazando el correo y nombre:
 
 ```sql
 update public.perfiles
-set nombre = 'Nombre Directora', rol = 'director', sede_id = null
+set nombre = 'Nombre Directora', rol = 'director', sede_id = null, activo = true
 where email = 'directora@escuelaruth.cl';
 ```
 

@@ -51,8 +51,12 @@ sale con código distinto de cero. Eso es lo que hace que sirva en CI.
 | `01_mantenciones.sql` | 14 | El cliente no elige estado ni reportante; el reporte original no se reescribe; no se resuelve sin describir el trabajo; no se cierra sin resolver; una cerrada no admite cambios. |
 | `02_preventivas_y_prestamos.sql` | 20 | `proxima_fecha` es columna generada y no se escribe a mano; una ejecución vieja no adelanta el vencimiento; un recurso no se presta dos veces; la sede se hereda del recurso; un préstamo devuelto no se reabre. |
 | `03_perfiles_y_aislamiento.sql` | 7 | La dirección ve a todo el personal (regresión); nadie ve colegas ni datos de sedes que no comparte; `anon` no lee nada. |
+| `04_alta_de_usuario.sql` | 7 | El rol y la sede que manda el cliente al registrarse se ignoran; toda cuenta nueva nace inactiva y no lee nada. |
 
-**41 comprobaciones en total.**
+**48 comprobaciones en total.**
+
+Además hay 62 pruebas unitarias del código (`npm test`), sobre el mapa de
+permisos, el validador de RUT, el formateo de fechas y los mappers.
 
 ## Los actores se eligen solos
 

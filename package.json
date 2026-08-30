@@ -8,10 +8,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy:admin-users": "npx supabase functions deploy admin-users",
-    "seed:data": "node scripts/seed_from_json.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rls": "bash scripts/test-rls.sh",
     "type-check": "tsc --noEmit",
-    "test:rls": "bash scripts/test-rls.sh"
+    "deploy:admin-users": "npx supabase functions deploy admin-users",
+    "seed:data": "node scripts/seed_from_json.js"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.4.0",
@@ -30,6 +32,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^6.0.2",
     "vite": "^6.3.1",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.11"
   }
 }

@@ -39,6 +39,9 @@ jobs:
       - name: Comprobar tipos
         run: npm run type-check
 
+      - name: Pruebas unitarias
+        run: npm test
+
       # Compila en Linux, que distingue mayúsculas — a diferencia de Windows.
       # Un import con la caja equivocada revienta acá y no en producción.
       - name: Compilar
