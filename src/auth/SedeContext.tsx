@@ -54,7 +54,7 @@ export function SedeProvider({ children }: { children: ReactNode }) {
       })
       .catch(err => {
         if (!vigente) return;
-        console.error('[SedeContext] No se pudieron cargar las sedes:', err);
+        if (import.meta.env.DEV) console.error('[SedeContext] No se pudieron cargar las sedes:', err);
         setError('No se pudieron cargar las sedes.');
       })
       .finally(() => {

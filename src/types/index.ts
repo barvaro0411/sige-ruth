@@ -247,6 +247,11 @@ export interface Estudiante extends Omit<Tables['estudiantes'], 'apellido_patern
   curso_id?: string | null;
 }
 
+/** Campos mínimos necesarios para el buscador y las tarjetas de matrícula. */
+export type EstudianteResumen = Pick<Estudiante,
+  'id' | 'rut' | 'nombre' | 'apellidoPaterno' | 'apellidoMaterno'
+  | 'nivel' | 'jornada' | 'activo' | 'sedeId' | 'curso_id'>;
+
 export interface SolicitudPermiso extends Omit<Tables['solicitudes_permiso'],
   'solicitante_id' | 'sede_id' | 'fecha_inicio' | 'fecha_fin' | 'dias_habiles'
   | 'resuelta_por' | 'resuelta_en' | 'comentario_resolucion' | 'updated_at'> {

@@ -5,8 +5,8 @@
 -- el frontend. Las que importan son las que tienen que FALLAR: son las que
 -- demuestran que esconder un boton no es lo que protege el dato.
 --
--- Todo corre dentro de una transaccion que se revierte: no queda ni una fila.
--- Se puede ejecutar contra produccion sin riesgo.
+-- Todo corre dentro de una transaccion que se revierte. Aun asi, crea fixtures
+-- y toma bloqueos: se ejecuta solo en local o en un entorno aislado.
 --
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/01_mantenciones.sql
 -- =============================================================================

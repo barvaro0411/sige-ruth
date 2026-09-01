@@ -39,6 +39,7 @@ coverage/
 # Temporary
 scratch/
 supabase/.temp/
+supabase/.branches/
 .vercel/
 .vercel
 .env*

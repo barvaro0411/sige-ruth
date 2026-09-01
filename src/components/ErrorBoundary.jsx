@@ -13,8 +13,7 @@ export class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ error, errorInfo });
-    // In a real app, you would log this error to an error reporting service
-    console.error('Uncaught error:', error, errorInfo);
+    if (import.meta.env.DEV) console.error('Uncaught error:', error, errorInfo);
   }
 
   render() {
@@ -69,7 +68,7 @@ export class ErrorBoundary extends Component {
               Ocurrió un error inesperado. Nuestro equipo ha sido notificado del problema.
             </p>
 
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <div style={{
                 textAlign: 'left',
                 backgroundColor: 'var(--color-gray-100)',

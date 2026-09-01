@@ -29,6 +29,14 @@ const allowedRoles = new Set([
 // update_user_profile de la base.
 const rolesTransversales = new Set(['director', 'sostenedor']);
 
+function isStrongPassword(password: string) {
+  return password.length >= 12
+    && /[a-z]/.test(password)
+    && /[A-Z]/.test(password)
+    && /[0-9]/.test(password)
+    && /[^A-Za-z0-9]/.test(password);
+}
+
 function json(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
@@ -59,6 +67,10 @@ Deno.serve(async (request) => {
     return json({ success: false, error: 'Origen no autorizado' }, 403, corsHeaders);
   }
   if (request.method !== 'POST') return json({ success: false, error: 'Método no permitido' }, 405, corsHeaders);
+  const contentLength = Number(request.headers.get('Content-Length') || 0);
+  if (contentLength > 16 * 1024) {
+    return json({ success: false, error: 'Solicitud demasiado grande' }, 413, corsHeaders);
+  }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const secretKey = getSecretKey();
@@ -87,19 +99,53 @@ Deno.serve(async (request) => {
     .eq('id', authData.user.id)
     .single();
 
-  if (!caller?.activo || caller.rol !== 'director') {
-    return json({ success: false, error: 'Solo el director puede crear usuarios' }, 403, corsHeaders);
-  }
-
   let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > 16 * 1024) {
+      return json({ success: false, error: 'Solicitud demasiado grande' }, 413, corsHeaders);
+    }
+    body = JSON.parse(rawBody);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Cuerpo inválido');
   } catch {
     return json({ success: false, error: 'Solicitud inválida' }, 400, corsHeaders);
   }
 
+  if (body.action === 'change_initial_password') {
+    if (!caller?.activo) {
+      return json({ success: false, error: 'La cuenta no tiene un perfil activo' }, 403, corsHeaders);
+    }
+    const newPassword = String(body.password || '');
+    if (!authData.user.app_metadata?.must_change_password) {
+      return json({ success: false, error: 'La cuenta no requiere un cambio inicial' }, 409, corsHeaders);
+    }
+    if (!isStrongPassword(newPassword)) {
+      return json({ success: false, error: 'Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo' }, 400, corsHeaders);
+    }
+    const { error: changeError } = await admin.auth.admin.updateUserById(authData.user.id, {
+      password: newPassword,
+      app_metadata: { ...authData.user.app_metadata, must_change_password: false },
+    });
+    if (changeError) {
+      return json({ success: false, error: 'No se pudo cambiar la contraseña' }, 400, corsHeaders);
+    }
+    return json({ success: true }, 200, corsHeaders);
+  }
+
   if (body.action !== 'create') {
     return json({ success: false, error: 'Acción no permitida' }, 400, corsHeaders);
+  }
+  if (!caller?.activo || caller.rol !== 'director') {
+    return json({ success: false, error: 'Solo el director puede crear usuarios' }, 403, corsHeaders);
+  }
+
+  const { data: permitido, error: rateError } = await admin.rpc(
+    'consume_admin_user_rate_limit',
+    { p_actor: authData.user.id },
+  );
+  if (rateError) return json({ success: false, error: 'No se pudo validar el límite de solicitudes' }, 500, corsHeaders);
+  if (!permitido) {
+    return json({ success: false, error: 'Demasiados intentos. Espera cinco minutos.' }, 429, corsHeaders);
   }
 
   const nombre = String(body.nombre || '').trim();
@@ -112,11 +158,15 @@ Deno.serve(async (request) => {
       .filter(Boolean),
   )];
 
-  if (nombre.length < 3 || !/^\S+@\S+\.\S+$/.test(email)) {
+  if (nombre.length < 3 || nombre.length > 120
+      || email.length > 254 || !/^\S+@\S+\.\S+$/.test(email)) {
     return json({ success: false, error: 'Nombre o correo inválido' }, 400, corsHeaders);
   }
-  if (password.length < 8) {
-    return json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' }, 400, corsHeaders);
+  if (password.length > 128 || sedeIds.length > 10) {
+    return json({ success: false, error: 'Solicitud inválida' }, 400, corsHeaders);
+  }
+  if (!isStrongPassword(password)) {
+    return json({ success: false, error: 'Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo' }, 400, corsHeaders);
   }
   if (!allowedRoles.has(rol)) {
     return json({ success: false, error: 'Rol inválido' }, 400, corsHeaders);
@@ -143,6 +193,7 @@ Deno.serve(async (request) => {
     email,
     password,
     email_confirm: true,
+    app_metadata: { must_change_password: true },
     // El rol y las sedes NO viajan en user_metadata: es un campo editable por el
     // propio usuario. La fuente de verdad es public.perfiles/perfiles_sedes.
     user_metadata: { nombre },

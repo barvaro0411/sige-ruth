@@ -62,7 +62,7 @@ export default function DocumentManager({ estudianteId, nombreEstudiante, isOpen
     if (!user || !confirm('¿Estás seguro de eliminar este documento?')) return;
 
     try {
-      await DocumentoService.delete(id, url);
+      await DocumentoService.delete(id);
       addToast('Documento eliminado', 'success');
       setDocuments(prev => prev.filter(d => d.id !== id));
     } catch (err: any) {

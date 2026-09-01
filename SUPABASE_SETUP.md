@@ -6,8 +6,8 @@ Todo el esquema vive en `supabase/migrations/`, versionado y en orden. No hay
 SQL suelto que aplicar a mano.
 
 ```bash
-npx supabase link --project-ref <ref-del-proyecto>
-npx supabase db push
+npx --no-install supabase link --project-ref <ref-del-proyecto>
+npx --no-install supabase db push
 ```
 
 Las migrations crean, en este orden: sedes y cursos, perfiles vinculados a
@@ -16,6 +16,16 @@ permisos y feriados, materiales con ítems e historial, inventario y
 movimientos, mantenciones correctivas y preventivas, préstamos de recursos, el
 panel de operaciones, las políticas RLS de cada tabla y los buckets privados
 `documentos_estudiantes` y `adjuntos_solicitudes`.
+
+Para demostrar la reconstrucción completa sin tocar un proyecto remoto:
+
+```bash
+npx --no-install supabase db start
+DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres' npm run test:rls
+```
+
+`supabase/seed.sql` contiene únicamente identidades sintéticas `.invalid` para
+el entorno local y las pruebas; `db push` no lo carga en producción.
 
 > **No hay módulo de asistencia de estudiantes.** Se lleva en el libro de clases
 > y se sube al SIGE del MINEDUC. La tabla se eliminó y el código se retiró.
@@ -90,8 +100,8 @@ usuarios en auditoría. Falta solo desplegar la función que crea cuentas:
 1. Instala/inicia sesión en la CLI y vincula este directorio al proyecto:
 
 ```bash
-npx supabase login
-npx supabase link --project-ref TU_PROJECT_REF
+npx --no-install supabase login
+npx --no-install supabase link --project-ref TU_PROJECT_REF
 ```
 
 2. Despliega la función segura que crea cuentas en Supabase Auth:
@@ -116,14 +126,17 @@ de una asignada.
 
 ## Migrations
 
-Todas las migrations de `supabase/migrations/` están aplicadas en producción.
-Se corren con `npx supabase db push` y su orden es el del nombre del archivo.
+La cadena incluye ahora un baseline reconstruible y una migración de seguridad
+posterior a la auditoría. Los cambios nuevos **no deben considerarse aplicados
+en producción** hasta completar el procedimiento de
+`SECURITY_REMEDIATION.md`. Se corren con `npx --no-install supabase db push` y su orden es el
+del nombre del archivo.
 
 Los antiguos parches sueltos de la raíz (`supabase_schema.sql`,
-`supabase_gestion_patch.sql` y los demás) **se eliminaron**: fueron
-reemplazados por migrations que parten del estado real de la base. El de
-gestión, además, ya no se podía aplicar — asumía una base limpia y chocaba con
-tablas que ya existían con otra forma.
+`supabase_gestion_patch.sql` y los demás) siguen retirados. Las definiciones
+base necesarias se consolidaron como las migraciones `20260829000000` a
+`20260829002000`; las migraciones siguientes convergen al estado funcional
+actual y eliminan la antigua tabla de asistencia.
 
 ### Pasos manuales que siguen pendientes
 
@@ -141,4 +154,6 @@ Los *advisors* de Supabase marcan una vista `SECURITY DEFINER` (advisor 0010) y 
 - `calendario_ausencias_vista` tiene que saltarse la RLS para que el equipo vea quién está ausente y pueda cubrir. Expone solo quién y cuándo, nunca el tipo ni el motivo — un permiso puede ser una licencia médica.
 - Las funciones señaladas son las RPC del flujo de materiales y los helpers de autorización (`can_access_sede`, `has_role`, `gestiona_bodega`, `gestiona_mantencion`, `comparte_sede_conmigo`). Ser llamables es su propósito, y cada una valida por dentro quién es quien llama. Las funciones internas de trigger sí tienen el `EXECUTE` revocado.
 
-Queda un aviso real por resolver: **la protección de contraseñas filtradas está desactivada**. Se activa en el panel, en Authentication → Policies.
+La protección de contraseñas filtradas y MFA se activan en el panel alojado, en
+Authentication → Policies. `supabase/config.toml` conserva la configuración no
+secreta del entorno local, pero no sustituye esa verificación de producción.

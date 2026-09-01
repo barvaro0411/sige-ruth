@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { supabase } from '../../db/database';
-import { getMonthName, formatDate } from '../../utils/dates';
 import { useSede } from '../../auth/SedeContext';
 import {
-  Download, FileSpreadsheet, Users,
-  Mic2, Calendar, LayoutGrid
+  Download, Users, Mic2, LayoutGrid
 } from 'lucide-react';
 import { mapEstudiante } from '../../utils/mappers';
+import { createCsv } from '../../utils/csv';
 
 const REPORT_TYPES = [
   { id: 'matricula', title: 'Libro de Matrícula', icon: Users, color: '#3B82F6', desc: 'Listado completo de alumnos activos, RUT y datos de contacto.' },
@@ -16,37 +15,50 @@ const REPORT_TYPES = [
 export default function ReportesModule() {
   const { sede } = useSede();
   const [generating, setGenerating] = useState(false);
-  const [year] = useState(new Date().getFullYear());
 
   async function generateCSV(type) {
     setGenerating(true);
     try {
-      let csv = '';
+      let rows = [];
       let filename = '';
-      const { data: estudiantes } = await supabase.from('estudiantes').select('*').eq('sede_id', sede.id).eq('activo', true);
+      const { data: estudiantes, error: estudiantesError } = await supabase
+        .from('estudiantes')
+        .select('id,rut,nombre,apellido_paterno,apellido_materno,nivel,jornada,nombre_apoderado,telefono_apoderado')
+        .eq('sede_id', sede.id)
+        .eq('activo', true);
+      if (estudiantesError) throw estudiantesError;
       const alumnos = (estudiantes || []).map(mapEstudiante);
 
       if (type === 'matricula') {
-        csv = 'RUT,Nombre,Apellido Paterno,Apellido Materno,Nivel,Jornada,Apoderado,Telefono\n';
-        alumnos.forEach(e => {
-          csv += `${e.rut},"${e.nombre}","${e.apellidoPaterno}","${e.apellidoMaterno}","${e.nivel}","${e.jornada}","${e.nombreApoderado}","${e.telefonoApoderado}"\n`;
-        });
+        rows = [
+          ['RUT', 'Nombre', 'Apellido Paterno', 'Apellido Materno', 'Nivel', 'Jornada', 'Apoderado', 'Telefono'],
+          ...alumnos.map(e => [e.rut, e.nombre, e.apellidoPaterno, e.apellidoMaterno, e.nivel,
+            e.jornada, e.nombreApoderado, e.telefonoApoderado]),
+        ];
         filename = `matricula_${sede.id}.csv`;
       } else if (type === 'sesiones_fono') {
-        const { data: allSesiones } = await supabase.from('sesiones_fono').select('*').eq('sede_id', sede.id);
-        csv = 'Fecha,Alumno,Nivel Fonético,Nivel Semántico,Nivel Morfosintáctico,Nivel Pragmático,Actividad\n';
+        const { data: allSesiones, error: sesionesError } = await supabase
+          .from('sesiones_fono')
+          .select('fecha,estudiante_id,nivel_fonetico,nivel_semantico,nivel_morfosintactico,nivel_pragmatico,actividad_realizada')
+          .eq('sede_id', sede.id);
+        if (sesionesError) throw sesionesError;
+        rows = [['Fecha', 'Alumno', 'Nivel Fonético', 'Nivel Semántico', 'Nivel Morfosintáctico', 'Nivel Pragmático', 'Actividad']];
         (allSesiones || []).forEach(s => {
           const e = alumnos.find(a => a.id === s.estudiante_id);
-          csv += `${s.fecha},"${e?.nombre} ${e?.apellidoPaterno}",${s.nivel_fonetico},${s.nivel_semantico},${s.nivel_morfosintactico},${s.nivel_pragmatico},"${s.actividad_realizada}"\n`;
+          rows.push([s.fecha, `${e?.nombre || ''} ${e?.apellidoPaterno || ''}`.trim(), s.nivel_fonetico,
+            s.nivel_semantico, s.nivel_morfosintactico, s.nivel_pragmatico, s.actividad_realizada]);
         });
         filename = `reporte_fonoaudiologia_${sede.id}.csv`;
       }
 
+      const csv = createCsv(rows);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
+      link.href = objectUrl;
       link.download = filename;
       link.click();
+      URL.revokeObjectURL(objectUrl);
     } finally { setGenerating(false); }
   }
 

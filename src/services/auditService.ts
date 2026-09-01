@@ -9,7 +9,7 @@ export const AuditService = {
   async getAll(sedeId: string) {
     const { data, error } = await supabase
       .from('auditoria_vista')
-      .select('*, perfiles(nombre)')
+      .select('id,accion,entidad,entidad_id,usuario_id,sede_id,created_at,valor_anterior,valor_nuevo,perfiles(nombre)')
       .eq('sede_id', sedeId)
       .order('created_at', { ascending: false })
       .limit(200);
