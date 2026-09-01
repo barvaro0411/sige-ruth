@@ -106,6 +106,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         .sidebar-nav {
           flex: 1;
+          min-height: 0;
+          overflow-y: auto;
           padding: 0 16px;
           display: flex;
           flex-direction: column;

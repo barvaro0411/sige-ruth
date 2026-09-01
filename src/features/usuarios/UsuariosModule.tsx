@@ -77,7 +77,7 @@ export default function UsuariosModule() {
 
   function validateProfile(nombre: string, rol: PerfilUsuario['rol'], sedeIds: string[]) {
     if (nombre.trim().length < 3) return 'Ingresa el nombre completo del usuario.';
-    if (rol !== 'director' && sedeIds.length === 0) return 'Asigna al menos una sede a este usuario.';
+    if (!esRolTransversal(rol) && sedeIds.length === 0) return 'Asigna al menos una sede a este usuario.';
     return '';
   }
 
