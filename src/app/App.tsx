@@ -6,6 +6,7 @@ import { ToastProvider } from '../components/Toast';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginScreen from '../auth/LoginScreen';
+import InitialPasswordScreen from '../auth/InitialPasswordScreen';
 import ProtectedRoute from '../auth/ProtectedRoute';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -27,7 +28,7 @@ import { PERMISSIONS, getDefaultRoute } from '../auth/permissions';
 
 // Layout shared for all authenticated routes
 function AppLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword } = useAuth();
   const { sede, loading: sedesLoading, error: sedesError } = useSedeStatus();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
@@ -50,6 +51,8 @@ function AppLayout() {
   }
 
   if (!user) return <LoginScreen />;
+
+  if (mustChangePassword) return <InitialPasswordScreen />;
 
   if (sedesLoading) {
     return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;

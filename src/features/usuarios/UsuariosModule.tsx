@@ -85,7 +85,9 @@ export default function UsuariosModule() {
     event.preventDefault();
     const validationError = validateProfile(createForm.nombre, createForm.rol, createForm.sede_ids);
     if (validationError) return setFormError(validationError);
-    if (createForm.password.length < 8) return setFormError('La contraseña temporal debe tener al menos 8 caracteres.');
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/.test(createForm.password)) {
+      return setFormError('Usa al menos 12 caracteres, con mayúscula, minúscula, número y símbolo.');
+    }
 
     setFormError('');
     createMutation.mutate({
@@ -183,7 +185,7 @@ export default function UsuariosModule() {
             </div>
             <div className="form-group">
               <label className="form-label">Contraseña temporal *</label>
-              <input required minLength={8} type="password" className="form-input" autoComplete="new-password" disabled={createMutation.isPending} value={createForm.password} onChange={e => setCreateForm(prev => ({ ...prev, password: e.target.value }))} />
+              <input required minLength={12} type="password" className="form-input" autoComplete="new-password" disabled={createMutation.isPending} value={createForm.password} onChange={e => setCreateForm(prev => ({ ...prev, password: e.target.value }))} />
             </div>
           </div>
           <ModalActions pending={createMutation.isPending} onCancel={() => setShowCreate(false)} submitLabel="Crear usuario" />

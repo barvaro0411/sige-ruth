@@ -6,9 +6,9 @@ import { PERMISSIONS } from '../../auth/permissions';
 import { useToast } from '../../components/Toast';
 import { supabase } from '../../db/database';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Estudiante } from '../../types';
+import { Estudiante, EstudianteResumen } from '../../types';
 import {
-  Plus, Search, Edit2, Eye, Trash2, FolderOpen, FileText, Filter
+  Plus, Search, Edit2, Eye, Trash2, FolderOpen, FileText
 } from 'lucide-react';
 // El generador de PDF pesa ~1,5 MB. Se carga al abrir la matrícula, no en
 // cada visita a la app: la mayoría del personal nunca la imprime.
@@ -18,7 +18,7 @@ import EstudianteForm from './EstudianteForm';
 import Modal from '../../components/Modal';
 
 export default function EstudiantesList() {
-  const { user, can } = useAuth();
+  const { can } = useAuth();
   const { sede } = useSede();
   const { addToast } = useToast();
   const queryClient = useQueryClient();
@@ -27,25 +27,33 @@ export default function EstudiantesList() {
   const [filterCurso, setFilterCurso] = useState('');
   const [cursos, setCursos] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Estudiante | null>(null);
+  const [loadingStudentId, setLoadingStudentId] = useState<number | null>(null);
   const [showDetail, setShowDetail] = useState<Estudiante | null>(null);
   const [docStudent, setDocStudent] = useState<{id: number, nombre: string} | null>(null);
   const [showMatricula, setShowMatricula] = useState<Estudiante | null>(null);
-  const [deactivatingStudent, setDeactivatingStudent] = useState<Estudiante | null>(null);
+  const [deactivatingStudent, setDeactivatingStudent] = useState<EstudianteResumen | null>(null);
 
   // Cargar cursos de la sede
   useEffect(() => {
     async function loadCursos() {
-      const { data } = await supabase.from('cursos').select('*').eq('sede_id', sede.id);
+      const { data, error } = await supabase
+        .from('cursos')
+        .select('id,nombre,nivel')
+        .eq('sede_id', sede.id);
+      if (error) {
+        addToast('No se pudieron cargar los cursos: ' + error.message, 'danger');
+        return;
+      }
       setCursos(data || []);
     }
     loadCursos();
-  }, [sede.id]);
+  }, [addToast, sede.id]);
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      if (editingId) {
-        return EstudianteService.update(editingId, data);
+      if (editingStudent) {
+        return EstudianteService.update(editingStudent.id, data);
       } else {
         return EstudianteService.create(data, sede.id);
       }
@@ -54,7 +62,7 @@ export default function EstudiantesList() {
       queryClient.invalidateQueries({ queryKey: ['estudiantes', sede.id] });
       addToast('Estudiante guardado exitosamente', 'success');
       setShowForm(false);
-      setEditingId(null);
+      setEditingStudent(null);
     },
     onError: (err: any) => {
       addToast('Error al guardar estudiante: ' + err.message, 'danger');
@@ -73,9 +81,21 @@ export default function EstudiantesList() {
     },
   });
 
-  const handleEdit = (est: Estudiante) => {
-    setEditingId(est.id);
-    setShowForm(true);
+  const loadStudentDetail = async (id: number, destination: 'detail' | 'edit' | 'matricula') => {
+    setLoadingStudentId(id);
+    try {
+      const student = await EstudianteService.getById(id);
+      if (destination === 'detail') setShowDetail(student);
+      if (destination === 'edit') {
+        setEditingStudent(student);
+        setShowForm(true);
+      }
+      if (destination === 'matricula') setShowMatricula(student);
+    } catch (error: any) {
+      addToast('No se pudo cargar el expediente: ' + error.message, 'danger');
+    } finally {
+      setLoadingStudentId(null);
+    }
   };
 
   const { data: estudiantes = [], isLoading } = useQuery({
@@ -103,7 +123,7 @@ export default function EstudiantesList() {
           <p className="page-subtitle">Gestión de expedientes y registros oficiales</p>
         </div>
         {can(PERMISSIONS.ENROLL_STUDENTS) && (
-          <button className="btn btn-gold" onClick={() => setShowForm(true)}>
+          <button className="btn btn-gold" onClick={() => { setEditingStudent(null); setShowForm(true); }}>
             <Plus size={20} /> Nueva Matrícula
           </button>
         )}
@@ -183,9 +203,9 @@ export default function EstudiantesList() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button className="btn btn-ghost" style={{ padding: '8px' }} onClick={() => setShowDetail(est)}><Eye size={18} /></button>
+                  <button className="btn btn-ghost" disabled={loadingStudentId === est.id} style={{ padding: '8px' }} onClick={() => void loadStudentDetail(est.id, 'detail')}><Eye size={18} /></button>
                   <button className="btn btn-ghost" style={{ padding: '8px' }} onClick={() => setDocStudent({id: est.id, nombre: `${est.nombre} ${est.apellidoPaterno}`})}><FolderOpen size={18} /></button>
-                  <button className="btn btn-ghost" style={{ padding: '8px' }} onClick={() => setShowMatricula(est)}><FileText size={18} /></button>
+                  <button className="btn btn-ghost" disabled={loadingStudentId === est.id} style={{ padding: '8px' }} onClick={() => void loadStudentDetail(est.id, 'matricula')}><FileText size={18} /></button>
                 </div>
                 {can(PERMISSIONS.ENROLL_STUDENTS) && (
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -194,7 +214,8 @@ export default function EstudiantesList() {
                       title="Editar estudiante"
                       aria-label={`Editar a ${est.nombre} ${est.apellidoPaterno}`}
                       style={{ padding: '8px', color: 'var(--gold-600)' }}
-                      onClick={() => handleEdit(est)}
+                      disabled={loadingStudentId === est.id}
+                      onClick={() => void loadStudentDetail(est.id, 'edit')}
                     ><Edit2 size={18} /></button>
                     <button
                       className="btn btn-ghost"
@@ -249,9 +270,9 @@ export default function EstudiantesList() {
       {showForm && (
         <EstudianteForm 
           isOpen={showForm} 
-          onClose={() => { setShowForm(false); setEditingId(null); }} 
+          onClose={() => { setShowForm(false); setEditingStudent(null); }}
           onSubmit={(data) => mutation.mutate(data)} 
-          estudiante={editingId ? estudiantes.find(e => e.id === editingId) || null : null}
+          estudiante={editingStudent}
           isLoading={mutation.isPending}
           cursos={cursos}
         />

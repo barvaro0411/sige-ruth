@@ -23,17 +23,19 @@ existe para que eso no vuelva a pasar sin que nadie se entere.
 
 ## Cómo se ejecutan
 
-Cada archivo abre una transacción y la **revierte al final**. No dejan ni una
-fila. Se pueden correr contra producción sin riesgo.
+Cada archivo abre una transacción y la **revierte al final**, pero crea fixtures,
+toma bloqueos y simula usuarios. Debe ejecutarse únicamente contra una base
+local o un entorno aislado; no contra producción.
 
 ```bash
-export DATABASE_URL='postgresql://postgres:...@db.<ref>.supabase.co:5432/postgres'
+npx --no-install supabase db start
+export DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 npm run test:rls
 ```
 
-La cadena de conexión está en Supabase → Project Settings → Database → Connection
-string (modo *session*). Es una credencial de administrador: no se guarda en el
-repositorio ni se pega en un chat.
+Para una rama remota dedicada a pruebas se debe definir además
+`ALLOW_REMOTE_RLS_TESTS=1`. La cadena administrativa nunca se guarda en el
+repositorio ni se pega en un chat. El script rechaza bases remotas por defecto.
 
 Para correr un archivo suelto:
 
@@ -52,18 +54,20 @@ sale con código distinto de cero. Eso es lo que hace que sirva en CI.
 | `02_preventivas_y_prestamos.sql` | 20 | `proxima_fecha` es columna generada y no se escribe a mano; una ejecución vieja no adelanta el vencimiento; un recurso no se presta dos veces; la sede se hereda del recurso; un préstamo devuelto no se reabre. |
 | `03_perfiles_y_aislamiento.sql` | 7 | La dirección ve a todo el personal (regresión); nadie ve colegas ni datos de sedes que no comparte; `anon` no lee nada. |
 | `04_alta_de_usuario.sql` | 7 | El rol y la sede que manda el cliente al registrarse se ignoran; toda cuenta nueva nace inactiva y no lee nada. |
+| `05_correcciones_auditoria.sql` | 11 | Roles operativos fuera de estudiantes, metadata y Storage; contraseña temporal bloqueada; días y costos no manipulables. |
+| `06_integridad_operativa.sql` | 6 | Actores de inventario, preventivas y préstamos no falsificables; préstamos inmutables; inventario aislado por sede; rate limit atómico. |
 
-**48 comprobaciones en total.**
+**65 comprobaciones en total.**
 
-Además hay 62 pruebas unitarias del código (`npm test`), sobre el mapa de
+Además hay 69 pruebas unitarias del código (`npm test`), sobre el mapa de
 permisos, el validador de RUT, el formateo de fechas y los mappers.
 
 ## Los actores se eligen solos
 
 Ninguna prueba trae UUID escritos a mano. Cada archivo busca en la base a quien
 necesita —alguien de dirección, alguien del personal operativo, una sede— para
-que funcionen igual en producción, en una rama de Supabase o en un entorno
-local.
+que funcione igual con el seed sintético local o en una rama aislada de
+Supabase.
 
 Para el aislamiento entre sedes se elige a propósito a la persona con **menos**
 sedes asignadas: es la única con la que el escenario tiene sentido. Con alguien

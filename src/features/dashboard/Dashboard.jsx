@@ -25,7 +25,7 @@ export default function Dashboard() {
         const data = await DashboardService.getStats(sede.id);
         setStats(data);
       } catch (err) {
-        console.error('[Dashboard] Error loading stats:', err);
+        if (import.meta.env.DEV) console.error('[Dashboard] Error loading stats:', err);
         setError('No se pudieron cargar las estadísticas.');
       } finally {
         setLoading(false);

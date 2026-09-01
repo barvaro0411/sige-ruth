@@ -15,6 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   roleLabel: string;
   roleColor: string;
+  mustChangePassword: boolean;
+  changeInitialPassword: (password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     const { data, error: profileError } = await supabase
@@ -32,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single();
 
     if (profileError) {
-      console.error('[AuthContext] Error fetching profile:', profileError.message);
+      if (import.meta.env.DEV) console.error('[AuthContext] Error fetching profile:', profileError.message);
       return null;
     }
 
@@ -64,11 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
+          setMustChangePassword(Boolean(session.user.app_metadata?.must_change_password));
           // Si el perfil no existe o fue desactivado, se cierra la sesión.
           await syncSession(session.user.id);
         }
       } catch (err: any) {
-        console.error('[AuthContext] Critical error during initialization:', err);
+        if (import.meta.env.DEV) console.error('[AuthContext] Critical error during initialization:', err);
         if (active) setError('Error crítico al conectar con el servidor.');
       } finally {
         if (active) setLoading(false);
@@ -80,11 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')
           && session?.user) {
+        setMustChangePassword(Boolean(session.user.app_metadata?.must_change_password));
         // Se difiere para no ejecutar otra llamada Supabase dentro del lock de Auth.
         // Revalida `activo` en cada refresco: una cuenta desactivada pierde la sesión.
         setTimeout(() => { void syncSession(session.user.id); }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setMustChangePassword(false);
       }
     });
 
@@ -96,6 +102,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchUserProfile]);
 
+  // En equipos compartidos, una sesión olvidada no debe quedar abierta todo
+  // el día. La actividad local renueva el plazo; a los 30 minutos se cierra.
+  useEffect(() => {
+    if (!user) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { void supabase.auth.signOut(); }, 30 * 60 * 1000);
+    };
+    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+    events.forEach(event => window.addEventListener(event, reset, { passive: true }));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach(event => window.removeEventListener(event, reset));
+    };
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -104,11 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (authError) {
-        console.warn('[Auth] Intento de login fallido:', authError.message);
+        if (import.meta.env.DEV) console.warn('[Auth] Intento de login fallido:', authError.message);
         return { success: false, error: 'Correo o contraseña incorrectos.' };
       }
 
       if (data.user) {
+        setMustChangePassword(Boolean(data.user.app_metadata?.must_change_password));
         const profile = await fetchUserProfile(data.user.id);
         if (profile) {
           setUser(profile);
@@ -121,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { success: false, error: 'Error desconocido durante el inicio de sesión.' };
     } catch (err) {
-      console.error('[Auth] Login error:', err);
+      if (import.meta.env.DEV) console.error('[Auth] Login error:', err);
       return { success: false, error: 'Error de conexión.' };
     }
   }, [fetchUserProfile]);
@@ -129,6 +154,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setMustChangePassword(false);
+  }, []);
+
+  const changeInitialPassword = useCallback(async (password: string) => {
+    const { data, error: changeError } = await supabase.functions.invoke('admin-users', {
+      body: { action: 'change_initial_password', password },
+    });
+    if (changeError || !data?.success) {
+      return { success: false, error: data?.error || changeError?.message || 'No se pudo cambiar la contraseña.' };
+    }
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) return { success: false, error: 'La contraseña cambió, pero debes volver a iniciar sesión.' };
+    setMustChangePassword(false);
+    return { success: true };
   }, []);
 
   const can = useCallback((permission: Permiso) => {
@@ -146,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     roleLabel: user ? ROLE_LABELS[user.rol] : '',
     roleColor: user ? ROLE_COLORS[user.rol] : '',
+    mustChangePassword,
+    changeInitialPassword,
   };
 
   return (

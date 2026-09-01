@@ -89,7 +89,7 @@ export default function PermisosModule() {
       setSaldo(saldoAnual);
       setPendientes(bandeja);
     } catch (err) {
-      console.error(err);
+      if (import.meta.env.DEV) console.error(err);
       addToast('Error al cargar las solicitudes', 'danger');
     } finally {
       setLoading(false);

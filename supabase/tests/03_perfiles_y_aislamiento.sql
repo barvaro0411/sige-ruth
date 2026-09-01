@@ -18,6 +18,7 @@ begin;
 
 create temp table resultado (n int, prueba text, esperado text, obtenido text) on commit drop;
 grant all on resultado to authenticated;
+grant all on resultado to anon;
 create temp table actor (papel text primary key, perfil uuid, sede text) on commit drop;
 grant all on actor to authenticated;
 

@@ -18,6 +18,7 @@
 begin;
 
 create temp table resultado (n int, prueba text, esperado text, obtenido text) on commit drop;
+grant all on resultado to authenticated;
 
 do $pruebas$
 declare

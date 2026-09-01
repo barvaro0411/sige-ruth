@@ -1,6 +1,8 @@
 import { supabase } from '../db/database';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 const EXTENSIONES_PERMITIDAS = ['pdf', 'png', 'jpg', 'jpeg'];
+const CAMPOS_DOCUMENTO = 'id,estudiante_id,nombre_archivo,ruta_archivo,url_archivo,subido_por,sede_id,created_at';
 
 /**
  * DocumentoService
@@ -13,7 +15,7 @@ export const DocumentoService = {
   async getByEstudiante(estudianteId: number) {
     const { data, error } = await supabase
       .from('estudiantes_documentos')
-      .select('*')
+      .select(CAMPOS_DOCUMENTO)
       .eq('estudiante_id', estudianteId)
       .order('created_at', { ascending: false });
 
@@ -62,7 +64,7 @@ export const DocumentoService = {
         url_archivo: filePath,
         sede_id: sedeId
       })
-      .select()
+      .select(CAMPOS_DOCUMENTO)
       .single();
 
     if (dbError) {
@@ -76,7 +78,7 @@ export const DocumentoService = {
   /**
    * Eliminar un documento del storage y de la DB
    */
-  async delete(docId: string, _url?: string) {
+  async delete(docId: string) {
     const { data: documento, error: fetchError } = await supabase
       .from('estudiantes_documentos')
       .select('ruta_archivo, url_archivo')
@@ -85,13 +87,6 @@ export const DocumentoService = {
 
     if (fetchError) throw fetchError;
 
-    const { error } = await supabase
-      .from('estudiantes_documentos')
-      .delete()
-      .eq('id', docId);
-
-    if (error) throw error;
-
     const path = documento.ruta_archivo || documento.url_archivo;
     if (path) {
       const { error: storageError } = await supabase.storage
@@ -99,5 +94,17 @@ export const DocumentoService = {
         .remove([path]);
       if (storageError) throw storageError;
     }
+
+    // La política de Storage comprueba la metadata: el objeto se elimina
+    // mientras esa fila todavía existe. Si la segunda operación falla, queda
+    // metadata reparable, nunca un archivo privado huérfano.
+    const { data, error } = await supabase
+      .from('estudiantes_documentos')
+      .delete()
+      .eq('id', docId)
+      .select('id');
+
+    if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   }
 };

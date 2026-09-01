@@ -1,5 +1,5 @@
 import {
-  Estudiante, User, Tables, SolicitudPermiso, SaldoPermiso,
+  Estudiante, EstudianteResumen, User, Tables, SolicitudPermiso, SaldoPermiso,
   SolicitudMaterial, ItemMaterial, EventoHistorial, Notificacion,
   Mantencion, Preventiva, EjecucionPreventiva, Recurso, Prestamo,
   PanelOperaciones, GastoMensual, CompraSugerida, Adjunto,
@@ -22,6 +22,24 @@ export function mapEstudiante(d: Tables['estudiantes']): Estudiante {
     nombreApoderado: d.nombre_apoderado,
     telefonoApoderado: d.telefono_apoderado,
     sedeId: d.sede_id,
+  };
+}
+
+export function mapEstudianteResumen(
+  d: Pick<Tables['estudiantes'], 'id' | 'rut' | 'nombre' | 'apellido_paterno'
+    | 'apellido_materno' | 'nivel' | 'jornada' | 'activo' | 'sede_id' | 'curso_id'>,
+): EstudianteResumen {
+  return {
+    id: d.id,
+    rut: d.rut,
+    nombre: d.nombre,
+    apellidoPaterno: d.apellido_paterno,
+    apellidoMaterno: d.apellido_materno,
+    nivel: d.nivel,
+    jornada: d.jornada,
+    activo: d.activo,
+    sedeId: d.sede_id,
+    curso_id: d.curso_id,
   };
 }
 

@@ -2,9 +2,10 @@
 # =============================================================================
 # Corre las pruebas de reglas de la base, en orden.
 #
-# Cada archivo se revierte solo: no deja filas. Se puede apuntar a produccion.
+# Cada archivo se revierte solo, pero crea fixtures y toma bloqueos. Debe
+# apuntar a Supabase local o a una base de pruebas aislada, nunca a produccion.
 #
-#   export DATABASE_URL='postgresql://postgres:...@db.<ref>.supabase.co:5432/postgres'
+#   export DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 #   npm run test:rls
 # =============================================================================
 set -euo pipefail
@@ -12,6 +13,12 @@ set -euo pipefail
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "Falta DATABASE_URL." >&2
   echo "Supabase > Project Settings > Database > Connection string (modo session)." >&2
+  exit 2
+fi
+
+if [[ "$DATABASE_URL" != *"127.0.0.1"* && "$DATABASE_URL" != *"localhost"* \
+      && "${ALLOW_REMOTE_RLS_TESTS:-}" != "1" ]]; then
+  echo "Se rechazó una base remota. Usa un entorno aislado y confirma con ALLOW_REMOTE_RLS_TESTS=1." >&2
   exit 2
 fi
 

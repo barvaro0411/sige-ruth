@@ -1,6 +1,7 @@
 import { supabase } from '../db/database';
 import { mapAdjunto } from '../utils/mappers';
 import { Adjunto, MomentoAdjunto, OrigenAdjunto } from '../types';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 /**
  * AdjuntoService
@@ -153,13 +154,20 @@ export const AdjuntoService = {
 
   /** Solo quien lo subió puede borrarlo — lo exige la RLS, no el botón. */
   async eliminar(adjunto: Adjunto): Promise<void> {
-    const { error } = await supabase
+    // Storage autoriza el borrado mirando la metadata, por eso el objeto va
+    // primero. El orden contrario deja archivos privados huérfanos.
+    const { error: storageError } = await supabase.storage
+      .from('adjuntos_solicitudes')
+      .remove([adjunto.rutaArchivo]);
+    if (storageError) throw storageError;
+
+    const { data, error } = await supabase
       .from('adjuntos_solicitudes')
       .delete()
-      .eq('id', adjunto.id);
+      .eq('id', adjunto.id)
+      .select('id');
 
     if (error) throw error;
-
-    await supabase.storage.from('adjuntos_solicitudes').remove([adjunto.rutaArchivo]);
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 };
