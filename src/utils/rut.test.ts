@@ -3,17 +3,17 @@ import { cleanRut, formatRut, calculateDV, validateRut, rutInputHandler } from '
 
 /**
  * El RUT identifica a cada estudiante y es la clave con la que se evitan
- * duplicados al matricular. Un validador que acepta un RUT invalido deja
- * entrar un registro que despues nadie sabe de quien es.
+ * duplicados al matricular. Un validador que acepta un RUT inválido deja
+ * entrar un registro que después nadie sabe de quién es.
  */
-describe('digito verificador', () => {
-  // Propiedad: un RUT armado con su propio DV siempre es valido. Cubre mas
+describe('dígito verificador', () => {
+  // Propiedad: un RUT armado con su propio DV siempre es válido. Cubre más
   // casos que una lista escrita a mano, y no depende de que yo calcule bien.
-  it('todo cuerpo mas su DV calculado es valido', () => {
+  it('todo cuerpo más su DV calculado es válido', () => {
     const cuerpos = ['12345678', '11111111', '9999999', '1', '5000000', '22222222', '7654321'];
     for (const cuerpo of cuerpos) {
       const dv = calculateDV(cuerpo);
-      expect(validateRut(cuerpo + dv), `${cuerpo}-${dv} deberia ser valido`).toBe(true);
+      expect(validateRut(cuerpo + dv), `${cuerpo}-${dv} debería ser válido`).toBe(true);
     }
   });
 
@@ -24,11 +24,11 @@ describe('digito verificador', () => {
 
   it('devuelve K cuando el resto lo exige', () => {
     // Se busca un cuerpo cuyo DV sea K en vez de inventarlo a mano.
-    let conK = null;
+    let conK: string | null = null;
     for (let i = 1000000; i < 1000200; i++) {
       if (calculateDV(String(i)) === 'K') { conK = String(i); break; }
     }
-    expect(conK, 'no se encontro ningun cuerpo con DV = K').not.toBeNull();
+    expect(conK, 'no se encontró ningún cuerpo con DV = K').not.toBeNull();
     expect(validateRut(conK + 'K')).toBe(true);
   });
 });
@@ -42,7 +42,7 @@ describe('validateRut', () => {
 
   it('rechaza basura', () => {
     for (const malo of ['', '1', 'abc', '---', '0']) {
-      expect(validateRut(malo), `${malo} no deberia pasar`).toBe(false);
+      expect(validateRut(malo), `${malo} no debería pasar`).toBe(false);
     }
   });
 
@@ -54,8 +54,8 @@ describe('validateRut', () => {
     expect(validateRut('12.345.678-5')).toBe(true);
   });
 
-  it('acepta la K en minuscula', () => {
-    let conK = null;
+  it('acepta la K en minúscula', () => {
+    let conK: string | null = null;
     for (let i = 1000000; i < 1000200; i++) {
       if (calculateDV(String(i)) === 'K') { conK = String(i); break; }
     }
@@ -72,27 +72,27 @@ describe('formato', () => {
     expect(formatRut('12345')).toBe('1.234-5');
   });
 
-  it('cleanRut deja solo digitos y K en mayuscula', () => {
+  it('cleanRut deja solo dígitos y K en mayúscula', () => {
     expect(cleanRut('12.345.678-k')).toBe('123456785'.slice(0, 8) + 'K');
     expect(cleanRut('  12.345.678-5  ')).toBe('123456785');
   });
 });
 
 describe('rutInputHandler', () => {
-  it('formatea mientras se escribe y avisa si ya es valido', () => {
+  it('formatea mientras se escribe y avisa si ya es válido', () => {
     const r = rutInputHandler('123456785');
     expect(r.formatted).toBe('12.345.678-5');
     expect(r.isValid).toBe(true);
     expect(r.clean).toBe('123456785');
   });
 
-  it('un RUT a medio escribir no es valido todavia, pero no revienta', () => {
+  it('un RUT a medio escribir no es válido todavía, pero no revienta', () => {
     const r = rutInputHandler('123');
     expect(r.isValid).toBe(false);
     expect(typeof r.formatted).toBe('string');
   });
 
-  it('el campo vacio devuelve todo vacio', () => {
+  it('el campo vacío devuelve todo vacío', () => {
     expect(rutInputHandler('')).toEqual({ formatted: '', isValid: false, clean: '' });
   });
 });

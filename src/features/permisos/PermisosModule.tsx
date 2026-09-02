@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../auth/AuthContext';
 import { useSede } from '../../auth/SedeContext';
 import { useToast } from '../../components/Toast';
 import { PERMISSIONS } from '../../auth/permissions';
 import { PermisoService } from '../../services/permisoService';
-import { EstadoPermiso, JornadaPermiso, SaldoPermiso, SolicitudPermiso, TipoPermiso } from '../../types';
+import { EstadoPermiso, JornadaPermiso, SolicitudPermiso, TipoPermiso } from '../../types';
 import { formatDate } from '../../utils/dates';
 import Modal from '../../components/Modal';
 import { CalendarPlus, Check, X, Inbox, CalendarDays, Ban, MessageSquare } from 'lucide-react';
@@ -52,17 +53,12 @@ export default function PermisosModule() {
   const { user, can } = useAuth();
   const { sede } = useSede();
   const { addToast } = useToast();
+  const queryClient = useQueryClient();
 
   const puedeAprobar = can(PERMISSIONS.APPROVE_LEAVE);
   const anio = new Date().getFullYear();
 
   const [tab, setTab] = useState<'mias' | 'bandeja'>('mias');
-  const [misSolicitudes, setMisSolicitudes] = useState<SolicitudPermiso[]>([]);
-  const [pendientes, setPendientes] = useState<SolicitudPermiso[]>([]);
-  const [saldo, setSaldo] = useState<SaldoPermiso | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     tipo: 'administrativo' as TipoPermiso,
@@ -74,27 +70,81 @@ export default function PermisosModule() {
   const [resolviendo, setResolviendo] = useState<SolicitudPermiso | null>(null);
   const [comentario, setComentario] = useState('');
 
-  useEffect(() => { loadData(); }, [sede.id, user?.id]);
+  const { data: misSolicitudes = [], isLoading: cargandoMias } = useQuery({
+    queryKey: ['permisos', 'mias', user?.id],
+    queryFn: () => PermisoService.getMisSolicitudes(user!.id),
+    enabled: Boolean(user?.id),
+  });
 
-  async function loadData() {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const [mias, saldoAnual, bandeja] = await Promise.all([
-        PermisoService.getMisSolicitudes(user.id),
-        PermisoService.getSaldo(user.id, anio),
-        puedeAprobar ? PermisoService.getPorRevisarSede(sede.id) : Promise.resolve([]),
-      ]);
-      setMisSolicitudes(mias);
-      setSaldo(saldoAnual);
-      setPendientes(bandeja);
-    } catch (err) {
-      if (import.meta.env.DEV) console.error(err);
-      addToast('Error al cargar las solicitudes', 'danger');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data: saldo = null, isLoading: cargandoSaldo } = useQuery({
+    queryKey: ['permisos', 'saldo', user?.id, anio],
+    queryFn: () => PermisoService.getSaldo(user!.id, anio),
+    enabled: Boolean(user?.id),
+  });
+
+  const { data: pendientes = [], isLoading: cargandoPendientes } = useQuery({
+    queryKey: ['permisos', 'bandeja', sede?.id],
+    queryFn: () => PermisoService.getPorRevisarSede(sede.id),
+    enabled: Boolean(sede?.id && puedeAprobar),
+  });
+
+  const invalidatePermisos = () => {
+    queryClient.invalidateQueries({ queryKey: ['permisos'] });
+  };
+
+  const crearMutation = useMutation({
+    mutationFn: (data: Parameters<typeof PermisoService.crear>[0]) => PermisoService.crear(data),
+    onSuccess: () => {
+      invalidatePermisos();
+      addToast('Solicitud enviada', 'success');
+      setShowForm(false);
+      setForm({ tipo: 'administrativo', fechaInicio: '', fechaFin: '', jornada: 'completa', motivo: '' });
+    },
+    onError: (err: any) => {
+      addToast(err?.message || 'No se pudo enviar la solicitud', 'danger');
+    },
+  });
+
+  const cancelarMutation = useMutation({
+    mutationFn: (id: number) => PermisoService.cancelar(id),
+    onSuccess: () => {
+      invalidatePermisos();
+      addToast('Solicitud cancelada', 'success');
+    },
+    onError: (err: any) => {
+      addToast(err?.message || 'No se pudo cancelar', 'danger');
+    },
+  });
+
+  const reenviarMutation = useMutation({
+    mutationFn: (id: number) => PermisoService.reenviar(id),
+    onSuccess: () => {
+      invalidatePermisos();
+      addToast('Solicitud reenviada', 'success');
+    },
+    onError: (err: any) => {
+      addToast(err?.message || 'No se pudo reenviar', 'danger');
+    },
+  });
+
+  const resolverMutation = useMutation({
+    mutationFn: ({ id, estado, comentario }: { id: number; estado: 'aprobada' | 'rechazada' | 'observada'; comentario: string }) =>
+      PermisoService.resolver(id, estado, comentario),
+    onSuccess: (_, variables) => {
+      invalidatePermisos();
+      addToast(
+        variables.estado === 'aprobada' ? 'Solicitud aprobada'
+        : variables.estado === 'rechazada' ? 'Solicitud rechazada'
+        : 'Observación enviada',
+        'success'
+      );
+      setResolviendo(null);
+      setComentario('');
+    },
+    onError: (err: any) => {
+      addToast(err?.message || 'No se pudo resolver la solicitud', 'danger');
+    },
+  });
 
   const diasSolicitados = useMemo(
     () => calcularDiasHabiles(form.fechaInicio, form.fechaFin, form.jornada),
@@ -105,86 +155,53 @@ export default function PermisosModule() {
     && saldo !== null
     && diasSolicitados > saldo.disponibles;
 
-  async function enviarSolicitud() {
-    if (!user || saving) return;
+  const isSaving = crearMutation.isPending || cancelarMutation.isPending || reenviarMutation.isPending || resolverMutation.isPending;
+
+  function enviarSolicitud() {
+    if (!user || isSaving) return;
     if (!form.fechaInicio || !form.fechaFin) {
-      addToast('Indica la fecha de inicio y de término', 'warning'); return;
+      addToast('Indica la fecha de inicio y de término', 'warning');
+      return;
     }
     if (form.fechaFin < form.fechaInicio) {
-      addToast('La fecha de término no puede ser anterior al inicio', 'warning'); return;
+      addToast('La fecha de término no puede ser anterior al inicio', 'warning');
+      return;
     }
     if (diasSolicitados === 0) {
-      addToast('El rango elegido no tiene días hábiles', 'warning'); return;
+      addToast('El rango elegido no tiene días hábiles', 'warning');
+      return;
     }
     // Un día administrativo no exige justificar el motivo; el resto sí.
     if (form.tipo !== 'administrativo' && !form.motivo.trim()) {
-      addToast('Este tipo de permiso necesita un motivo', 'warning'); return;
+      addToast('Este tipo de permiso necesita un motivo', 'warning');
+      return;
     }
 
-    try {
-      setSaving(true);
-      await PermisoService.crear({
-        solicitanteId: user.id,
-        sedeId: sede.id,
-        tipo: form.tipo,
-        fechaInicio: form.fechaInicio,
-        fechaFin: form.fechaFin,
-        jornada: form.jornada,
-        motivo: form.motivo,
-      });
-      addToast('Solicitud enviada', 'success');
-      setShowForm(false);
-      setForm({ tipo: 'administrativo', fechaInicio: '', fechaFin: '', jornada: 'completa', motivo: '' });
-      await loadData();
-    } catch (err: any) {
-      addToast(err?.message || 'No se pudo enviar la solicitud', 'danger');
-    } finally {
-      setSaving(false);
-    }
+    crearMutation.mutate({
+      solicitanteId: user.id,
+      sedeId: sede.id,
+      tipo: form.tipo,
+      fechaInicio: form.fechaInicio,
+      fechaFin: form.fechaFin,
+      jornada: form.jornada,
+      motivo: form.motivo,
+    });
   }
 
-  async function cancelar(solicitud: SolicitudPermiso) {
-    try {
-      await PermisoService.cancelar(solicitud.id);
-      addToast('Solicitud cancelada', 'success');
-      await loadData();
-    } catch (err: any) {
-      addToast(err?.message || 'No se pudo cancelar', 'danger');
-    }
-  }
-
-  async function reenviar(solicitud: SolicitudPermiso) {
-    try {
-      await PermisoService.reenviar(solicitud.id);
-      addToast('Solicitud reenviada', 'success');
-      await loadData();
-    } catch (err: any) {
-      addToast(err?.message || 'No se pudo reenviar', 'danger');
-    }
-  }
-
-  async function resolver(estado: 'aprobada' | 'rechazada' | 'observada') {
-    if (!resolviendo || saving) return;
+  function resolver(estado: 'aprobada' | 'rechazada' | 'observada') {
+    if (!resolviendo || isSaving) return;
     if (estado !== 'aprobada' && !comentario.trim()) {
       addToast(estado === 'rechazada' ? 'Explica por qué se rechaza' : 'Escribe la observación', 'warning');
       return;
     }
-    try {
-      setSaving(true);
-      await PermisoService.resolver(resolviendo.id, estado, comentario);
-      addToast(
-        estado === 'aprobada' ? 'Solicitud aprobada'
-        : estado === 'rechazada' ? 'Solicitud rechazada'
-        : 'Observación enviada', 'success');
-      setResolviendo(null);
-      setComentario('');
-      await loadData();
-    } catch (err: any) {
-      addToast(err?.message || 'No se pudo resolver la solicitud', 'danger');
-    } finally {
-      setSaving(false);
-    }
+    resolverMutation.mutate({
+      id: resolviendo.id,
+      estado,
+      comentario,
+    });
   }
+
+  const loading = cargandoMias || cargandoSaldo || (puedeAprobar && cargandoPendientes);
 
   if (loading) return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
 
@@ -274,13 +291,13 @@ export default function PermisosModule() {
                 </button>
               ) : s.estado === 'observada' ? (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-gold" onClick={() => reenviar(s)}>Reenviar</button>
-                  <button className="btn btn-outline" onClick={() => cancelar(s)}>
+                  <button className="btn btn-gold" disabled={isSaving} onClick={() => reenviarMutation.mutate(s.id)}>Reenviar</button>
+                  <button className="btn btn-outline" disabled={isSaving} onClick={() => cancelarMutation.mutate(s.id)}>
                     <Ban size={16} /> Cancelar
                   </button>
                 </div>
               ) : s.estado === 'pendiente' ? (
-                <button className="btn btn-outline" onClick={() => cancelar(s)}>
+                <button className="btn btn-outline" disabled={isSaving} onClick={() => cancelarMutation.mutate(s.id)}>
                   <Ban size={16} /> Cancelar
                 </button>
               ) : null}
@@ -352,8 +369,8 @@ export default function PermisosModule() {
             </div>
           )}
 
-          <button className="btn btn-gold" style={{ width: '100%', padding: '14px' }} disabled={saving} onClick={enviarSolicitud}>
-            {saving ? 'Enviando...' : 'Enviar solicitud'}
+          <button className="btn btn-gold" style={{ width: '100%', padding: '14px' }} disabled={isSaving} onClick={enviarSolicitud}>
+            {crearMutation.isPending ? 'Enviando...' : 'Enviar solicitud'}
           </button>
         </div>
       </Modal>
@@ -381,14 +398,14 @@ export default function PermisosModule() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <button className="btn btn-outline" disabled={saving} onClick={() => resolver('rechazada')}>
+              <button className="btn btn-outline" disabled={isSaving} onClick={() => resolver('rechazada')}>
                 <X size={18} /> Rechazar
               </button>
-              <button className="btn btn-gold" disabled={saving} onClick={() => resolver('aprobada')}>
+              <button className="btn btn-gold" disabled={isSaving} onClick={() => resolver('aprobada')}>
                 <Check size={18} /> Aprobar
               </button>
             </div>
-            <button className="btn btn-ghost" style={{ width: '100%' }} disabled={saving}
+            <button className="btn btn-ghost" style={{ width: '100%' }} disabled={isSaving}
               onClick={() => resolver('observada')}>
               <MessageSquare size={18} /> Pedir cambios sin rechazar
             </button>

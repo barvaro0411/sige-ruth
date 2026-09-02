@@ -1,7 +1,8 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { formatDateTime } from '../../utils/dates';
+import { Estudiante, Sede } from '../../types';
 
-// Configuramos una fuente corporativa/profesional (Opcional, pero recomendado para Enterprise Grade)
+// Configuramos una fuente corporativa/profesional
 Font.register({
   family: 'Roboto',
   src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf',
@@ -115,11 +116,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#64748b',
     marginRight: 6,
-  }
+  },
+  checkboxChecked: {
+    backgroundColor: '#1e293b',
+  },
 });
 
+export interface MatriculaDocumentProps {
+  estudiante: Estudiante;
+  sede: Sede;
+}
+
 // Componente del Documento de Matrícula
-export function MatriculaDocument({ estudiante, sede }) {
+export function MatriculaDocument({ estudiante, sede }: MatriculaDocumentProps) {
   const currentDate = new Date().toLocaleDateString('es-CL');
   
   return (
@@ -129,7 +138,7 @@ export function MatriculaDocument({ estudiante, sede }) {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.titleLogo}>Escuela de Lenguaje Ruth</Text>
-            <Text style={styles.subtitleRoot}>Sede {sede.nombre} — RBD: {sede.id === 'gambino' ? '12345-6' : '65432-1'}</Text>
+            <Text style={styles.subtitleRoot}>Sede {sede.nombre} — RBD: {sede.rbd || (sede.id === 'gambino' ? '10375-6' : '10375-6')}</Text>
           </View>
           <View style={styles.headerRight}>
              <Text style={styles.subtitleRoot}>Fecha: {currentDate}</Text>
@@ -151,7 +160,9 @@ export function MatriculaDocument({ estudiante, sede }) {
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Fecha de Nacimiento:</Text>
-              <Text style={styles.value}>{new Date(estudiante.fechaNacimiento).toLocaleDateString('es-CL')}</Text>
+              <Text style={styles.value}>
+                {estudiante.fechaNacimiento ? new Date(estudiante.fechaNacimiento).toLocaleDateString('es-CL') : 'No Registrada'}
+              </Text>
             </View>
           </View>
         </View>
@@ -176,11 +187,11 @@ export function MatriculaDocument({ estudiante, sede }) {
               <Text style={styles.label}>Evaluaciones Anexas:</Text>
               <View style={{ flex: 1, flexDirection: 'row', gap: 20 }}>
                 <View style={styles.checkboxRow}>
-                  <View style={[styles.checkbox, estudiante.anamnesis && { backgroundColor: '#1e293b' }]} />
+                  <View style={[styles.checkbox, estudiante.anamnesis ? styles.checkboxChecked : {}]} />
                   <Text>Anamnesis</Text>
                 </View>
                 <View style={styles.checkboxRow}>
-                   <View style={[styles.checkbox, estudiante.pruebaInicial && { backgroundColor: '#1e293b' }]} />
+                   <View style={[styles.checkbox, estudiante.pruebaInicial ? styles.checkboxChecked : {}]} />
                   <Text>Prueba Inicial Fono.</Text>
                 </View>
               </View>

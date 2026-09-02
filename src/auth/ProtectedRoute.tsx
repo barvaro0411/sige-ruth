@@ -1,8 +1,14 @@
+import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { getDefaultRoute, hasPermission } from './permissions';
+import { getDefaultRoute, hasPermission, Permiso } from './permissions';
 
-export default function ProtectedRoute({ children, permission }) {
+interface ProtectedRouteProps {
+  children: ReactNode;
+  permission?: Permiso;
+}
+
+export default function ProtectedRoute({ children, permission }: ProtectedRouteProps) {
   const { user, isAuthenticated, loading } = useAuth();
   
   if (loading) {
@@ -24,7 +30,7 @@ export default function ProtectedRoute({ children, permission }) {
     );
   }
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -32,5 +38,5 @@ export default function ProtectedRoute({ children, permission }) {
     return <Navigate to={getDefaultRoute(user.rol)} replace />;
   }
 
-  return children;
+  return <>{children}</>;
 }

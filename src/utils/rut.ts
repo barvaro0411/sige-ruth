@@ -1,11 +1,17 @@
 // RUT Validator for Chilean RUT (Rol Único Tributario)
 // Algorithm: Módulo 11 con serie 2-7
 
-export function cleanRut(rut) {
+export interface RutHandlerResult {
+  formatted: string;
+  isValid: boolean;
+  clean: string;
+}
+
+export function cleanRut(rut: string): string {
   return rut.replace(/[^0-9kK]/g, '').toUpperCase();
 }
 
-export function formatRut(rut) {
+export function formatRut(rut: string): string {
   const clean = cleanRut(rut);
   if (clean.length < 2) return clean;
   
@@ -26,13 +32,13 @@ export function formatRut(rut) {
   return `${formatted}-${dv}`;
 }
 
-export function calculateDV(rutBody) {
+export function calculateDV(rutBody: string | number): string {
   const clean = rutBody.toString().replace(/[^0-9]/g, '');
   let sum = 0;
   let multiplier = 2;
   
   for (let i = clean.length - 1; i >= 0; i--) {
-    sum += parseInt(clean[i]) * multiplier;
+    sum += parseInt(clean[i], 10) * multiplier;
     multiplier = multiplier === 7 ? 2 : multiplier + 1;
   }
   
@@ -43,7 +49,7 @@ export function calculateDV(rutBody) {
   return remainder.toString();
 }
 
-export function validateRut(rut) {
+export function validateRut(rut: string): boolean {
   const clean = cleanRut(rut);
   if (clean.length < 2) return false;
   
@@ -57,7 +63,7 @@ export function validateRut(rut) {
   return dv === expectedDV;
 }
 
-export function rutInputHandler(value) {
+export function rutInputHandler(value: string): RutHandlerResult {
   const clean = cleanRut(value);
   if (clean.length === 0) return { formatted: '', isValid: false, clean: '' };
   

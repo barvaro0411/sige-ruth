@@ -69,6 +69,7 @@ export interface Tables {
     sede_id: string | null;
     created_at: string;
   };
+
   cursos: {
     id: string;
     nombre: string;
@@ -222,6 +223,18 @@ export interface Tables {
     created_at: string;
     updated_at: string;
   };
+}
+
+export interface AuditLogEntry {
+  id: number;
+  accion: string;
+  entidad: string;
+  entidadId: string | null;
+  usuario: string;
+  valorAnterior: any;
+  valorNuevo: any;
+  sedeId: string | null;
+  timestamp: string;
 }
 
 export type PrioridadMaterial = 'baja' | 'normal' | 'alta' | 'urgente';

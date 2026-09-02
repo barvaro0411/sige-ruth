@@ -4,7 +4,7 @@ import { Tables } from '../types';
 const CAMPOS_SESION = [
   'id', 'fecha', 'estudiante_id', 'fonoaudiologo_id', 'actividad_realizada',
   'observaciones', 'nivel_fonetico', 'nivel_semantico', 'nivel_morfosintactico',
-  'nivel_pragmatico', 'sede_id', 'created_at', 'updated_at',
+  'nivel_pragmatico', 'sede_id', 'created_at',
 ].join(',');
 
 /**
@@ -15,7 +15,7 @@ export const FonoService = {
   /**
    * Obtener todas las sesiones de una sede
    */
-  async getSesionesBySede(sedeId: string) {
+  async getSesionesBySede(sedeId: string): Promise<Tables['sesiones_fono'][]> {
     const { data, error } = await supabase
       .from('sesiones_fono')
       .select(CAMPOS_SESION)
@@ -23,14 +23,13 @@ export const FonoService = {
       .order('fecha', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as unknown as Tables['sesiones_fono'][];
   },
 
   /**
    * Guardar una nueva sesión o actualizar una existente
-   * Nota: La auditoría se realiza automáticamente vía Triggers en la DB.
    */
-  async saveSesion(payload: Partial<Tables['sesiones_fono']>) {
+  async saveSesion(payload: Partial<Tables['sesiones_fono']>): Promise<Tables['sesiones_fono']> {
     const { data, error } = await supabase
       .from('sesiones_fono')
       .upsert(payload)
@@ -38,18 +37,18 @@ export const FonoService = {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as unknown as Tables['sesiones_fono'];
   },
 
   /**
    * Eliminar una sesión
    */
-  async deleteSesion(id: number) {
+  async deleteSesion(id: number): Promise<void> {
     const { error } = await supabase
       .from('sesiones_fono')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
-  }
+  },
 };

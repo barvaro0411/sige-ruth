@@ -10,33 +10,35 @@
  */
 const SOLO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
-function aFecha(date) {
+function aFecha(date: Date | string | number): Date {
   if (typeof date === 'string' && SOLO_FECHA.test(date)) {
     return new Date(`${date}T12:00:00`);
   }
   return new Date(date);
 }
 
-export function formatDate(date) {
+export function formatDate(date: Date | string | number): string {
   const d = aFecha(date);
   return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export function formatTime(date) {
+export function formatTime(date: Date | string | number): string {
   const d = new Date(date);
   return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function formatDateTime(date) {
+export function formatDateTime(date: Date | string | number): string {
   return `${formatDate(date)} ${formatTime(date)}`;
 }
 
-export function getToday() {
+export function getToday(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function getMonthName(monthIndex) {
-  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  return months[monthIndex];
+export function getMonthName(monthIndex: number): string {
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  return months[monthIndex] || '';
 }
-

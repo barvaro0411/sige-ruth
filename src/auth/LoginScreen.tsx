@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
-import { Lock, Mail, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff, GraduationCap } from 'lucide-react';
 
 export default function LoginScreen() {
   const { login, error: contextError } = useAuth();
@@ -13,7 +13,7 @@ export default function LoginScreen() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !password) {
-      setError('Ingrese su correo y contraseña');
+      setError('Por favor, ingresa tu correo y contraseña.');
       return;
     }
 
@@ -22,7 +22,7 @@ export default function LoginScreen() {
     
     const result = await login(email, password);
     if (!result.success) {
-      setError(result.error || 'Error de autenticación');
+      setError(result.error || 'Credenciales no válidas o acceso denegado.');
       setLoading(false);
     }
   }
@@ -31,34 +31,34 @@ export default function LoginScreen() {
     <div className="login-screen">
       <div className="login-card">
         <header className="login-header">
-          <div className="login-logo">
-            <ShieldCheck size={32} />
+          <div className="login-logo" aria-hidden="true">
+            <GraduationCap size={32} />
           </div>
           <h1 className="login-title">Gestión Ruth</h1>
-          <p className="login-subtitle">Sistema de Gestión Escolar v6.0</p>
+          <p className="login-subtitle">Sistema de Administración Escolar</p>
         </header>
 
         {(error || contextError) && (
-          <div className="login-error" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="login-error" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{error || contextError}</span>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="login-form">
+        <form onSubmit={handleLogin} className="login-form" noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="email">Correo Electrónico</label>
             <div className="input-with-icon">
-              <Mail className="input-icon" size={18} />
+              <Mail className="input-icon" size={18} aria-hidden="true" />
               <input
                 id="email"
                 type="email"
                 className="form-input"
-                placeholder="ejemplo@correo.com"
+                placeholder="nombre@escuelaruth.cl"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 disabled={loading}
-                autoComplete="email"
+                autoComplete="username"
                 required
               />
             </div>
@@ -67,12 +67,12 @@ export default function LoginScreen() {
           <div className="form-group">
             <label className="form-label" htmlFor="password">Contraseña</label>
             <div className="input-with-icon">
-              <Lock className="input-icon" size={18} />
+              <Lock className="input-icon" size={18} aria-hidden="true" />
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="••••••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
@@ -83,7 +83,7 @@ export default function LoginScreen() {
                 type="button"
                 className="input-action-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -92,19 +92,19 @@ export default function LoginScreen() {
 
           <button
             type="submit"
-            className={`btn btn-gold login-submit ${loading ? 'loading' : ''}`}
+            className="btn btn-gold login-submit"
             disabled={loading || !email || !password}
           >
-            {loading ? 'Iniciando sesión...' : 'Entrar al Sistema'}
+            {loading ? 'Iniciando sesión...' : 'Ingresar al Sistema'}
           </button>
         </form>
 
         <footer className="login-footer">
           <p>© 2026 Escuela de Lenguaje Ruth</p>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '8px', color: 'var(--color-navy-light)', fontSize: '12px', fontWeight: 600 }}>
-             <span>SECURE-AUTH</span>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px', color: 'var(--navy-400)', fontSize: '11px', fontWeight: 700 }}>
+             <span>Conchalí, Chile</span>
              <span>•</span>
-             <span>SUPABASE-NATIVE</span>
+             <span>Sedes Gambino & Vascongados</span>
           </div>
         </footer>
       </div>

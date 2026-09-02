@@ -1,10 +1,17 @@
-import React from 'react';
 import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
 import { MatriculaDocument } from './MatriculaDocument';
 import Modal from '../../components/Modal';
 import { FileText, Download, X, Printer } from 'lucide-react';
+import { Estudiante, Sede } from '../../types';
 
-export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sede }) {
+interface MatriculaPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  estudiante: Estudiante | null;
+  sede: Sede;
+}
+
+export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sede }: MatriculaPreviewModalProps) {
   if (!estudiante) return null;
 
   return (
@@ -41,7 +48,7 @@ export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sed
               className="btn btn-primary"
               style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
             >
-              {({ blob, url, loading, error }) => 
+              {({ loading }) => 
                 loading ? 'Cargando...' : (
                   <>
                     <Download size={18} />

@@ -6,19 +6,14 @@ import { useSede } from '../auth/SedeContext';
 import { ROLE_LABELS } from '../auth/permissions';
 import { NotificacionService } from '../services/notificacionService';
 import { formatDateTime } from '../utils/dates';
-import { Menu, MapPin, Bell, User, ChevronDown, Check } from 'lucide-react';
+import { Menu, MapPin, Bell, User, ChevronDown, Check, BellOff } from 'lucide-react';
 
 interface HeaderProps {
   onMenuToggle: () => void;
 }
 
 /**
- * Cabecera: sede activa, notificaciones y perfil.
- *
- * La campanita mostraba un «¡Bienvenido a SIGE!» escrito a mano y fijo,
- * mientras la base escribía notificaciones reales de materiales, permisos y
- * mantenciones que nadie llegaba a ver. Es el mismo error que el «Asistencia
- * Hoy: 0 %»: algo que se lee como un dato y en realidad no lo es.
+ * Cabecera institucional: sede activa, notificaciones en tiempo real y perfil.
  */
 export default function Header({ onMenuToggle }: HeaderProps) {
   const { user } = useAuth();
@@ -32,8 +27,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     queryKey: ['notificaciones'],
     queryFn: () => NotificacionService.getRecientes(),
     enabled: !!user,
-    // La bandeja se refresca sola cada dos minutos: una solicitud urgente no
-    // debería esperar a que la persona recargue la página.
     refetchInterval: 1000 * 60 * 2,
   });
 
@@ -59,7 +52,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const notifRef = useRef<HTMLDivElement>(null);
   const sedeRef = useRef<HTMLDivElement>(null);
 
-  // El contexto ya entrega solo las sedes autorizadas para este perfil.
   const canChangeSede = availableSedes.length > 1;
 
   useEffect(() => {
@@ -77,28 +69,44 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   }, []);
 
   return (
-    <header className="header">
+    <header className="header" aria-label="Cabecera principal">
       <div className="header-left">
-        <button className="menu-btn" onClick={onMenuToggle} aria-label="Abrir menú">
-          <Menu size={24} />
+        <button 
+          type="button"
+          className="menu-btn" 
+          onClick={onMenuToggle} 
+          aria-label="Abrir menú de navegación"
+        >
+          <Menu size={22} />
         </button>
         
         <div style={{ position: 'relative' }} ref={sedeRef}>
           <div 
             className={`sede-badge ${canChangeSede ? 'clickable' : ''}`}
             onClick={() => canChangeSede && setShowSedeSelector(!showSedeSelector)}
+            role={canChangeSede ? 'button' : undefined}
+            tabIndex={canChangeSede ? 0 : undefined}
+            aria-haspopup={canChangeSede ? 'true' : undefined}
+            aria-expanded={canChangeSede ? showSedeSelector : undefined}
+            onKeyDown={(e) => {
+              if (canChangeSede && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                setShowSedeSelector(!showSedeSelector);
+              }
+            }}
           >
-            <MapPin size={16} />
+            <MapPin size={15} className="text-gold" />
             <span>{sede.nombre}</span>
-            {canChangeSede && <ChevronDown size={14} style={{ marginLeft: '4px', opacity: 0.5 }} />}
+            {canChangeSede && <ChevronDown size={14} style={{ opacity: 0.6 }} />}
           </div>
 
           {showSedeSelector && (
-            <div className="dropdown-menu sede-dropdown animate-in">
+            <div className="dropdown-menu sede-dropdown">
               <div className="dropdown-header">Cambiar de Sede</div>
               {availableSedes.map(s => (
                 <button 
                   key={s.id} 
+                  type="button"
                   className={`dropdown-item ${s.id === sede.id ? 'active' : ''}`}
                   onClick={() => {
                     setSede(s);
@@ -106,7 +114,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   }}
                 >
                   <span>{s.nombre}</span>
-                  {s.id === sede.id && <Check size={16} />}
+                  {s.id === sede.id && <Check size={16} className="text-gold" />}
                 </button>
               ))}
             </div>
@@ -118,23 +126,23 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         {/* Notificaciones */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button
+            type="button"
             className="icon-btn"
-            title={sinLeer > 0 ? `${sinLeer} sin leer` : 'Notificaciones'}
+            title={sinLeer > 0 ? `${sinLeer} notificaciones sin leer` : 'Notificaciones'}
             aria-label={sinLeer > 0 ? `Notificaciones, ${sinLeer} sin leer` : 'Notificaciones'}
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell size={20} />
-            {/* El punto aparece solo si hay algo. Un indicador siempre encendido
-                deja de significar nada a la semana. */}
             {sinLeer > 0 && <span className="notification-dot" />}
           </button>
 
           {showNotifications && (
-            <div className="notifications-dropdown dropdown-menu animate-in">
+            <div className="notifications-dropdown dropdown-menu">
               <div className="notifications-header">
                 <h3>Notificaciones</h3>
                 {sinLeer > 0 && (
                   <button
+                    type="button"
                     className="text-btn"
                     onClick={() => marcarTodas.mutate()}
                     disabled={marcarTodas.isPending}
@@ -145,11 +153,12 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               </div>
               <div className="notifications-body">
                 {notificaciones.isLoading ? (
-                  <div className="skeleton" style={{ height: 64, margin: '8px' }} />
+                  <div className="skeleton" style={{ height: 72, margin: '12px' }} />
                 ) : lista.length === 0 ? (
-                  <p className="text-muted" style={{ padding: '20px 16px', margin: 0, fontSize: '13px' }}>
-                    No tienes notificaciones.
-                  </p>
+                  <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--navy-500)' }}>
+                    <BellOff size={28} style={{ opacity: 0.4, marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>No tienes notificaciones pendientes</p>
+                  </div>
                 ) : (
                   lista.map(n => (
                     <button
@@ -158,15 +167,27 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                       className="notification-item"
                       onClick={() => abrir(n.id, !!n.leidaEn, n.enlace)}
                       style={{
-                        width: '100%', textAlign: 'left', border: 'none', font: 'inherit',
+                        width: '100%',
+                        textAlign: 'left',
+                        border: 'none',
+                        font: 'inherit',
                         cursor: n.enlace ? 'pointer' : 'default',
                         background: n.leidaEn ? 'transparent' : 'var(--gold-50)',
+                        borderLeft: n.leidaEn ? '3px solid transparent' : '3px solid var(--gold-500)',
                       }}
                     >
-                      <div className="notification-content">
-                        <p><strong>{n.titulo}</strong></p>
-                        {n.cuerpo && <span>{n.cuerpo}</span>}
-                        <small>{formatDateTime(n.created_at)}</small>
+                      <div className="notification-content" style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%' }}>
+                        <p style={{ fontSize: '13.5px', color: 'var(--navy-900)', fontWeight: n.leidaEn ? 600 : 800 }}>
+                          {n.titulo}
+                        </p>
+                        {n.cuerpo && (
+                          <span style={{ fontSize: '12.5px', color: 'var(--navy-600)', lineHeight: '1.4' }}>
+                            {n.cuerpo}
+                          </span>
+                        )}
+                        <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          {formatDateTime(n.created_at)}
+                        </small>
                       </div>
                     </button>
                   ))
@@ -186,7 +207,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {user?.rol ? ROLE_LABELS[user.rol] : 'Usuario'}
             </span>
           </div>
-          <div className="profile-avatar">
+          <div className="profile-avatar" aria-hidden="true">
             <User size={18} />
           </div>
         </div>

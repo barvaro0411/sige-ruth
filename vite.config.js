@@ -31,8 +31,17 @@ export default defineConfig({
         // El generador de PDF sale del precarga: son ~1,5 MB que se descargaban
         // en el celular de cada persona aunque nunca abriera una matrícula.
         // Se guarda en caché la primera vez que alguien la usa.
-        globIgnores: ['**/vendor-pdf-*.js', '**/vendor-charts-*.js'],
+        globIgnores: ['**/vendor-pdf-*.js', '**/vendor-charts-*.js', '**/vendor-excel-*.js'],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/vendor-excel-.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vendor-excel',
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
           {
             urlPattern: /\/assets\/vendor-charts-.*\.js$/,
             handler: 'CacheFirst',
@@ -87,6 +96,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-pdf': ['@react-pdf/renderer'],
+          'vendor-excel': ['xlsx'],
           'vendor-ui': ['lucide-react'],
           'vendor-charts': ['recharts'],
         }
