@@ -23,7 +23,6 @@ import PedirInsumos from '../features/insumos/PedirInsumos';
 import MantencionesModule from '../features/mantenciones/MantencionesModule';
 import PrestamosModule from '../features/prestamos/PrestamosModule';
 import PanelOperaciones from '../features/operaciones/PanelOperaciones';
-import BottomNav from '../components/BottomNav';
 import { PERMISSIONS, getDefaultRoute } from '../auth/permissions';
 import { useRealtimeSync } from '../auth/useRealtimeSync';
 
@@ -115,7 +114,6 @@ function AppLayout() {
             <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />
           </Routes>
         </main>
-        <BottomNav onMenuToggle={() => setSidebarOpen(true)} />
       </div>
     </div>
   );

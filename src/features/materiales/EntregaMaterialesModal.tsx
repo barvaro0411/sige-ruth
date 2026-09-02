@@ -148,7 +148,7 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
           </div>
         )}
 
-        <div className="modal-footer" style={{ padding: '20px 0 0', border: 'none' }}>
+        <div className="modal-footer-sticky">
           <button type="button" className="btn btn-outline" onClick={onClose} disabled={entregar.isPending}>
             Cancelar
           </button>

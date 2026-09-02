@@ -335,7 +335,7 @@ export default function MaterialesModule() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="modal-footer-sticky" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <button className="btn btn-outline" disabled={crear.isPending} onClick={() => validarYEnviar(false)}>
               Guardar borrador
             </button>

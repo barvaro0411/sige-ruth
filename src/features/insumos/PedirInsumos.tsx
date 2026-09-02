@@ -208,19 +208,10 @@ export default function PedirInsumos() {
 
       {/* Barra de envío: se queda a la vista mientras haya algo elegido */}
       {pedido.length > 0 && (
-        <div
-          style={{
-            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 900,
-            padding: '14px 16px calc(14px + env(safe-area-inset-bottom))',
-            background: 'rgba(255,255,255,0.96)',
-            backdropFilter: 'saturate(180%) blur(20px)',
-            borderTop: '1px solid var(--border-medium)',
-            boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
-          }}
-        >
+        <div className="insumos-floating-bar">
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: '14px' }}>
+              <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--navy-900)' }}>
                 {pedido.length} producto{pedido.length === 1 ? '' : 's'} · {totalArticulos} en total
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -229,11 +220,11 @@ export default function PedirInsumos() {
             </div>
             <button
               className="btn btn-gold"
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, minHeight: '44px', padding: '10px 22px' }}
               disabled={enviar.isPending}
               onClick={() => enviar.mutate()}
             >
-              <Send size={18} /> {enviar.isPending ? 'Enviando…' : 'Enviar'}
+              <Send size={18} /> {enviar.isPending ? 'Enviando…' : 'Enviar pedido'}
             </button>
           </div>
         </div>

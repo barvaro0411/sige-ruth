@@ -302,18 +302,18 @@ export default function InventarioModule() {
                   {p.ubicacion && <> · <MapPin size={11} style={{ verticalAlign: '-1px' }} /> {p.ubicacion}</>}
                 </p>
 
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
                   {puedeMover && (
-                    <button className="btn btn-outline btn-sm" onClick={() => setMoviendo(p)}>
+                    <button className="btn btn-outline btn-sm" style={{ flex: '1 1 auto', minHeight: '38px' }} onClick={() => setMoviendo(p)}>
                       <Box size={14} /> Movimiento
                     </button>
                   )}
-                  <button className="btn btn-ghost btn-sm" onClick={() => setViendoHistorial(p)} title="Ver historial">
-                    <History size={15} />
+                  <button className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px' }} onClick={() => setViendoHistorial(p)} title="Ver historial">
+                    <History size={15} /> <span>Historial</span>
                   </button>
                   {puedeAdministrar && (
-                    <button className="btn btn-ghost btn-sm" onClick={() => abrirEdicion(p)} title="Editar producto">
-                      <Edit2 size={15} />
+                    <button className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px' }} onClick={() => abrirEdicion(p)} title="Editar producto">
+                      <Edit2 size={15} /> <span>Editar</span>
                     </button>
                   )}
                 </div>
@@ -481,7 +481,7 @@ function FormularioProducto({
           </p>
         )}
 
-        <div className="modal-footer" style={{ padding: '20px 0 0', border: 'none' }}>
+        <div className="modal-footer-sticky">
           <button type="button" className="btn btn-outline" onClick={onCancel} disabled={guardando}>Cancelar</button>
           <button type="submit" className="btn btn-gold" disabled={guardando}>
             {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Crear producto'}
@@ -649,7 +649,7 @@ function FormularioMovimiento({
           </span>
         </div>
 
-        <div className="modal-footer" style={{ padding: '20px 0 0', border: 'none' }}>
+        <div className="modal-footer-sticky">
           <button type="button" className="btn btn-outline" onClick={onClose} disabled={registrar.isPending}>
             Cancelar
           </button>
