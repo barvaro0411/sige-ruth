@@ -1,5 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../auth/AuthContext';
+import { useSede } from '../auth/SedeContext';
+import { DashboardService } from '../services/dashboardService';
 import { PERMISSIONS, ROLE_LABELS, Permiso } from '../auth/permissions';
 import {
   LayoutDashboard, Users,
@@ -17,6 +20,8 @@ interface MenuItem {
   icon: LucideIcon;
   label: string;
   permission: Permiso;
+  badge?: number;
+  badgeType?: string;
 }
 
 interface MenuSection {
@@ -26,6 +31,31 @@ interface MenuSection {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout, can } = useAuth();
+  const { sede } = useSede();
+
+  // Consultar estadísticas operativas para badges en tiempo real (reutiliza caché del dashboard)
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard', sede?.id],
+    queryFn: () => DashboardService.getStats(sede.id),
+    enabled: Boolean(sede?.id),
+    refetchInterval: 30000,
+  });
+
+  const badgeMateriales = (can(PERMISSIONS.REVIEW_MATERIALS) || can(PERMISSIONS.CONFIRM_MATERIAL_DELIVERY))
+    ? stats?.solicitudesPendientes
+    : undefined;
+
+  const badgePermisos = can(PERMISSIONS.APPROVE_LEAVE)
+    ? stats?.permisosPendientes
+    : undefined;
+
+  const badgeMantenciones = can(PERMISSIONS.MANAGE_MAINTENANCE)
+    ? stats?.mantencionesAbiertas
+    : undefined;
+
+  const badgeBodega = can(PERMISSIONS.MANAGE_INVENTORY)
+    ? stats?.productosBajoMinimo
+    : undefined;
 
   const menuSections: MenuSection[] = [
     {
@@ -45,16 +75,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     {
       title: 'Personal y Solicitudes',
       items: [
-        { path: '/permisos', icon: CalendarDays, label: 'Permisos y Días', permission: PERMISSIONS.REQUEST_LEAVE },
+        { path: '/permisos', icon: CalendarDays, label: 'Permisos y Días', permission: PERMISSIONS.REQUEST_LEAVE, badge: badgePermisos, badgeType: 'sidebar-badge-warning' },
         { path: '/insumos', icon: ShoppingBasket, label: 'Pedir Insumos', permission: PERMISSIONS.REQUEST_MATERIALS },
-        { path: '/materiales', icon: Package, label: 'Mis Solicitudes', permission: PERMISSIONS.REQUEST_MATERIALS },
+        { path: '/materiales', icon: Package, label: 'Mis Solicitudes', permission: PERMISSIONS.REQUEST_MATERIALS, badge: badgeMateriales, badgeType: 'sidebar-badge-warning' },
       ]
     },
     {
       title: 'Recursos e Infraestructura',
       items: [
-        { path: '/inventario', icon: Boxes, label: 'Bodega y Stock', permission: PERMISSIONS.VIEW_INVENTORY },
-        { path: '/mantenciones', icon: Wrench, label: 'Mantenciones', permission: PERMISSIONS.REPORT_MAINTENANCE },
+        { path: '/inventario', icon: Boxes, label: 'Bodega y Stock', permission: PERMISSIONS.VIEW_INVENTORY, badge: badgeBodega, badgeType: 'sidebar-badge-danger' },
+        { path: '/mantenciones', icon: Wrench, label: 'Mantenciones', permission: PERMISSIONS.REPORT_MAINTENANCE, badge: badgeMantenciones, badgeType: 'sidebar-badge-info' },
         { path: '/prestamos', icon: ArrowLeftRight, label: 'Préstamos', permission: PERMISSIONS.VIEW_LOANS },
       ]
     },
@@ -123,7 +153,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     onClick={() => window.innerWidth < 1024 && onClose()}
                   >
                     <item.icon size={18} className="sidebar-icon" aria-hidden="true" />
-                    <span>{item.label}</span>
+                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.label}
+                    </span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`sidebar-badge ${item.badgeType || 'sidebar-badge-warning'}`} title={`${item.badge} pendiente(s)`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
               </div>
@@ -304,6 +341,41 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-500) 100%);
           box-shadow: 0 4px 14px rgba(184, 134, 11, 0.35);
           font-weight: 700;
+        }
+
+        .sidebar-badge {
+          margin-left: auto;
+          font-size: 11px;
+          font-weight: 800;
+          padding: 2px 7px;
+          border-radius: 999px;
+          line-height: 1.2;
+          letter-spacing: 0.02em;
+          flex-shrink: 0;
+        }
+
+        .sidebar-badge-warning {
+          background: rgba(245, 158, 11, 0.25);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .sidebar-badge-danger {
+          background: rgba(239, 68, 68, 0.25);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .sidebar-badge-info {
+          background: rgba(59, 130, 246, 0.25);
+          color: #93c5fd;
+          border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .sidebar-link.active .sidebar-badge {
+          background: rgba(0, 0, 0, 0.25);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .sidebar-icon {
