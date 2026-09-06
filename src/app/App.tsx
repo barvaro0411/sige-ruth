@@ -10,22 +10,42 @@ import InitialPasswordScreen from '../auth/InitialPasswordScreen';
 import ProtectedRoute from '../auth/ProtectedRoute';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import Dashboard from '../features/dashboard/Dashboard';
-import EstudiantesList from '../features/estudiantes/EstudiantesList';
-import FonoaudiologiaModule from '../features/fonoaudiologia/FonoaudiologiaModule';
-import ReportesModule from '../features/reportes/ReportesModule';
-import AuditLog from '../features/auditoria/AuditLog';
-import UsuariosModule from '../features/usuarios/UsuariosModule';
-import PermisosModule from '../features/permisos/PermisosModule';
-import MaterialesModule from '../features/materiales/MaterialesModule';
-import InventarioModule from '../features/inventario/InventarioModule';
-import PedirInsumos from '../features/insumos/PedirInsumos';
-import MantencionesModule from '../features/mantenciones/MantencionesModule';
-import PrestamosModule from '../features/prestamos/PrestamosModule';
-import PanelOperaciones from '../features/operaciones/PanelOperaciones';
 import BottomNav from '../components/BottomNav';
 import { PERMISSIONS, getDefaultRoute } from '../auth/permissions';
 import { useRealtimeSync } from '../auth/useRealtimeSync';
+
+/**
+ * Cada pantalla se descarga cuando alguien la abre.
+ *
+ * Estaban las trece importadas de forma estática, así que viajaban juntas en el
+ * bundle inicial: la persona de aseo —cuatro permisos, ninguno de ellos sobre
+ * bodega, usuarios o auditoría— descargaba igual esos módulos para entrar a
+ * pedir cloro. El permiso los ocultaba; el bundle los entregaba.
+ */
+const Dashboard = lazy(() => import('../features/dashboard/Dashboard'));
+const EstudiantesList = lazy(() => import('../features/estudiantes/EstudiantesList'));
+const FonoaudiologiaModule = lazy(() => import('../features/fonoaudiologia/FonoaudiologiaModule'));
+const ReportesModule = lazy(() => import('../features/reportes/ReportesModule'));
+const AuditLog = lazy(() => import('../features/auditoria/AuditLog'));
+const UsuariosModule = lazy(() => import('../features/usuarios/UsuariosModule'));
+const PermisosModule = lazy(() => import('../features/permisos/PermisosModule'));
+const MaterialesModule = lazy(() => import('../features/materiales/MaterialesModule'));
+const InventarioModule = lazy(() => import('../features/inventario/InventarioModule'));
+const PedirInsumos = lazy(() => import('../features/insumos/PedirInsumos'));
+const MantencionesModule = lazy(() => import('../features/mantenciones/MantencionesModule'));
+const PrestamosModule = lazy(() => import('../features/prestamos/PrestamosModule'));
+const PanelOperaciones = lazy(() => import('../features/operaciones/PanelOperaciones'));
+
+/** Lo que se ve mientras baja el módulo: la misma silueta que usan las pantallas. */
+function CargandoPantalla() {
+  return (
+    <div className="page-container" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Cargando la sección…</span>
+      <div className="skeleton h-28 mb-6" />
+      <div className="skeleton h-96" />
+    </div>
+  );
+}
 
 // Layout shared for all authenticated routes
 function AppLayout() {
@@ -38,18 +58,9 @@ function AppLayout() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: 'var(--color-navy, #1B2A4A)',
-        color: 'white', flexDirection: 'column', gap: '16px'
-      }}>
-        <div style={{
-          width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.2)',
-          borderTopColor: 'var(--color-gold, #D4A843)', borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite'
-        }} />
-        <p style={{ fontSize: '14px', opacity: 0.7 }}>Cargando Gestión Ruth...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="boot-screen" role="status" aria-live="polite">
+        <div className="boot-spinner" aria-hidden="true" />
+        <p className="boot-label">Cargando Gestión Ruth…</p>
       </div>
     );
   }
@@ -59,16 +70,16 @@ function AppLayout() {
   if (mustChangePassword) return <InitialPasswordScreen />;
 
   if (sedesLoading) {
-    return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+    return <div className="page-container"><div className="skeleton h-100" /></div>;
   }
 
   if (sedesError) {
     return (
       <div className="page-container">
-        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+        <div className="card aviso-card">
           <h2>No se pudieron cargar las sedes</h2>
           <p className="text-muted">{sedesError}</p>
-          <button className="btn btn-outline" onClick={() => window.location.reload()} style={{ marginTop: '20px' }}>
+          <button className="btn btn-outline mt-5" onClick={() => window.location.reload()}>
             Reintentar
           </button>
         </div>
@@ -80,7 +91,7 @@ function AppLayout() {
   if (!sede) {
     return (
       <div className="page-container">
-        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+        <div className="card aviso-card">
           <h2>Usuario sin sede asignada</h2>
           <p className="text-muted">Pide al director que asigne al menos una sede a tu perfil.</p>
         </div>
@@ -90,30 +101,35 @@ function AppLayout() {
 
   return (
     <div className="layout">
+      {/* Primero en el orden de tabulación: quien navega con teclado no tiene
+          que recorrer los trece enlaces del menú en cada pantalla. */}
+      <a className="skip-link" href="#contenido">Ir al contenido</a>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main-wrapper">
-        <Header 
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)} 
+        <Header
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         />
-        <main className="main-content">
-          <Routes>
-            <Route path="/dashboard" element={<ProtectedRoute permission={PERMISSIONS.VIEW_DASHBOARD}><Dashboard /></ProtectedRoute>} />
-            <Route path="/estudiantes" element={<ProtectedRoute permission={PERMISSIONS.VIEW_STUDENTS}><EstudiantesList /></ProtectedRoute>} />
-            <Route path="/fonoaudiologia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_SESSIONS}><FonoaudiologiaModule /></ProtectedRoute>} />
-            <Route path="/reportes" element={<ProtectedRoute permission={PERMISSIONS.EXPORT_REPORTS}><ReportesModule /></ProtectedRoute>} />
-            <Route path="/permisos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_LEAVE}><PermisosModule /></ProtectedRoute>} />
-            <Route path="/materiales" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><MaterialesModule /></ProtectedRoute>} />
-            <Route path="/insumos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><PedirInsumos /></ProtectedRoute>} />
-            <Route path="/inventario" element={<ProtectedRoute permission={PERMISSIONS.VIEW_INVENTORY}><InventarioModule /></ProtectedRoute>} />
-            <Route path="/mantenciones" element={<ProtectedRoute permission={PERMISSIONS.REPORT_MAINTENANCE}><MantencionesModule /></ProtectedRoute>} />
-            {/* Las notificaciones enlazan a /mantenciones/:id — el módulo abre ese detalle. */}
-            <Route path="/mantenciones/:id" element={<ProtectedRoute permission={PERMISSIONS.REPORT_MAINTENANCE}><MantencionesModule /></ProtectedRoute>} />
-            <Route path="/prestamos" element={<ProtectedRoute permission={PERMISSIONS.VIEW_LOANS}><PrestamosModule /></ProtectedRoute>} />
-            <Route path="/operaciones" element={<ProtectedRoute permission={PERMISSIONS.VIEW_OPERATIONS}><PanelOperaciones /></ProtectedRoute>} />
-            <Route path="/auditoria" element={<ProtectedRoute permission={PERMISSIONS.VIEW_AUDIT}><AuditLog /></ProtectedRoute>} />
-            <Route path="/usuarios" element={<ProtectedRoute permission={PERMISSIONS.MANAGE_USERS}><UsuariosModule /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />
-          </Routes>
+        <main className="main-content" id="contenido" tabIndex={-1}>
+          <Suspense fallback={<CargandoPantalla />}>
+            <Routes>
+              <Route path="/dashboard" element={<ProtectedRoute permission={PERMISSIONS.VIEW_DASHBOARD}><Dashboard /></ProtectedRoute>} />
+              <Route path="/estudiantes" element={<ProtectedRoute permission={PERMISSIONS.VIEW_STUDENTS}><EstudiantesList /></ProtectedRoute>} />
+              <Route path="/fonoaudiologia" element={<ProtectedRoute permission={PERMISSIONS.VIEW_SESSIONS}><FonoaudiologiaModule /></ProtectedRoute>} />
+              <Route path="/reportes" element={<ProtectedRoute permission={PERMISSIONS.EXPORT_REPORTS}><ReportesModule /></ProtectedRoute>} />
+              <Route path="/permisos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_LEAVE}><PermisosModule /></ProtectedRoute>} />
+              <Route path="/materiales" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><MaterialesModule /></ProtectedRoute>} />
+              <Route path="/insumos" element={<ProtectedRoute permission={PERMISSIONS.REQUEST_MATERIALS}><PedirInsumos /></ProtectedRoute>} />
+              <Route path="/inventario" element={<ProtectedRoute permission={PERMISSIONS.VIEW_INVENTORY}><InventarioModule /></ProtectedRoute>} />
+              <Route path="/mantenciones" element={<ProtectedRoute permission={PERMISSIONS.REPORT_MAINTENANCE}><MantencionesModule /></ProtectedRoute>} />
+              {/* Las notificaciones enlazan a /mantenciones/:id — el módulo abre ese detalle. */}
+              <Route path="/mantenciones/:id" element={<ProtectedRoute permission={PERMISSIONS.REPORT_MAINTENANCE}><MantencionesModule /></ProtectedRoute>} />
+              <Route path="/prestamos" element={<ProtectedRoute permission={PERMISSIONS.VIEW_LOANS}><PrestamosModule /></ProtectedRoute>} />
+              <Route path="/operaciones" element={<ProtectedRoute permission={PERMISSIONS.VIEW_OPERATIONS}><PanelOperaciones /></ProtectedRoute>} />
+              <Route path="/auditoria" element={<ProtectedRoute permission={PERMISSIONS.VIEW_AUDIT}><AuditLog /></ProtectedRoute>} />
+              <Route path="/usuarios" element={<ProtectedRoute permission={PERMISSIONS.MANAGE_USERS}><UsuariosModule /></ProtectedRoute>} />
+              <Route path="*" element={<Navigate to={getDefaultRoute(user.rol)} replace />} />
+            </Routes>
+          </Suspense>
         </main>
         <BottomNav onMenuToggle={() => setSidebarOpen(true)} />
       </div>

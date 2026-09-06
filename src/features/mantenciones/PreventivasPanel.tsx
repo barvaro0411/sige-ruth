@@ -146,21 +146,21 @@ export default function PreventivasPanel() {
   const alDia = preventivas.filter(p => p.estadoPreventiva === 'al_dia');
 
   return (
-    <div style={{ display: 'grid', gap: '20px' }}>
+    <div className="grid gap-5">
       {gestiona && (
         <button
-          className="btn btn-outline"
-          style={{ justifySelf: 'start' }}
-          onClick={() => { setForm(FORM_VACIO); setError(''); }}
+          className="btn btn-outline justify-self-start"
+
+onClick={() => { setForm(FORM_VACIO); setError(''); }}
         >
           <Plus size={17} /> Nueva rutina
         </button>
       )}
 
       {preventivas.length === 0 ? (
-        <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+        <div className="card py-12 px-6 text-center">
           <Repeat size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-          <h3 style={{ marginBottom: '6px' }}>Todavía no hay rutinas cargadas</h3>
+          <h3 className="mb-1">Todavía no hay rutinas cargadas</h3>
           <p className="text-muted">
             Extintores, calefactores, canaletas antes de las lluvias: lo que hay que
             revisar aunque no se haya roto.
@@ -195,17 +195,17 @@ export default function PreventivasPanel() {
               </button>
             </>
           }
-        >
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <div className="form-group" style={{ margin: 0 }}>
+              >
+          <div className="grid gap-3">
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-nombre">¿Qué hay que revisar?</label>
               <input
                 id="prev-nombre" className="form-input" autoFocus
                 placeholder="Recarga de extintores"
                 value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })}
-              />
+ />
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-categoria">Categoría</label>
               <select
                 id="prev-categoria" className="form-input"
@@ -216,7 +216,7 @@ export default function PreventivasPanel() {
                 {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-frecuencia">¿Cada cuánto?</label>
               <select
                 id="prev-frecuencia" className="form-input"
@@ -226,26 +226,26 @@ export default function PreventivasPanel() {
                 {FRECUENCIAS.map(f => <option key={f.dias} value={f.dias}>{f.label}</option>)}
               </select>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-inicio">Contar desde</label>
               <input
                 id="prev-inicio" type="date" className="form-input"
                 value={form.fechaInicio}
                 onChange={e => setForm({ ...form, fechaInicio: e.target.value })}
-              />
-              <p className="text-muted" style={{ fontSize: '12px', marginTop: '6px' }}>
+ />
+              <p className="text-muted text-sm mt-1">
                 Si ya se hizo alguna vez, pon esa fecha: la próxima se calcula sola.
               </p>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-ubicacion">Dónde (opcional)</label>
               <input
                 id="prev-ubicacion" className="form-input"
                 placeholder="Pasillo principal y cocina"
                 value={form.ubicacion} onChange={e => setForm({ ...form, ubicacion: e.target.value })}
-              />
+ />
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prev-responsable">Responsable (opcional)</label>
               <select
                 id="prev-responsable" className="form-input"
@@ -256,7 +256,7 @@ export default function PreventivasPanel() {
                 {colegas.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </div>
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
           </div>
         </Modal>
       )}
@@ -273,48 +273,48 @@ export default function PreventivasPanel() {
               </button>
             </>
           }
-        >
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <div className="form-group" style={{ margin: 0 }}>
+                >
+          <div className="grid gap-3">
+            <div className="form-group">
               <label className="form-label" htmlFor="ejec-fecha">¿Cuándo se hizo?</label>
               <input
                 id="ejec-fecha" type="date" className="form-input"
                 value={ejecucion.fecha}
                 onChange={e => setEjecucion({ ...ejecucion, fecha: e.target.value })}
-              />
+ />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
+            <div className="grid grid-2 gap-2">
+              <div className="form-group">
                 <label className="form-label" htmlFor="ejec-costo">Costo (opcional)</label>
                 <input
                   id="ejec-costo" className="form-input" inputMode="numeric" placeholder="0"
                   value={ejecucion.costo}
                   onChange={e => setEjecucion({ ...ejecucion, costo: e.target.value })}
-                />
+ />
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className="form-group">
                 <label className="form-label" htmlFor="ejec-proveedor">Quién lo hizo</label>
                 <input
                   id="ejec-proveedor" className="form-input" placeholder="Empresa o persona"
                   value={ejecucion.proveedor}
                   onChange={e => setEjecucion({ ...ejecucion, proveedor: e.target.value })}
-                />
+ />
               </div>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="ejec-obs">Observaciones (opcional)</label>
               <textarea
                 id="ejec-obs" className="form-textarea" rows={2}
                 placeholder="Dos extintores había que reemplazarlos"
                 value={ejecucion.observaciones}
                 onChange={e => setEjecucion({ ...ejecucion, observaciones: e.target.value })}
-              />
+ />
             </div>
-            <p className="text-muted" style={{ fontSize: '12px', margin: 0 }}>
+            <p className="text-muted text-sm">
               Al registrarla, la próxima queda agendada para
               {' '}{formatDate(sumarDias(ejecucion.fecha, marcando.frecuenciaDias))}.
             </p>
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
           </div>
         </Modal>
       )}
@@ -335,22 +335,21 @@ function Grupo({
 
   return (
     <section>
-      <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>{titulo} · {items.length}</h3>
-      <div style={{ display: 'grid', gap: '10px' }}>
+      <h3 className="text-base mb-2">{titulo} · {items.length}</h3>
+      <div className="grid gap-2">
         {items.map(p => (
           <article
             key={p.id}
-            className="card"
-            style={{ padding: '14px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}
+            className="card p-3 flex gap-3 items-center flex-wrap"
           >
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <strong style={{ fontSize: '15px' }}>{p.nombre}</strong>
+            <div className="flex-1 min-w-50">
+              <div className="flex gap-2 items-center flex-wrap">
+                <strong className="text-md">{p.nombre}</strong>
                 <span className={`badge ${ESTILO_ESTADO[p.estadoPreventiva].clase}`}>
                   {ESTILO_ESTADO[p.estadoPreventiva].texto}
                 </span>
               </div>
-              <div className="text-muted" style={{ fontSize: '12.5px', marginTop: '4px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div className="text-muted text-sm mt-1 flex gap-1 items-center">
                 <CalendarClock size={13} />
                 {p.estadoPreventiva === 'vencida'
                   ? `Venció hace ${Math.abs(p.diasRestantes)} día${Math.abs(p.diasRestantes) === 1 ? '' : 's'}`
@@ -361,14 +360,14 @@ function Grupo({
             </div>
 
             {gestiona && (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="flex gap-1">
                 <button className="btn btn-outline btn-sm" onClick={() => onMarcar(p)}>
                   <CalendarCheck size={15} /> Marcar hecha
                 </button>
                 <button
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: 'var(--color-danger)' }}
-                  onClick={() => onQuitar(p.id)}
+                  className="btn btn-ghost btn-sm text-danger"
+
+onClick={() => onQuitar(p.id)}
                   aria-label={`Retirar ${p.nombre}`}
                 >
                   <Trash2 size={15} />

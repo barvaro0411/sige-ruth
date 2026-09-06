@@ -11,6 +11,8 @@ const ACTION_LABELS: Record<string, { label: string; class: string }> = {
   MODIFICAR: { label: 'Modificación', class: 'badge-warning' },
   ELIMINAR: { label: 'Eliminación', class: 'badge-danger' },
   CERRAR: { label: 'Cierre Jornada', class: 'badge-info' },
+  // En dato clínico, abrir la ficha también se registra.
+  CONSULTAR: { label: 'Consulta', class: 'badge-navy' },
 };
 
 export default function AuditLog() {
@@ -24,16 +26,16 @@ export default function AuditLog() {
     enabled: Boolean(sede?.id),
   });
 
-  const filtered = logs.filter(l => 
-    !search || 
-    l.usuario.toLowerCase().includes(search.toLowerCase()) || 
+  const filtered = logs.filter(l =>
+    !search ||
+    l.usuario.toLowerCase().includes(search.toLowerCase()) ||
     l.entidad.toLowerCase().includes(search.toLowerCase())
   );
 
   if (isLoading) {
     return (
       <div className="page-container">
-        <div className="skeleton" style={{ height: 400 }} />
+        <div className="skeleton h-100" />
       </div>
     );
   }
@@ -46,17 +48,17 @@ export default function AuditLog() {
           <p className="page-subtitle">Registro de acciones del sistema</p>
         </div>
       </header>
-      
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="card-body" style={{ padding: '16px 24px' }}>
+
+      <div className="card mb-6">
+        <div className="card-body py-4 px-6">
           <div className="search-container">
             <Search size={18} className="search-icon" />
-            <input 
-              className="search-input" 
-              placeholder="Buscar por usuario o entidad..." 
-              value={search} 
-              onChange={e => setSearch(e.target.value)} 
-            />
+            <input
+              className="search-input"
+              placeholder="Buscar por usuario o entidad..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+ />
           </div>
         </div>
       </div>
@@ -78,24 +80,24 @@ export default function AuditLog() {
               const isExpanded = expandedId === log.id;
               return (
                 <tr key={log.id}>
-                  <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{formatDateTime(log.timestamp)}</td>
-                  <td style={{ fontWeight: 600 }}>{log.usuario}</td>
+                  <td className="text-sm truncate">{formatDateTime(log.timestamp)}</td>
+                  <td className="font-semibold">{log.usuario}</td>
                   <td><span className={`badge ${actionMeta.class}`}>{actionMeta.label}</span></td>
                   <td>{log.entidad}</td>
                   <td>
                     {(log.valorAnterior || log.valorNuevo) && (
-                      <button 
-                        className="btn btn-ghost btn-sm" 
+                      <button
+                        className="btn btn-ghost btn-sm"
                         onClick={() => setExpandedId(isExpanded ? null : log.id)}
                         aria-label="Ver detalles del log"
                       >
-                        <ChevronDown 
-                          size={14} 
-                          style={{ 
-                            transform: isExpanded ? 'rotate(180deg)' : '', 
-                            transition: 'transform 150ms' 
-                          }} 
-                        />
+                        <ChevronDown
+                          size={14}
+                          style={{
+                            transform: isExpanded ? 'rotate(180deg)' : '',
+                            transition: 'transform 150ms'
+                          }}
+ />
                       </button>
                     )}
                   </td>

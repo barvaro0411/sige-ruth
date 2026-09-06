@@ -1,6 +1,7 @@
 import { supabase } from '../db/database';
 import { mapSaldoPermiso, mapSolicitudPermiso } from '../utils/mappers';
 import { EstadoPermiso, JornadaPermiso, SaldoPermiso, SolicitudPermiso, TipoPermiso } from '../types';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 /**
  * PermisoService
@@ -62,14 +63,22 @@ export const PermisoService = {
     return data ? mapSaldoPermiso(data) : null;
   },
 
-  /** Vuelve a enviar una solicitud observada, ya corregida. */
+  /**
+   * Vuelve a enviar una solicitud observada, ya corregida.
+   *
+   * El trigger `enforce_permiso_transicion` valida el salto de estado, pero
+   * solo corre sobre las filas que el `USING` de la política dejó pasar: si la
+   * RLS filtra la fila, el update vuelve sin error y sin filas.
+   */
   async reenviar(id: number): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('solicitudes_permiso')
       .update({ estado: 'pendiente' as EstadoPermiso })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
   async crear(input: NuevaSolicitud): Promise<void> {
@@ -92,12 +101,14 @@ export const PermisoService = {
   },
 
   async cancelar(id: number): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('solicitudes_permiso')
       .update({ estado: 'cancelada' as EstadoPermiso })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
   async resolver(
@@ -105,11 +116,13 @@ export const PermisoService = {
     estado: 'aprobada' | 'rechazada' | 'observada',
     comentario: string
   ): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('solicitudes_permiso')
       .update({ estado, comentario_resolucion: comentario.trim() || null })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 };

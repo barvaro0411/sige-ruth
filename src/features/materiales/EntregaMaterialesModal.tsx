@@ -26,7 +26,7 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
   const [error, setError] = useState('');
 
   const pendientes = useMemo(
-    () => solicitud.items.filter(i => i.pendiente > 0),
+    () => solicitud.items.filter(i => i.pendiente> 0),
     [solicitud.items]
   );
 
@@ -49,12 +49,12 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
   const seleccionadas = useMemo(
     () => pendientes
       .map(i => ({ itemId: i.id, cantidad: Number(cantidades[i.id]) || 0 }))
-      .filter(e => e.cantidad > 0),
+      .filter(e => e.cantidad> 0),
     [pendientes, cantidades]
   );
 
   const entregaCompleta = pendientes.every(
-    i => (Number(cantidades[i.id]) || 0) >= i.pendiente
+    i => (Number(cantidades[i.id]) || 0)>= i.pendiente
   );
 
   function submit(e: FormEvent) {
@@ -65,7 +65,7 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
       setError('Indica cuánto entregas de al menos un material.');
       return;
     }
-    const excedida = pendientes.find(i => (Number(cantidades[i.id]) || 0) > i.pendiente);
+    const excedida = pendientes.find(i => (Number(cantidades[i.id]) || 0)> i.pendiente);
     if (excedida) {
       setError(`De "${excedida.nombre}" solo faltan ${excedida.pendiente} ${excedida.unidad}.`);
       return;
@@ -76,18 +76,18 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
   return (
     <Modal isOpen onClose={onClose} title="Entregar materiales" size="lg">
       <form onSubmit={submit}>
-        {error && <div className="login-error" role="alert" style={{ marginBottom: '16px' }}>{error}</div>}
+        {error && <div className="login-error mb-4" role="alert">{error}</div>}
 
-        <p className="text-muted" style={{ fontSize: '13.5px', marginBottom: '18px' }}>
+        <p className="text-muted text-base mb-4">
           Escribe cuánto entregas de cada material. Los que están en bodega descuentan
           el stock automáticamente. Si no alcanza para alguno, no se entrega nada y
           nada queda descontado.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="flex flex-col gap-2">
           {pendientes.map(item => {
             const valor = Number(cantidades[item.id]) || 0;
-            const excede = valor > item.pendiente;
+            const excede = valor> item.pendiente;
             return (
               <div
                 key={item.id}
@@ -99,21 +99,21 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                 }}
               >
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '7px' }}>
+                  <div className="font-bold text-base flex items-center gap-2">
                     {item.nombre}
                     {item.itemId
                       ? <Boxes size={14} style={{ color: 'var(--color-success)' }} aria-label="Descuenta de bodega" />
                       : null}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <div className="text-sm text-muted">
                     Pidió {item.cantidad} {item.unidad}
-                    {item.cantidadEntregada > 0 && <> · ya recibió {item.cantidadEntregada}</>}
+                    {item.cantidadEntregada> 0 && <> · ya recibió {item.cantidadEntregada}</>}
                     {' '}· <strong>faltan {item.pendiente}</strong>
                     {!item.itemId && ' · no está en bodega'}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <label className="form-label" htmlFor={`entrega-${item.id}`} style={{ margin: 0 }}>
+                <div className="flex items-center gap-2">
+                  <label className="form-label" htmlFor={`entrega-${item.id}`}>
                     Entregar
                   </label>
                   <input
@@ -124,24 +124,18 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                     value={cantidades[item.id] ?? ''}
                     onChange={e => setCantidades(prev => ({ ...prev, [item.id]: e.target.value }))}
                     disabled={entregar.isPending}
-                  />
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.unidad}</span>
+ />
+                  <span className="text-sm text-secondary">{item.unidad}</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {!entregaCompleta && seleccionadas.length > 0 && (
-          <div
-            style={{
-              display: 'flex', gap: '10px', alignItems: 'flex-start',
-              padding: '12px 16px', marginTop: '16px', borderRadius: 'var(--radius-md)',
-              background: 'var(--color-warning-soft)', color: 'var(--color-warning)',
-            }}
-          >
-            <AlertTriangle size={17} style={{ flexShrink: 0, marginTop: '1px' }} />
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>
+        {!entregaCompleta && seleccionadas.length> 0 && (
+          <div className="alerta alerta-warning alerta-bloque mt-4">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <span className="text-sm font-semibold">
               La solicitud quedará como «entregada en parte». Lo que falte se puede
               entregar después, cuando llegue.
             </span>

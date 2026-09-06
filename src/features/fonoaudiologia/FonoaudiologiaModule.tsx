@@ -44,6 +44,16 @@ export default function FonoaudiologiaModule() {
   const [alumnoParaEvolucion, setAlumnoParaEvolucion] = useState<EstudianteResumen | null>(null);
   const [mesSeleccionado, setMesSeleccionado] = useState(new Date().getMonth());
 
+  /**
+   * Abrir la evolución de un alumno es leer su ficha clínica, y eso queda
+   * registrado. La anotación no bloquea la apertura: si no se puede escribir,
+   * la ficha se muestra igual.
+   */
+  function abrirEvolucion(alumno: EstudianteResumen) {
+    setAlumnoParaEvolucion(alumno);
+    void FonoService.registrarConsulta(alumno.id);
+  }
+
   // Form State
   const [sesionEnEdicion, setSesionEnEdicion] = useState<SesionConEstudiante | null>(null);
   const [fechaSesion, setFechaSesion] = useState(getToday());
@@ -123,7 +133,7 @@ export default function FonoaudiologiaModule() {
       addToast('Completa la fecha, el estudiante y la actividad', 'warning');
       return;
     }
-    if (fechaSesion > getToday()) {
+    if (fechaSesion> getToday()) {
       addToast('La fecha de la sesión no puede estar en el futuro', 'warning');
       return;
     }
@@ -131,7 +141,7 @@ export default function FonoaudiologiaModule() {
       addToast('Describe la actividad con al menos 5 caracteres', 'warning');
       return;
     }
-    if (Object.values(nivelesLogrados).some(nivel => nivel < 1 || nivel > 3)) {
+    if (Object.values(nivelesLogrados).some(nivel => nivel < 1 || nivel> 3)) {
       addToast('Evalúa los cuatro niveles antes de guardar', 'warning');
       return;
     }
@@ -158,7 +168,7 @@ export default function FonoaudiologiaModule() {
   if (estaCargando) {
     return (
       <div className="page-container">
-        <div className="skeleton" style={{ height: 400 }} />
+        <div className="skeleton h-100" />
       </div>
     );
   }
@@ -169,7 +179,7 @@ export default function FonoaudiologiaModule() {
 
   return (
     <div className="page-container animate-in">
-      <header className="page-header" style={{ marginBottom: '32px' }}>
+      <header className="page-header mb-8">
         <div>
           <h1 className="page-title">Fonoaudiología</h1>
           <p className="page-subtitle">Seguimiento clínico y avance fonoaudiológico en {sede.nombre}</p>
@@ -182,7 +192,7 @@ export default function FonoaudiologiaModule() {
       </header>
 
       {/* KPI Cards */}
-      <section className="grid grid-2" style={{ marginBottom: '32px' }}>
+      <section className="grid grid-2 mb-8">
         <article className="card stat-card">
           <div className="stat-header">
             <span className="stat-label">Intervenciones ({getMonthName(mesSeleccionado)})</span>
@@ -212,13 +222,13 @@ export default function FonoaudiologiaModule() {
 
       {/* Historial de Sesiones */}
       <section className="card">
-        <div className="card-header" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="card-header py-5 px-6 flex justify-between items-center">
           <div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Registro de Intervenciones Clínicas</h3>
-            <p className="text-muted" style={{ fontSize: '13px' }}>Últimas sesiones fonoaudiológicas registradas</p>
+            <h3 className="text-md font-bold">Registro de Intervenciones Clínicas</h3>
+            <p className="text-muted text-sm">Últimas sesiones fonoaudiológicas registradas</p>
           </div>
-          <select 
-            className="form-control" 
+          <select
+            className="form-control"
             style={{ width: 'auto', padding: '6px 12px', fontSize: '13px' }}
             value={mesSeleccionado}
             onChange={e => setMesSeleccionado(parseInt(e.target.value, 10))}
@@ -228,7 +238,7 @@ export default function FonoaudiologiaModule() {
             ))}
           </select>
         </div>
-        
+
         <div className="data-table-container">
           <table className="data-table">
             <thead>
@@ -237,13 +247,13 @@ export default function FonoaudiologiaModule() {
                 <th>Estudiante</th>
                 <th>Niveles Evaluados</th>
                 <th>Actividad Realizada</th>
-                <th style={{ textAlign: 'right' }}>Acciones</th>
+                <th className="text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {sesionesMes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                  <td colSpan={5} className="text-center p-10 text-muted">
                     No hay sesiones registradas en {getMonthName(mesSeleccionado)}.
                   </td>
                 </tr>
@@ -252,13 +262,13 @@ export default function FonoaudiologiaModule() {
                   const est = s.estudiante;
                   return (
                     <tr key={s.id}>
-                      <td style={{ fontWeight: 600, fontSize: '13px' }}>{s.fecha}</td>
+                      <td className="font-semibold text-sm">{s.fecha}</td>
                       <td>
-                        <div style={{ fontWeight: 600 }}>{est ? `${est.nombre} ${est.apellidoPaterno}` : 'Alumno no asignado'}</div>
-                        <div className="text-muted" style={{ fontSize: '11px' }}>{est?.nivel || ''}</div>
+                        <div className="font-semibold">{est ? `${est.nombre} ${est.apellidoPaterno}` : 'Alumno no asignado'}</div>
+                        <div className="text-muted text-xs">{est?.nivel || ''}</div>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '4px' }}>
+                        <div className="flex gap-1">
                           <span title="Fonético" className={`badge ${s.nivel_fonetico === 3 ? 'badge-success' : s.nivel_fonetico === 2 ? 'badge-warning' : 'badge-danger'}`}>F:{s.nivel_fonetico}</span>
                           <span title="Semántico" className={`badge ${s.nivel_semantico === 3 ? 'badge-success' : s.nivel_semantico === 2 ? 'badge-warning' : 'badge-danger'}`}>S:{s.nivel_semantico}</span>
                           <span title="Morfosintáctico" className={`badge ${s.nivel_morfosintactico === 3 ? 'badge-success' : s.nivel_morfosintactico === 2 ? 'badge-warning' : 'badge-danger'}`}>M:{s.nivel_morfosintactico}</span>
@@ -270,20 +280,20 @@ export default function FonoaudiologiaModule() {
                           {s.actividad_realizada}
                         </div>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <td className="text-right">
+                        <div className="flex justify-end gap-2">
                           {est && (
-                            <button 
-                              className="btn btn-ghost btn-sm" 
+                            <button
+                              className="btn btn-ghost btn-sm"
                               title="Ver Evolución"
-                              onClick={() => setAlumnoParaEvolucion(est)}
+                              onClick={() => abrirEvolucion(est)}
                             >
                               <TrendingUp size={16} />
                             </button>
                           )}
                           {can(PERMISSIONS.RECORD_SESSIONS) && (
-                            <button 
-                              className="btn btn-ghost btn-sm" 
+                            <button
+                              className="btn btn-ghost btn-sm"
                               title="Editar Sesión"
                               onClick={() => editarSesion(s)}
                             >
@@ -307,22 +317,22 @@ export default function FonoaudiologiaModule() {
         onClose={limpiarForm}
         title={sesionEnEdicion ? 'Editar Intervención Fonoaudiológica' : 'Nueva Intervención Fonoaudiológica'}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-5">
           <div className="grid grid-2">
             <div className="form-group">
               <label className="form-label">Fecha de Intervención</label>
-              <input 
-                type="date" 
-                className="form-control" 
-                value={fechaSesion} 
+              <input
+                type="date"
+                className="form-control"
+                value={fechaSesion}
                 max={getToday()}
-                onChange={e => setFechaSesion(e.target.value)} 
-              />
+                onChange={e => setFechaSesion(e.target.value)}
+ />
             </div>
             <div className="form-group">
               <label className="form-label">Estudiante</label>
-              <select 
-                className="form-control" 
+              <select
+                className="form-control"
                 value={idAlumnoSeleccionado}
                 onChange={e => setIdAlumnoSeleccionado(e.target.value)}
                 disabled={!!sesionEnEdicion}
@@ -337,18 +347,18 @@ export default function FonoaudiologiaModule() {
 
           <div className="form-group">
             <label className="form-label">Evaluación de Niveles del Lenguaje</label>
-            <div className="grid grid-2" style={{ gap: '12px' }}>
+            <div className="grid grid-2 gap-3">
               {NIVELES_EVALUACION.map(n => (
-                <div key={n.id} style={{ background: 'var(--color-gray-50)', padding: '12px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{n.label}</div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
+                <div key={n.id} className="bg-subtle p-3 rounded-sm">
+                  <div className="text-sm font-semibold mb-2">{n.label}</div>
+                  <div className="flex gap-1">
                     {ESCALA_EVALUACION.map(esc => (
                       <button
                         key={esc.valor}
                         type="button"
                         style={{
                           flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 600, borderRadius: '6px',
-                          border: `1px solid ${nivelesLogrados[n.id] === esc.valor ? esc.color : 'var(--color-gray-200)'}`,
+                          border: `1px solid ${nivelesLogrados[n.id] === esc.valor ? esc.color : 'var(--border-medium)'}`,
                           background: nivelesLogrados[n.id] === esc.valor ? esc.color : 'white',
                           color: nivelesLogrados[n.id] === esc.valor ? 'white' : 'var(--text-primary)',
                           cursor: 'pointer'
@@ -366,27 +376,27 @@ export default function FonoaudiologiaModule() {
 
           <div className="form-group">
             <label className="form-label">Actividad Realizada</label>
-            <textarea 
-              className="form-control" 
-              rows={3} 
+            <textarea
+              className="form-control"
+              rows={3}
               placeholder="Describe el trabajo fonético/fonológico o semántico ejecutado..."
               value={descripcionActividad}
               onChange={e => setDescripcionActividad(e.target.value)}
-            />
+ />
           </div>
 
           <div className="form-group">
             <label className="form-label">Observaciones Adicionales (Opcional)</label>
-            <input 
-              type="text" 
-              className="form-control" 
+            <input
+              type="text"
+              className="form-control"
               placeholder="Conducta, atención, recomendaciones al docente..."
               value={notasAdicionales}
               onChange={e => setNotasAdicionales(e.target.value)}
-            />
+ />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+          <div className="flex justify-end gap-3 mt-3">
             <button className="btn btn-outline" onClick={limpiarForm}>Cancelar</button>
             <button className="btn btn-gold" onClick={guardarSesion} disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Guardando...' : 'Guardar Sesión'}
@@ -402,10 +412,10 @@ export default function FonoaudiologiaModule() {
         title={alumnoParaEvolucion ? `Evolución Fonoaudiológica: ${alumnoParaEvolucion.nombre} ${alumnoParaEvolucion.apellidoPaterno}` : ''}
       >
         {alumnoParaEvolucion && (
-          <Suspense fallback={<div className="skeleton" style={{ height: 350 }} />}>
-            <FonoEvolutionChart 
-              data={historialSesiones.filter(s => s.estudiante_id === alumnoParaEvolucion.id)} 
-            />
+          <Suspense fallback={<div className="skeleton h-88" />}>
+            <FonoEvolutionChart
+              data={historialSesiones.filter(s => s.estudiante_id === alumnoParaEvolucion.id)}
+ />
           </Suspense>
         )}
       </Modal>

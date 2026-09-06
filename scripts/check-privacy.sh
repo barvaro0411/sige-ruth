@@ -50,15 +50,24 @@ done
 duplicados=$(printf '%s\n' "${timestamps[@]}" | sort | uniq -d)
 [ -z "$duplicados" ] || fallar "Hay timestamps de migración duplicados: $duplicados"
 
-if rg -Il -i -e 'using[[:space:]]*\([[:space:]]*true[[:space:]]*\)' \
+# Estas dos comprobaciones usaban `rg`. Si ripgrep no está instalado, el
+# comando falla, el `if` lo lee como «no encontró nada» y la verificación pasa
+# sin haber mirado nada — el mismo fallo silencioso que el resto del proyecto
+# se esfuerza en evitar. `git grep` ya se usa más arriba y viene con git.
+if git grep -I -l -i -E \
+  -e 'using[[:space:]]*\([[:space:]]*true[[:space:]]*\)' \
   -e 'with[[:space:]]+check[[:space:]]*\([[:space:]]*true[[:space:]]*\)' \
-  supabase/migrations; then
+  -- supabase/migrations; then
   fallar "Se detectó una política RLS abierta incondicionalmente."
 fi
 
-if rg -Il -e "select\\(['\"]\\*" \
-  src/services/estudianteService.ts src/services/documentoService.ts src/services/fonoService.ts; then
+if git grep -I -l -E "select\\(['\"]\\*" \
+  -- src/services/estudianteService.ts src/services/documentoService.ts src/services/fonoService.ts; then
   fallar "Una consulta sensible volvió a usar select('*')."
 fi
+
+# Las variables CSS inexistentes las caza `src/app/tokens.test.ts`, que corre
+# con `npm test`: comparar contra el conjunto real de tokens es más fiable que
+# mantener acá una lista de nombres prohibidos.
 
 echo "Privacidad del árbol y estructura de migraciones verificadas."

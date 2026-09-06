@@ -29,89 +29,45 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'var(--bg-color)',
-          padding: 'var(--space-4)',
-          fontFamily: 'var(--font-primary)'
-        }}>
-          <div style={{
-            maxWidth: '480px',
-            width: '100%',
-            backgroundColor: 'var(--color-white)',
-            borderRadius: 'var(--radius-xl)',
-            padding: 'var(--space-8)',
-            boxShadow: 'var(--shadow-xl)',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              backgroundColor: 'var(--color-danger-light)',
-              color: 'var(--color-danger)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto var(--space-6)'
-            }}>
+        <div className="error-screen" role="alert">
+          <div className="error-card">
+            <div className="error-icon" aria-hidden="true">
               <AlertTriangle size={32} />
             </div>
-            
-            <h1 style={{
-              fontSize: 'var(--text-xl)',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              marginBottom: 'var(--space-2)'
-            }}>
-              Oops! Algo salió mal.
+
+            <h1 className="text-xl font-extrabold text-navy mb-2">
+              Algo se rompió en esta pantalla
             </h1>
-            
-            <p style={{
-              color: 'var(--text-secondary)',
-              marginBottom: 'var(--space-6)',
-              lineHeight: 1.5
-            }}>
-              Ocurrió un error inesperado. Nuestro equipo ha sido notificado del problema.
+
+            <p className="text-secondary mb-6 leading-snug">
+              No es culpa tuya y no se perdió nada de lo que ya estaba guardado.
+              Recarga la página; si vuelve a pasar, avisa a dirección.
             </p>
 
             {import.meta.env.DEV && (
-              <div style={{
-                textAlign: 'left',
-                backgroundColor: 'var(--color-gray-100)',
-                padding: 'var(--space-4)',
-                borderRadius: 'var(--radius-lg)',
-                marginBottom: 'var(--space-6)',
-                overflow: 'auto',
-                maxHeight: '200px'
-              }}>
-                <p style={{ fontWeight: 600, color: 'var(--color-danger)', fontSize: 'var(--text-sm)' }}>
+              <div className="error-detalle">
+                <p className="font-semibold text-danger text-sm">
                   {this.state.error && this.state.error.toString()}
                 </p>
-                <pre style={{ fontSize: 'var(--text-xs)', marginTop: 'var(--space-2)' }}>
+                <pre className="text-xs mt-2">
                   {this.state.errorInfo && this.state.errorInfo.componentStack}
                 </pre>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center' }}>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="btn btn-primary"
-                style={{ flex: 1, padding: 'var(--space-3)' }}
+            <div className="flex gap-3 justify-center flex-wrap">
+              <button
+                onClick={() => window.location.reload()}
+                className="btn btn-gold flex-1"
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={18} aria-hidden="true" />
                 Recargar página
               </button>
-              <button 
-                onClick={() => { window.location.href = '/'; }} 
-                className="btn btn-outline"
-                style={{ flex: 1, padding: 'var(--space-3)' }}
+              <button
+                onClick={() => { window.location.href = '/'; }}
+                className="btn btn-outline flex-1"
               >
-                <Home size={18} />
+                <Home size={18} aria-hidden="true" />
                 Ir al inicio
               </button>
             </div>

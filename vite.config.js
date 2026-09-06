@@ -26,37 +26,30 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Aumentar límite a 5MB
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // El generador de PDF sale del precarga: son ~1,5 MB que se descargaban
-        // en el celular de cada persona aunque nunca abriera una matrícula.
-        // Se guarda en caché la primera vez que alguien la usa.
-        globIgnores: ['**/vendor-pdf-*.js', '**/vendor-charts-*.js', '**/vendor-excel-*.js'],
+        // Al precaché entra el armazón de la app —lo que hace falta para que
+        // abra sin red— y nada más.
+        //
+        // Fuera quedan los dos chunks pesados, que ahora llevan el nombre del
+        // módulo que los generó porque `lazy()` los produce: el visor de
+        // matrícula (~1,5 MB de @react-pdf) y el motor de gráficas de recharts.
+        // Se guardan en caché la primera vez que alguien los usa, con la regla
+        // de más abajo.
+        globIgnores: [
+          '**/MatriculaPreviewModal-*.js',
+          '**/CartesianChart-*.js',
+        ],
+        maximumFileSizeToCacheInBytes: 600 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /\/assets\/vendor-excel-.*\.js$/,
+            // Los chunks que quedaron fuera del precaché por tamaño. Llevan
+            // hash en el nombre, así que `CacheFirst` es seguro: un cambio
+            // produce otra URL.
+            urlPattern: /\/assets\/.*\.js$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'vendor-excel',
-              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
-              cacheableResponse: { statuses: [0, 200] }
-            }
-          },
-          {
-            urlPattern: /\/assets\/vendor-charts-.*\.js$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'vendor-charts',
-              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
-              cacheableResponse: { statuses: [0, 200] }
-            }
-          },
-          {
-            urlPattern: /\/assets\/vendor-pdf-.*\.js$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'vendor-pdf',
-              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheName: 'chunks-pesados',
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] }
             }
           },
@@ -93,12 +86,23 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Solo se agrupa a mano lo que todo el mundo necesita desde el primer
+        // segundo: React y los iconos.
+        //
+        // El generador de PDF y las gráficas NO van acá, aunque parezca que
+        // corresponde. Declararlos como chunk propio los convierte en chunks de
+        // nivel superior, y Vite los lista en el `modulepreload` del HTML de
+        // entrada — con lo que el navegador se los descargaba en la primera
+        // visita aunque los componentes que los usan sean `lazy()`. Eran 1,5 MB
+        // de PDF que la mayoría del personal nunca abre, precargados en el
+        // celular de quien solo entra a pedir insumos.
+        //
+        // Sin la declaración, Rollup los deja dentro de los chunks asíncronos
+        // que `lazy()` ya genera, que es lo que decía la documentación que
+        // pasaba y no pasaba.
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-pdf': ['@react-pdf/renderer'],
-          'vendor-excel': ['xlsx'],
           'vendor-ui': ['lucide-react'],
-          'vendor-charts': ['recharts'],
         }
       }
     },

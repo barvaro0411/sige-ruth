@@ -105,7 +105,7 @@ export default function EstudiantesList() {
 
   const filtered = useMemo(() => {
     return estudiantes.filter(e => {
-      const matchSearch = !search || 
+      const matchSearch = !search ||
         `${e.nombre} ${e.apellidoPaterno} ${e.apellidoMaterno}`.toLowerCase().includes(search.toLowerCase()) ||
         e.rut.includes(search.replace(/\./g, ''));
       const matchCurso = !filterCurso || e.curso_id === filterCurso;
@@ -113,11 +113,11 @@ export default function EstudiantesList() {
     }).sort((a, b) => a.apellidoPaterno.localeCompare(b.apellidoPaterno));
   }, [estudiantes, search, filterCurso]);
 
-  if (isLoading) return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+  if (isLoading) return <div className="page-container"><div className="skeleton h-100" /></div>;
 
   return (
     <div className="page-container animate-in">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+      <header className="flex justify-between items-end mb-10">
         <div>
           <h1 className="page-title">Libro de Matrícula</h1>
           <p className="page-subtitle">Gestión de expedientes y registros oficiales</p>
@@ -130,38 +130,38 @@ export default function EstudiantesList() {
       </header>
 
       {/* Filtros Pulidos */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '32px', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
+      <div className="flex gap-5 mb-8 items-center">
+        <div className="relative flex-1">
           <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--navy-600)' }} />
-          <input 
-            className="form-input" 
+          <input
+            className="form-input"
             style={{ paddingLeft: '48px', width: '100%' }}
-            placeholder="Buscar por nombre o RUT..." 
-            value={search} 
-            onChange={e => setSearch(e.target.value)} 
-          />
+            placeholder="Buscar por nombre o RUT..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+ />
         </div>
         <div style={{ display: 'flex', background: 'var(--border-light)', padding: '6px', borderRadius: '14px', gap: '4px', overflowX: 'auto' }}>
-          <button 
+          <button
             onClick={() => setFilterCurso('')}
-            style={{ 
+            style={{
               padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
               background: !filterCurso ? 'white' : 'transparent',
               boxShadow: !filterCurso ? 'var(--shadow-subtle)' : 'none',
               color: !filterCurso ? 'var(--navy-900)' : 'var(--navy-600)'
             }}
-          >Todos</button>
+>Todos</button>
           {cursos.map(c => (
-            <button 
+            <button
               key={c.id}
               onClick={() => setFilterCurso(c.id)}
-              style={{ 
+              style={{
                 padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                 background: filterCurso === c.id ? 'white' : 'transparent',
                 boxShadow: filterCurso === c.id ? 'var(--shadow-subtle)' : 'none',
                 color: filterCurso === c.id ? 'var(--navy-900)' : 'var(--navy-600)'
               }}
-            >{c.nombre}</button>
+>{c.nombre}</button>
           ))}
         </div>
       </div>
@@ -169,11 +169,11 @@ export default function EstudiantesList() {
       {/* Grid de Alumnos */}
       <div className="grid grid-3">
         {filtered.map(est => (
-          <article key={est.id} className="card" style={{ padding: '0' }}>
-            <div style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ 
-                  width: '64px', height: '64px', borderRadius: '18px', 
+          <article key={est.id} className="card">
+            <div className="p-6">
+              <div className="flex gap-5 items-center mb-6">
+                <div style={{
+                  width: '64px', height: '64px', borderRadius: '18px',
                   background: 'linear-gradient(135deg, var(--navy-900), var(--navy-800))',
                   color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '22px', fontWeight: 800, border: '4px solid var(--gold-50)'
@@ -181,49 +181,49 @@ export default function EstudiantesList() {
                   {est.nombre[0]}{est.apellidoPaterno[0]}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--navy-900)', marginBottom: '4px' }}>
+                  <h3 className="text-lg font-extrabold text-navy mb-1">
                     {est.apellidoPaterno} {est.apellidoMaterno}
                   </h3>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--navy-600)' }}>{est.nombre}</p>
+                  <p className="text-sm font-semibold text-secondary">{est.nombre}</p>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '4px' }}>RUT</div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>{est.rut}</div>
+              <div className="grid grid-2 gap-3 mb-6">
+                <div className="bg-main p-3 rounded-md">
+                  <div className="text-xs font-extrabold text-secondary uppercase mb-1">RUT</div>
+                  <div className="text-sm font-bold">{est.rut}</div>
                 </div>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '4px' }}>Curso</div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>
+                <div className="bg-main p-3 rounded-md">
+                  <div className="text-xs font-extrabold text-secondary uppercase mb-1">Curso</div>
+                  <div className="text-sm font-bold">
                     {cursos.find(c => c.id === est.curso_id)?.nombre || est.nivel}
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button className="btn btn-ghost" disabled={loadingStudentId === est.id} style={{ padding: '8px' }} onClick={() => void loadStudentDetail(est.id, 'detail')}><Eye size={18} /></button>
-                  <button className="btn btn-ghost" style={{ padding: '8px' }} onClick={() => setDocStudent({id: est.id, nombre: `${est.nombre} ${est.apellidoPaterno}`})}><FolderOpen size={18} /></button>
-                  <button className="btn btn-ghost" disabled={loadingStudentId === est.id} style={{ padding: '8px' }} onClick={() => void loadStudentDetail(est.id, 'matricula')}><FileText size={18} /></button>
+              <div className="flex justify-between items-center">
+                <div className="flex gap-1">
+                  <button className="btn btn-ghost p-2" disabled={loadingStudentId === est.id}  onClick={() => void loadStudentDetail(est.id, 'detail')}><Eye size={18} /></button>
+                  <button className="btn btn-ghost p-2"  onClick={() => setDocStudent({id: est.id, nombre: `${est.nombre} ${est.apellidoPaterno}`})}><FolderOpen size={18} /></button>
+                  <button className="btn btn-ghost p-2" disabled={loadingStudentId === est.id}  onClick={() => void loadStudentDetail(est.id, 'matricula')}><FileText size={18} /></button>
                 </div>
                 {can(PERMISSIONS.ENROLL_STUDENTS) && (
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div className="flex gap-1">
                     <button
-                      className="btn btn-ghost"
+                      className="btn btn-ghost p-2 text-gold"
                       title="Editar estudiante"
                       aria-label={`Editar a ${est.nombre} ${est.apellidoPaterno}`}
-                      style={{ padding: '8px', color: 'var(--gold-600)' }}
-                      disabled={loadingStudentId === est.id}
+
+disabled={loadingStudentId === est.id}
                       onClick={() => void loadStudentDetail(est.id, 'edit')}
-                    ><Edit2 size={18} /></button>
+><Edit2 size={18} /></button>
                     <button
-                      className="btn btn-ghost"
+                      className="btn btn-ghost p-2 text-danger"
                       title="Desactivar matrícula"
                       aria-label={`Desactivar matrícula de ${est.nombre} ${est.apellidoPaterno}`}
-                      style={{ padding: '8px', color: 'var(--danger)' }}
-                      onClick={() => setDeactivatingStudent(est)}
-                    ><Trash2 size={18} /></button>
+
+onClick={() => setDeactivatingStudent(est)}
+><Trash2 size={18} /></button>
                   </div>
                 )}
               </div>
@@ -241,7 +241,7 @@ export default function EstudiantesList() {
         size="lg"
       >
         {showDetail && (
-          <div className="grid grid-2" style={{ gap: '16px' }}>
+          <div className="grid grid-2 gap-4">
             {[
               ['Nombre', `${showDetail.nombre} ${showDetail.apellidoPaterno} ${showDetail.apellidoMaterno}`],
               ['RUT', showDetail.rut],
@@ -254,9 +254,9 @@ export default function EstudiantesList() {
               ['Anamnesis', showDetail.anamnesis ? 'Completada' : 'Pendiente'],
               ['Prueba inicial', showDetail.pruebaInicial ? 'Completada' : 'Pendiente'],
             ].map(([label, value]) => (
-              <div key={label} style={{ padding: '14px', background: 'var(--bg-main)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '5px' }}>{label}</div>
-                <div style={{ fontSize: '14px', fontWeight: 700 }}>{value}</div>
+              <div key={label} className="p-3 bg-main rounded-md">
+                <div className="text-xs font-extrabold text-secondary uppercase mb-1">{label}</div>
+                <div className="text-base font-bold">{value}</div>
               </div>
             ))}
           </div>
@@ -268,20 +268,20 @@ export default function EstudiantesList() {
       )}
 
       {showForm && (
-        <EstudianteForm 
-          isOpen={showForm} 
+        <EstudianteForm
+          isOpen={showForm}
           onClose={() => { setShowForm(false); setEditingStudent(null); }}
-          onSubmit={(data) => mutation.mutate(data)} 
+          onSubmit={(data) => mutation.mutate(data)}
           estudiante={editingStudent}
           isLoading={mutation.isPending}
           cursos={cursos}
-        />
+ />
       )}
 
       {showMatricula && (
         <Suspense fallback={
           <div className="modal-overlay">
-            <div className="modal-box md" style={{ padding: '40px', textAlign: 'center' }}>
+            <div className="modal-box md p-10 text-center">
               <p className="text-muted">Preparando la matrícula…</p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function EstudiantesList() {
             onClose={() => setShowMatricula(null)}
             estudiante={showMatricula}
             sede={sede}
-          />
+ />
         </Suspense>
       )}
 
@@ -305,18 +305,18 @@ export default function EstudiantesList() {
             ? `¿Confirmas que deseas desactivar la matrícula de ${deactivatingStudent.nombre} ${deactivatingStudent.apellidoPaterno}? El historial se conservará.`
             : ''}
         </p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div className="flex justify-end gap-3">
           <button
             className="btn btn-outline"
             disabled={deactivateMutation.isPending}
             onClick={() => setDeactivatingStudent(null)}
-          >Cancelar</button>
+>Cancelar</button>
           <button
             className="btn"
             disabled={!deactivatingStudent || deactivateMutation.isPending}
             onClick={() => deactivatingStudent && deactivateMutation.mutate(deactivatingStudent.id)}
-            style={{ background: 'var(--danger)', color: 'white' }}
-          >{deactivateMutation.isPending ? 'Desactivando...' : 'Desactivar matrícula'}</button>
+            style={{ background: 'var(--color-danger)', color: 'white' }}
+>{deactivateMutation.isPending ? 'Desactivando...' : 'Desactivar matrícula'}</button>
         </div>
       </Modal>
     </div>

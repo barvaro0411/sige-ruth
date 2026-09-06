@@ -109,9 +109,9 @@ export default function MantencionDetalle({
 
   return (
     <Modal isOpen onClose={onCerrar} title={mantencion.lugar} size="lg">
-      <div style={{ display: 'grid', gap: '20px' }}>
+      <div className="grid gap-5">
         {/* Encabezado */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <div className="flex flex-wrap gap-2 items-center">
           <span className="badge badge-navy">{ETIQUETA_ESTADO[mantencion.estado]}</span>
           <span className={`badge ${mantencion.prioridad === 'urgente' ? 'badge-danger'
             : mantencion.prioridad === 'alta' ? 'badge-warning' : 'badge-info'}`}>
@@ -122,37 +122,37 @@ export default function MantencionDetalle({
 
         <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.55 }}>{mantencion.descripcion}</p>
 
-        <div className="text-muted" style={{ fontSize: '13px', display: 'grid', gap: '4px' }}>
-          <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div className="text-muted text-sm grid gap-1">
+          <span className="flex gap-1 items-center">
             <User2 size={14} /> Reportó {mantencion.reportadoPorNombre ?? 'alguien del equipo'} · {formatDateTime(mantencion.createdAt)}
           </span>
           {mantencion.asignadoANombre && (
-            <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span className="flex gap-1 items-center">
               <Wrench size={14} /> A cargo: {mantencion.asignadoANombre}
             </span>
           )}
           {mantencion.fechaProgramada && (
-            <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span className="flex gap-1 items-center">
               <MapPin size={14} /> Programada para el {formatDate(mantencion.fechaProgramada)}
             </span>
           )}
         </div>
 
         {/* Fotos */}
-        {(adjuntos.data ?? []).length > 0 && (
+        {(adjuntos.data ?? []).length> 0 && (
           <section>
-            <h4 style={{ fontSize: '13px', marginBottom: '8px' }}>Fotos</h4>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <h4 className="text-sm mb-2">Fotos</h4>
+            <div className="flex gap-2 flex-wrap">
               {(adjuntos.data ?? []).map(a => (
-                <figure key={a.id} style={{ margin: 0 }}>
+                <figure key={a.id}>
                   <img
                     src={a.url} alt={a.nombreArchivo}
                     style={{
                       width: 132, height: 132, objectFit: 'cover',
                       borderRadius: 'var(--radius-md)', border: '1px solid var(--border-medium)',
                     }}
-                  />
-                  <figcaption className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>
+ />
+                  <figcaption className="text-muted text-xs mt-1">
                     {a.momento === 'despues' ? 'Cómo quedó' : 'Cómo estaba'}
                   </figcaption>
                 </figure>
@@ -162,12 +162,12 @@ export default function MantencionDetalle({
         )}
 
         {!cerradaDefinitiva && (gestiona || esReportante) && (
-          <label className="btn btn-outline btn-sm" style={{ justifySelf: 'start', cursor: 'pointer' }}>
+          <label className="btn btn-outline btn-sm justify-self-start cursor-pointer">
             <Camera size={16} /> Agregar foto
             <input
-              type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+              type="file" accept="image/*" capture="environment" className="hidden"
               onChange={e => { const f = e.target.files?.[0]; if (f) subirFoto.mutate(f); }}
-            />
+ />
           </label>
         )}
 
@@ -177,10 +177,10 @@ export default function MantencionDetalle({
             padding: '14px', borderRadius: 'var(--radius-md)',
             background: 'var(--color-success-soft)', border: '1px solid var(--border-light)',
           }}>
-            <h4 style={{ fontSize: '13px', marginBottom: '6px' }}>Qué se hizo</h4>
-            <p style={{ margin: 0, fontSize: '14px' }}>{mantencion.trabajoRealizado}</p>
+            <h4 className="text-sm mb-1">Qué se hizo</h4>
+            <p className="text-base">{mantencion.trabajoRealizado}</p>
             {(mantencion.costo !== null || mantencion.proveedor) && (
-              <p className="text-muted" style={{ fontSize: '12px', marginTop: '8px', marginBottom: 0 }}>
+              <p className="text-muted text-sm mt-2">
                 {mantencion.proveedor && <>{mantencion.proveedor}</>}
                 {mantencion.proveedor && mantencion.costo !== null && ' · '}
                 {mantencion.costo !== null && MONEDA.format(mantencion.costo)}
@@ -191,9 +191,9 @@ export default function MantencionDetalle({
 
         {/* Acciones de gestión */}
         {gestiona && !cerradaDefinitiva && (
-          <section style={{ display: 'grid', gap: '12px' }}>
-            {siguientes.length > 0 && (
-              <div className="form-group" style={{ margin: 0 }}>
+          <section className="grid gap-3">
+            {siguientes.length> 0 && (
+              <div className="form-group">
                 <label className="form-label" htmlFor="mant-estado">Mover a</label>
                 <select
                   id="mant-estado" className="form-input" value=""
@@ -208,7 +208,7 @@ export default function MantencionDetalle({
               </div>
             )}
 
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="mant-asignado">A cargo de</label>
               <select
                 id="mant-asignado" className="form-input"
@@ -224,7 +224,7 @@ export default function MantencionDetalle({
               </select>
             </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="mant-fecha">Programar para</label>
               <input
                 id="mant-fecha" type="date" className="form-input"
@@ -232,7 +232,7 @@ export default function MantencionDetalle({
                 onChange={e => accion.mutate(() =>
                   MantencionService.ajustar(mantencion.id, { fechaProgramada: e.target.value || null })
                 )}
-              />
+ />
             </div>
 
             {mantencion.estado !== 'resuelta' && !resolviendo && (
@@ -242,36 +242,33 @@ export default function MantencionDetalle({
             )}
 
             {resolviendo && (
-              <div style={{
-                display: 'grid', gap: '10px', padding: '14px',
-                borderRadius: 'var(--radius-md)', border: '1px solid var(--border-medium)',
-              }}>
-                <div className="form-group" style={{ margin: 0 }}>
+              <div className="grid gap-2 p-3 rounded-md border">
+                <div className="form-group">
                   <label className="form-label" htmlFor="mant-trabajo">¿Qué se hizo?</label>
                   <textarea
                     id="mant-trabajo" className="form-textarea" rows={2} autoFocus
                     placeholder="Se cambió el flexible y la llave"
                     value={trabajo} onChange={e => setTrabajo(e.target.value)}
-                  />
+ />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <div className="grid grid-2 gap-2">
+                  <div className="form-group">
                     <label className="form-label" htmlFor="mant-costo">Costo (opcional)</label>
                     <input
                       id="mant-costo" className="form-input" inputMode="numeric"
                       placeholder="0" value={costo} onChange={e => setCosto(e.target.value)}
-                    />
+ />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group">
                     <label className="form-label" htmlFor="mant-proveedor">Quién lo hizo</label>
                     <input
                       id="mant-proveedor" className="form-input"
                       placeholder="Gasfíter, o el nombre del taller"
                       value={proveedor} onChange={e => setProveedor(e.target.value)}
-                    />
+ />
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="flex gap-2">
                   <button className="btn btn-outline" onClick={() => setResolviendo(false)}>Cancelar</button>
                   <button className="btn btn-gold" onClick={resolver} disabled={accion.isPending}>
                     Guardar resolución
@@ -298,9 +295,9 @@ export default function MantencionDetalle({
         {/* Cancelar: quien reportó también puede, si se equivocó */}
         {!cerradaDefinitiva && (gestiona || esReportante) && (
           <button
-            className="btn btn-ghost"
-            style={{ color: 'var(--color-danger)', justifySelf: 'start' }}
-            onClick={() => accion.mutate(async () => {
+            className="btn btn-ghost text-danger justify-self-start"
+
+onClick={() => accion.mutate(async () => {
               await MantencionService.cancelar(mantencion.id);
               addToast('Reporte cancelado', 'info');
               onCerrar();
@@ -310,27 +307,27 @@ export default function MantencionDetalle({
           </button>
         )}
 
-        {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+        {error && <p className="text-danger text-sm">{error}</p>}
 
         {/* Historial */}
         <section>
-          <h4 style={{ fontSize: '13px', marginBottom: '10px' }}>Historial</h4>
+          <h4 className="text-sm mb-2">Historial</h4>
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '10px' }}>
             {(historial.data ?? []).map(evento => (
-              <li key={evento.id} style={{ display: 'flex', gap: '10px', fontSize: '13px' }}>
+              <li key={evento.id} className="flex gap-2 text-sm">
                 <span style={{
                   width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
                   background: 'var(--color-gold)',
                 }} />
                 <div>
-                  <div style={{ fontWeight: 700 }}>
+                  <div className="font-bold">
                     {ETIQUETA_ESTADO[evento.estadoNuevo as EstadoMantencion] ?? evento.estadoNuevo}
                   </div>
-                  <div className="text-muted" style={{ fontSize: '12px' }}>
+                  <div className="text-muted text-sm">
                     {formatDateTime(evento.createdAt)}
                   </div>
                   {evento.comentario && (
-                    <div style={{ fontSize: '13px', marginTop: '2px' }}>{evento.comentario}</div>
+                    <div className="text-sm">{evento.comentario}</div>
                   )}
                 </div>
               </li>

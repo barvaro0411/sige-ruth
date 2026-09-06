@@ -136,12 +136,12 @@ export default function MaterialesModule() {
   }
 
   if (consulta.isLoading) {
-    return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+    return <div className="page-container"><div className="skeleton h-100" /></div>;
   }
 
   return (
     <div className="page-container animate-in">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
+      <header className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
           <h1 className="page-title">Materiales</h1>
           <p className="page-subtitle">Solicitudes, aprobación y compra · {sede.nombre}</p>
@@ -153,16 +153,16 @@ export default function MaterialesModule() {
         )}
       </header>
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="flex gap-3 mb-6 flex-wrap items-center">
         <button className={`btn ${tab === 'mias' ? 'btn-gold' : 'btn-outline'}`} onClick={() => setTab('mias')}>
           <Package size={18} /> Mis solicitudes
         </button>
         {puedeGestionar && (
           <button className={`btn ${tab === 'bandeja' ? 'btn-gold' : 'btn-outline'}`} onClick={() => setTab('bandeja')}>
-            <Inbox size={18} /> Bandeja {(bandeja.data?.length ?? 0) > 0 && `(${bandeja.data?.length})`}
+            <Inbox size={18} /> Bandeja {(bandeja.data?.length ?? 0)> 0 && `(${bandeja.data?.length})`}
           </button>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+        <div className="flex items-center gap-2 ml-auto">
           <Filter size={16} aria-hidden="true" style={{ color: 'var(--navy-600)' }} />
           <label className="sr-only" htmlFor="filtro-estado">Filtrar por estado</label>
           <select id="filtro-estado" className="form-select" style={{ minWidth: '180px' }}
@@ -176,31 +176,31 @@ export default function MaterialesModule() {
       </div>
 
       {consulta.isError && (
-        <div className="card" style={{ padding: '20px', color: 'var(--color-danger)' }}>
+        <div className="card p-5 text-danger">
           No se pudieron cargar las solicitudes. Revisa tu conexión y vuelve a intentar.
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {lista.map(s => {
           const badge = ESTADOS_MATERIAL[s.estado];
           const atrasada = estaAtrasada(s.fechaNecesidad, s.estado);
           return (
-            <article key={s.id} className="card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <article key={s.id} className="card p-5 flex items-center gap-4 flex-wrap">
               <div style={{ flex: 1, minWidth: '240px' }}>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--navy-900)' }}>
+                <div className="text-md font-extrabold text-navy">
                   {s.titulo}
                   {tab === 'bandeja' && s.solicitanteNombre && (
-                    <span style={{ fontWeight: 600, color: 'var(--navy-600)' }}> · {s.solicitanteNombre}</span>
+                    <span className="font-semibold text-secondary"> · {s.solicitanteNombre}</span>
                   )}
                 </div>
-                <div style={{ fontSize: '13px', color: 'var(--navy-600)', fontWeight: 600, marginTop: '4px' }}>
+                <div className="text-sm text-secondary font-semibold mt-1">
                   {s.items.length} {s.items.length === 1 ? 'material' : 'materiales'}
                   {' · '}{formatCLP(s.costoEstimadoTotal)}
                   {s.fechaNecesidad && ` · para el ${formatDate(s.fechaNecesidad)}`}
                 </div>
                 {atrasada && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--color-danger)' }}>
+                  <div className="flex items-center gap-1 mt-1 text-sm font-bold text-danger">
                     <AlertTriangle size={14} /> Atrasada
                   </div>
                 )}
@@ -222,7 +222,7 @@ export default function MaterialesModule() {
         })}
 
         {lista.length === 0 && !consulta.isError && (
-          <div style={{ textAlign: 'center', padding: '80px', color: 'var(--navy-600)' }}>
+          <div className="text-center p-20 text-secondary">
             <Package size={48} style={{ opacity: 0.2, marginBottom: '16px' }} aria-hidden="true" />
             <p>
               {tab === 'mias'
@@ -237,11 +237,11 @@ export default function MaterialesModule() {
         <SolicitudMaterialDetalle
           solicitud={detalle}
           onClose={() => setDetalle(null)}
-        />
+ />
       )}
 
       <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nueva solicitud de materiales">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           <div>
             <label className="form-label" htmlFor="titulo-material">Título</label>
             <input id="titulo-material" className="form-input" value={form.titulo}
@@ -255,7 +255,7 @@ export default function MaterialesModule() {
               onChange={e => setForm({ ...form, justificacion: e.target.value })} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-2 gap-3">
             <div>
               <label className="form-label" htmlFor="prioridad-material">Prioridad</label>
               <select id="prioridad-material" className="form-select" value={form.prioridad}
@@ -273,7 +273,7 @@ export default function MaterialesModule() {
           </div>
 
           <div>
-            <label className="form-label" htmlFor="curso-material">Curso <span style={{ fontWeight: 500 }}>(opcional)</span></label>
+            <label className="form-label" htmlFor="curso-material">Curso <span className="font-medium">(opcional)</span></label>
             <select id="curso-material" className="form-select" value={form.cursoId}
               onChange={e => setForm({ ...form, cursoId: e.target.value })}>
               <option value="">Sin curso específico</option>
@@ -287,11 +287,11 @@ export default function MaterialesModule() {
             <datalist id="productos-bodega">
               {(productosBodega.data ?? []).map(p => (
                 <option key={p.id} value={p.nombre}>
-                  {p.stockActual > 0 ? `hay ${p.stockActual} ${p.unidadNombre.toLowerCase()}` : 'sin stock'}
+                  {p.stockActual> 0 ? `hay ${p.stockActual} ${p.unidadNombre.toLowerCase()}` : 'sin stock'}
                 </option>
               ))}
             </datalist>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="flex flex-col gap-2">
               {items.map((item, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 70px 1fr 1fr 36px', gap: '6px', alignItems: 'center' }}>
                   <input className="form-input" placeholder="Nombre" value={item.nombre}
@@ -318,24 +318,24 @@ export default function MaterialesModule() {
                 </div>
               ))}
             </div>
-            <button type="button" className="btn btn-ghost" style={{ marginTop: '8px' }}
-              onClick={() => setItems(prev => [...prev, { ...ITEM_VACIO }])}>
+            <button type="button" className="btn btn-ghost mt-2"
+onClick={() => setItems(prev => [...prev, { ...ITEM_VACIO }])}>
               <Plus size={16} /> Agregar material
             </button>
             {items.some(i => i.itemId) && (
-              <p className="text-muted" style={{ fontSize: '12.5px', marginTop: '8px' }}>
+              <p className="text-muted text-sm mt-2">
                 Los materiales que hay en bodega se descuentan solos al entregarlos.
               </p>
             )}
           </div>
 
-          {totalEstimado > 0 && (
-            <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-main)', fontSize: '13px', fontWeight: 700, color: 'var(--navy-800)' }}>
+          {totalEstimado> 0 && (
+            <div className="py-3 px-4 rounded-md bg-main text-sm font-bold text-navy">
               Total estimado: {formatCLP(totalEstimado)}
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-2 gap-3">
             <button className="btn btn-outline" disabled={crear.isPending} onClick={() => validarYEnviar(false)}>
               Guardar borrador
             </button>

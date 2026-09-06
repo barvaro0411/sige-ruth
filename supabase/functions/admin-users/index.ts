@@ -63,7 +63,15 @@ Deno.serve(async (request) => {
   const corsHeaders = buildCorsHeaders(origin);
 
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  if (origin && !allowedOrigins.includes(origin)) {
+
+  // El origen se exige, no se comprueba «si viene». Antes la condición era
+  // `origin && !permitido`, así que una petición sin cabecera `Origin` —o sea
+  // cualquier cliente que no sea un navegador— saltaba el filtro entero.
+  //
+  // Esto no es la barrera de seguridad: la barrera es el JWT verificado más
+  // abajo y el chequeo de rol. Es una capa más, y como tal tiene que cumplirse
+  // siempre o no estar.
+  if (!origin || !allowedOrigins.includes(origin)) {
     return json({ success: false, error: 'Origen no autorizado' }, 403, corsHeaders);
   }
   if (request.method !== 'POST') return json({ success: false, error: 'Método no permitido' }, 405, corsHeaders);
@@ -118,6 +126,19 @@ Deno.serve(async (request) => {
     const newPassword = String(body.password || '');
     if (!authData.user.app_metadata?.must_change_password) {
       return json({ success: false, error: 'La cuenta no requiere un cambio inicial' }, 409, corsHeaders);
+    }
+    // El límite cubre también este camino: sin él, una sesión con contraseña
+    // temporal puede martillear la función probando contraseñas hasta dar con
+    // una que pase el chequeo de robustez.
+    const { data: permitidoCambio, error: errorLimiteCambio } = await admin.rpc(
+      'consume_admin_user_rate_limit',
+      { p_actor: authData.user.id },
+    );
+    if (errorLimiteCambio) {
+      return json({ success: false, error: 'No se pudo validar el límite de solicitudes' }, 500, corsHeaders);
+    }
+    if (!permitidoCambio) {
+      return json({ success: false, error: 'Demasiados intentos. Espera cinco minutos.' }, 429, corsHeaders);
     }
     if (!isStrongPassword(newPassword)) {
       return json({ success: false, error: 'Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo' }, 400, corsHeaders);

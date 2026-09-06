@@ -17,38 +17,38 @@ export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sed
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Ficha de Matrícula: ${estudiante.nombre} ${estudiante.apellidoPaterno}`}>
       <div className="matricula-preview-container" style={{ display: 'flex', flexDirection: 'column', height: '80vh' }}>
-        
+
         {/* Toolbar superior del Modal */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          padding: 'var(--space-4)', 
-          borderBottom: '1px solid var(--color-gray-200)',
-          backgroundColor: 'var(--color-gray-50)'
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px',
+          borderBottom: '1px solid var(--border-medium)',
+          backgroundColor: 'var(--bg-subtle)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <div style={{ 
-              width: 40, height: 40, borderRadius: 'var(--radius-lg)', 
+          <div className="flex items-center gap-3">
+            <div style={{
+              width: 40, height: 40, borderRadius: 'var(--radius-lg)',
               backgroundColor: 'var(--color-navy)', color: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
               <FileText size={20} />
             </div>
             <div>
-              <p style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>Vista Previa Digital</p>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>Generado automáticamente • v6.0</p>
+              <p className="font-bold text-sm text-navy">Vista Previa Digital</p>
+              <p className="text-xs text-secondary">Generado automáticamente • v6.0</p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-            <PDFDownloadLink 
-              document={<MatriculaDocument estudiante={estudiante} sede={sede} />} 
+          <div className="flex gap-3">
+            <PDFDownloadLink
+              document={<MatriculaDocument estudiante={estudiante} sede={sede} />}
               fileName={`Matricula_${estudiante.apellidoPaterno}_${estudiante.nombre}.pdf`}
-              className="btn btn-primary"
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
+              className="btn btn-gold"
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              {({ loading }) => 
+              {({ loading }) =>
                 loading ? 'Cargando...' : (
                   <>
                     <Download size={18} />
@@ -57,7 +57,7 @@ export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sed
                 )
               }
             </PDFDownloadLink>
-            <button onClick={onClose} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <button onClick={onClose} className="btn btn-outline flex items-center gap-2">
               <X size={18} />
               Cerrar
             </button>
@@ -65,23 +65,23 @@ export default function MatriculaPreviewModal({ isOpen, onClose, estudiante, sed
         </div>
 
         {/* Visor de PDF */}
-        <div style={{ flex: 1, backgroundColor: 'var(--color-gray-100)', overflow: 'hidden' }}>
+        <div className="flex-1 bg-subtle overflow-hidden">
           <PDFViewer width="100%" height="100%" style={{ border: 'none' }} showToolbar={false}>
             <MatriculaDocument estudiante={estudiante} sede={sede} />
           </PDFViewer>
         </div>
 
         {/* Footer informativo */}
-        <div style={{ 
-          padding: 'var(--space-3) var(--space-4)', 
-          backgroundColor: 'white', 
-          borderTop: '1px solid var(--color-gray-200)',
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: 'white',
+          borderTop: '1px solid var(--border-medium)',
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--space-2)'
+          gap: '8px'
         }}>
-          <Printer size={14} style={{ color: 'var(--color-gray-400)' }} />
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-gray-500)' }}>
+          <Printer size={14} style={{ color: 'var(--text-light)' }} />
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             Recomendación: Imprimir en tamaño A4 con orientación vertical para mantener las firmas alineadas.
           </p>
         </div>

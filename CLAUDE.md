@@ -46,10 +46,20 @@ ahorra tiempo, no evita errores ni entrega información útil, no se agrega.**
 8. **Acceso a datos en `src/services/*Service.ts`.** Sin consultas a Supabase
    dentro de componentes de presentación.
 9. **Un `update` que la RLS filtra no falla**: vuelve sin error y con cero filas.
-   En los updates cuya única barrera es la política —sin un trigger que levante
-   excepción— hay que encadenar `.select('id')` y pasar el resultado por
-   `exigirFilaAfectada()` (`src/db/afectadas.ts`). Si no, la app dice «guardado»
-   sobre un cambio que nunca ocurrió.
+   Hay que encadenar `.select('id')` y pasar el resultado por
+   `exigirFilaAfectada()` (`src/services/afectadas.ts`). Si no, la app dice
+   «guardado» sobre un cambio que nunca ocurrió.
+   Vale también cuando la tabla tiene un trigger que valida transiciones: el
+   trigger solo corre sobre las filas que el `USING` de la política dejó pasar,
+   así que la fila ajena no lanza excepción — desaparece.
+10. **El estilo va en `index.css`, no en el JSX.** Nada de bloques `<style>`
+    dentro de componentes: se reinyectan en cada montaje, obligan a
+    `unsafe-inline` en la CSP y parten el sistema de diseño en dos lugares que
+    terminan contradiciéndose. Un `style={{ }}` en línea solo se justifica
+    cuando el valor depende de un dato (el ancho de una barra, el color de un
+    estado calculado). Para todo lo demás están los tokens y la capa de
+    utilidades. `src/app/tokens.test.ts` falla si se usa una variable o una
+    clase que no existe.
 
 ## Decisiones tomadas
 
@@ -58,6 +68,33 @@ ahorra tiempo, no evita errores ni entrega información útil, no se agrega.**
   inconsistencia y ningún valor. La tabla se eliminó y el código se retiró.
 - **El generador de PDF se carga bajo demanda** (`lazy` + fuera del precache de
   la PWA): son ~1,5 MB que la mayoría del personal nunca usa.
+  **Y no se declara en `manualChunks`.** Ese era el detalle que faltaba:
+  declararlo lo convierte en un chunk de nivel superior y Vite lo lista en el
+  `modulepreload` del HTML de entrada, así que se descargaba en la primera
+  visita igual, aunque el componente fuera `lazy()`. Sin la declaración, Rollup
+  lo deja dentro del chunk asíncrono. En `manualChunks` va solo lo que todo el
+  mundo necesita desde el primer segundo: React y los iconos.
+- **Cada pantalla se descarga cuando alguien la abre** (`lazy` por ruta en
+  `App.tsx`). El permiso las oculta; sin esto el bundle las entregaba igual.
+- **El `.xlsx` se escribe con código propio** (`src/utils/xlsx.ts`, sin
+  dependencias). `xlsx` de SheetJS dejó de publicarse en npm en la 0.18.5 y
+  quedó ahí con dos avisos sin parche, lo que mantenía el `npm audit` del CI en
+  rojo. Un .xlsx es un ZIP con XML adentro: se arma a mano en ~250 líneas, se
+  fue esa dependencia y 283 KB del bundle.
+- **La inactividad se mide contra el reloj, no contra un `setTimeout`.** El
+  temporizador en memoria se reinicia al cerrar la pestaña, que es justo el caso
+  que el cierre automático quería cubrir. La marca vive en `localStorage`
+  (`src/auth/inactividad.ts`) y además hace que dos pestañas compartan el plazo.
+- **`sesion_lista` se deriva del catálogo.** La política restrictiva que hace
+  cumplir el cambio de contraseña temporal se aplicaba recorriendo una lista de
+  27 tablas escrita a mano: una tabla nueva quedaba fuera en silencio. Ahora
+  entran todas las que tienen RLS y salen solo las declaradas en
+  `tablas_exentas_del_candado_de_sesion()`, con su motivo. La prueba 07 falla si
+  aparece una sin decidir.
+- **Abrir una ficha clínica queda registrado.** `audit_row_change()` anota quién
+  escribe; `registrar_consulta_clinica()` anota quién mira. En dato de salud de
+  un menor la consulta importa tanto como la modificación, y Postgres no tiene
+  disparador de SELECT.
 - **Mantenciones no usa RPC.** El flujo es más simple que el de materiales y
   las reglas caben en dos triggers: `preparar_mantencion` pone reportante y
   estado inicial, `enforce_mantencion_transicion` decide quién mueve qué. Los

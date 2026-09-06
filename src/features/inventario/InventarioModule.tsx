@@ -177,7 +177,7 @@ export default function InventarioModule() {
             Materiales de {sede.nombre} — el stock sale de los movimientos registrados
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="flex gap-2 flex-wrap">
           {puedeMover && (
             <button
               className="btn btn-outline"
@@ -197,18 +197,18 @@ export default function InventarioModule() {
       </header>
 
       {/* Lo primero que se necesita saber: qué falta */}
-      {faltantes.length > 0 && (
+      {faltantes.length> 0 && (
         <section
           className="card"
           style={{ padding: '20px 24px', marginBottom: '24px', borderColor: 'var(--color-warning)' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+          <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={20} style={{ color: 'var(--color-warning)' }} />
-            <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>
+            <h2 className="text-md font-extrabold">
               Hay que reponer {faltantes.length} producto{faltantes.length === 1 ? '' : 's'}
             </h2>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="flex flex-wrap gap-2">
             {faltantes.map(p => (
               <button
                 key={p.id}
@@ -228,7 +228,7 @@ export default function InventarioModule() {
       )}
 
       {/* Filtros */}
-      <section style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      <section className="flex gap-3 flex-wrap mb-5">
         <div className="search-container" style={{ flex: '1 1 260px' }}>
           <Search size={18} className="search-icon" />
           <input
@@ -236,7 +236,7 @@ export default function InventarioModule() {
             placeholder="Buscar producto, categoría o ubicación"
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-          />
+ />
         </div>
         <select
           className="form-select"
@@ -256,9 +256,9 @@ export default function InventarioModule() {
       </section>
 
       {visibles.length === 0 ? (
-        <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+        <div className="card py-12 px-6 text-center">
           <Boxes size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-          <h3 style={{ marginBottom: '6px' }}>
+          <h3 className="mb-1">
             {productos.length === 0
               ? 'Todavía no hay productos en esta bodega'
               : soloFaltantes
@@ -278,11 +278,11 @@ export default function InventarioModule() {
           {visibles.map(p => {
             const estado = ESTILO_ESTADO[p.estadoStock];
             return (
-              <article key={p.id} className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '10px' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '2px' }}>{p.nombre}</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{p.categoria}</p>
+              <article key={p.id} className="card p-5">
+                <div className="flex justify-between gap-2 mb-2">
+                  <div>
+                    <h3 className="text-md font-extrabold">{p.nombre}</h3>
+                    <p className="text-sm text-muted">{p.categoria}</p>
                   </div>
                   <span className={`badge ${estado.clase}`} style={{ height: 'fit-content' }}>{estado.texto}</span>
                 </div>
@@ -291,18 +291,18 @@ export default function InventarioModule() {
                   <span style={{ fontSize: '30px', fontWeight: 900, color: 'var(--color-navy)', fontVariantNumeric: 'tabular-nums' }}>
                     {p.stockActual}
                   </span>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  <span className="text-sm text-secondary font-semibold">
                     {p.unidadNombre.toLowerCase()}
                   </span>
                 </div>
 
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px' }}>
-                  {p.stockMinimo > 0 ? <>Mínimo {p.stockMinimo}</> : 'Sin mínimo definido'}
-                  {p.faltante > 0 && <> · <strong style={{ color: 'var(--color-warning)' }}>faltan {p.faltante}</strong></>}
+                  {p.stockMinimo> 0 ? <>Mínimo {p.stockMinimo}</> : 'Sin mínimo definido'}
+                  {p.faltante> 0 && <> · <strong className="text-warning">faltan {p.faltante}</strong></>}
                   {p.ubicacion && <> · <MapPin size={11} style={{ verticalAlign: '-1px' }} /> {p.ubicacion}</>}
                 </p>
 
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div className="flex gap-2 flex-wrap">
                   {puedeMover && (
                     <button className="btn btn-outline btn-sm" onClick={() => setMoviendo(p)}>
                       <Box size={14} /> Movimiento
@@ -334,7 +334,7 @@ export default function InventarioModule() {
           onChange={setFormProducto}
           onCancel={() => { setFormProducto(null); setEditandoId(null); }}
           onSubmit={() => guardarProducto.mutate(formProducto)}
-        />
+ />
       )}
 
       {moviendo && (
@@ -342,7 +342,7 @@ export default function InventarioModule() {
           producto={moviendo}
           onClose={() => setMoviendo(null)}
           onHecho={() => { setMoviendo(null); refrescar(); }}
-        />
+ />
       )}
 
       {viendoHistorial && (
@@ -375,17 +375,17 @@ function FormularioProducto({
   return (
     <Modal isOpen onClose={onCancel} title={editando ? 'Editar producto' : 'Nuevo producto'} size="lg">
       <form onSubmit={submit}>
-        {error && <div className="login-error" role="alert" style={{ marginBottom: '16px' }}>{error}</div>}
+        {error && <div className="login-error mb-4" role="alert">{error}</div>}
 
-        <div className="grid grid-2" style={{ gap: '16px' }}>
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="grid grid-2 gap-4">
+          <div className="form-group col-span-full">
             <label className="form-label" htmlFor="prod-nombre">Nombre *</label>
             <input
               id="prod-nombre" required minLength={2} className="form-input" disabled={guardando}
               placeholder="Cartulina española roja"
               value={form.nombre}
               onChange={e => onChange({ ...form, nombre: e.target.value })}
-            />
+ />
           </div>
 
           <div className="form-group">
@@ -416,7 +416,7 @@ function FormularioProducto({
               id="prod-min" type="number" min={0} step="0.01" className="form-input" disabled={guardando}
               value={form.stockMinimo}
               onChange={e => onChange({ ...form, stockMinimo: Number(e.target.value) })}
-            />
+ />
           </div>
 
           <div className="form-group">
@@ -426,21 +426,21 @@ function FormularioProducto({
               placeholder="Bodega, estante 2"
               value={form.ubicacion}
               onChange={e => onChange({ ...form, ubicacion: e.target.value })}
-            />
+ />
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <div className="form-group col-span-full">
             <label className="form-label" htmlFor="prod-desc">Detalle (opcional)</label>
             <input
               id="prod-desc" className="form-input" disabled={guardando}
               value={form.descripcion}
               onChange={e => onChange({ ...form, descripcion: e.target.value })}
-            />
+ />
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <div className="form-group col-span-full">
             <label className="form-label">Aparece primero al pedir para</label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div className="flex gap-2 flex-wrap">
               {ROLES_CON_LISTA.map(r => {
                 const marcado = form.rolesFrecuentes.includes(r.rol);
                 return (
@@ -462,13 +462,13 @@ function FormularioProducto({
                           ? form.rolesFrecuentes.filter(x => x !== r.rol)
                           : [...form.rolesFrecuentes, r.rol],
                       })}
-                    />
+ />
                     {r.label}
                   </label>
                 );
               })}
             </div>
-            <p className="text-muted" style={{ fontSize: '12.5px', marginTop: '8px' }}>
+            <p className="text-muted text-sm mt-2">
               Quien tenga ese rol verá este producto de entrada en «Pedir insumos»,
               sin tener que buscarlo.
             </p>
@@ -476,7 +476,7 @@ function FormularioProducto({
         </div>
 
         {!editando && (
-          <p className="text-muted" style={{ fontSize: '13px', marginTop: '16px' }}>
+          <p className="text-muted text-sm mt-4">
             El producto se crea con stock 0. Para cargarlo, registra un movimiento de ingreso.
           </p>
         )}
@@ -553,9 +553,9 @@ function FormularioMovimiento({
   return (
     <Modal isOpen onClose={onClose} title={producto.nombre} size="md">
       <form onSubmit={submit}>
-        {error && <div className="login-error" role="alert" style={{ marginBottom: '16px' }}>{error}</div>}
+        {error && <div className="login-error mb-4" role="alert">{error}</div>}
 
-        <div className="tabs" style={{ marginBottom: '20px' }}>
+        <div className="tabs mb-5">
           <button type="button" className={`tab ${modo === 'movimiento' ? 'active' : ''}`} onClick={() => setModo('movimiento')}>
             Registrar movimiento
           </button>
@@ -566,9 +566,9 @@ function FormularioMovimiento({
 
         {modo === 'movimiento' ? (
           <>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
+            <div className="form-group mb-4">
               <label className="form-label">Qué pasó</label>
-              <div style={{ display: 'grid', gap: '8px' }}>
+              <div className="grid gap-2">
                 {TIPOS_MANUALES.map(t => (
                   <label
                     key={t.tipo}
@@ -582,9 +582,9 @@ function FormularioMovimiento({
                     <input
                       type="radio" name="tipo-mov" checked={tipo === t.tipo}
                       onChange={() => setTipo(t.tipo)}
-                    />
-                    <span style={{ fontWeight: 700, fontSize: '14px' }}>{ETIQUETA_MOVIMIENTO[t.tipo]}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t.ayuda}</span>
+ />
+                    <span className="font-bold text-base">{ETIQUETA_MOVIMIENTO[t.tipo]}</span>
+                    <span className="text-sm text-muted">{t.ayuda}</span>
                   </label>
                 ))}
               </div>
@@ -597,12 +597,12 @@ function FormularioMovimiento({
               <input
                 id="mov-cant" required type="number" min="0.01" step="0.01" className="form-input"
                 value={cantidad} onChange={e => setCantidad(e.target.value)} autoFocus
-              />
+ />
             </div>
           </>
         ) : (
           <>
-            <p className="text-muted" style={{ fontSize: '13.5px', marginBottom: '16px' }}>
+            <p className="text-muted text-base mb-4">
               Cuenta lo que hay en la bodega y escríbelo. El sistema calcula la diferencia
               y la deja registrada como ajuste, sin borrar nada del historial.
             </p>
@@ -613,12 +613,12 @@ function FormularioMovimiento({
               <input
                 id="mov-cont" required type="number" min="0" step="0.01" className="form-input"
                 value={contado} onChange={e => setContado(e.target.value)} autoFocus
-              />
+ />
             </div>
           </>
         )}
 
-        <div className="form-group" style={{ marginTop: '16px' }}>
+        <div className="form-group mt-4">
           <label className="form-label" htmlFor="mov-motivo">
             Motivo {modo === 'conteo' ? '' : '(a quién o para qué)'}
           </label>
@@ -626,7 +626,7 @@ function FormularioMovimiento({
             id="mov-motivo" className="form-input"
             placeholder={modo === 'conteo' ? 'Conteo de fin de mes' : 'Entrega a Medio Mayor A'}
             value={motivo} onChange={e => setMotivo(e.target.value)}
-          />
+ />
         </div>
 
         <div
@@ -636,7 +636,7 @@ function FormularioMovimiento({
             background: insuficiente ? 'var(--color-danger-soft)' : 'var(--bg-main)',
           }}
         >
-          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+          <span className="text-sm font-bold text-secondary">
             Quedará en
           </span>
           <span
@@ -673,16 +673,16 @@ function HistorialProducto({ producto, onClose }: { producto: ProductoInventario
   return (
     <Modal isOpen onClose={onClose} title={`Historial · ${producto.nombre}`} size="lg">
       {isLoading ? (
-        <div className="skeleton" style={{ height: 200 }} />
+        <div className="skeleton h-50" />
       ) : movimientos.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
           <PackageX size={38} style={{ color: 'var(--text-muted)', marginBottom: '10px' }} />
           <p className="text-muted">Este producto todavía no tiene movimientos registrados.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div className="flex flex-col gap-1">
           {movimientos.map(m => {
-            const suma = m.cantidad > 0;
+            const suma = m.cantidad> 0;
             return (
               <div
                 key={m.id}
@@ -701,12 +701,12 @@ function HistorialProducto({ producto, onClose }: { producto: ProductoInventario
                 >
                   {suma ? <Plus size={16} /> : <Minus size={16} />}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px' }}>
+                <div className="flex-1">
+                  <div className="font-bold text-base">
                     {ETIQUETA_MOVIMIENTO[m.tipo]}
-                    {m.motivo && <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}> — {m.motivo}</span>}
+                    {m.motivo && <span className="font-medium text-secondary"> — {m.motivo}</span>}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                  <div className="text-xs text-muted">
                     {new Date(m.createdAt).toLocaleString('es-CL', {
                       day: '2-digit', month: '2-digit', year: 'numeric',
                       hour: '2-digit', minute: '2-digit',
@@ -725,7 +725,7 @@ function HistorialProducto({ producto, onClose }: { producto: ProductoInventario
               </div>
             );
           })}
-          <p className="text-muted" style={{ fontSize: '12px', marginTop: '14px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <p className="text-muted text-sm mt-3 flex gap-1 items-center">
             <Check size={13} /> Los movimientos no se editan ni se borran: un error se corrige con un ajuste.
           </p>
         </div>

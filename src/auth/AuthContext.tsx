@@ -3,6 +3,9 @@ import { supabase } from '../db/database';
 import { hasPermission, getDefaultRoute, ROLE_LABELS, ROLE_COLORS, Permiso } from './permissions';
 import { User } from '../types';
 import { mapPerfil } from '../utils/mappers';
+import {
+  anotarActividad, olvidarActividad, restanteDeInactividad, sesionVencidaPorInactividad,
+} from './inactividad';
 
 interface AuthContextType {
   user: User | null;
@@ -67,6 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
+          // La inactividad se mide contra el reloj, no contra un temporizador
+          // en memoria: si no, cerrar la pestaña y volver más tarde reinicia
+          // el plazo y la sesión olvidada sigue viva.
+          if (sesionVencidaPorInactividad()) {
+            await supabase.auth.signOut();
+            olvidarActividad();
+            return;
+          }
           setMustChangePassword(Boolean(session.user.app_metadata?.must_change_password));
           // Si el perfil no existe o fue desactivado, se cierra la sesión.
           await syncSession(session.user.id);
@@ -102,21 +113,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchUserProfile]);
 
-  // En equipos compartidos, una sesión olvidada no debe quedar abierta todo
-  // el día. La actividad local renueva el plazo; a los 30 minutos se cierra.
+  // En equipos compartidos, una sesión olvidada no debe quedar abierta todo el
+  // día. Cada gesto anota la hora y renueva el plazo; a los 30 minutos se
+  // cierra. La marca se guarda para que el plazo sobreviva a cerrar la pestaña
+  // —que era justamente el caso que se escapaba— y para que dos pestañas de la
+  // misma persona compartan un solo reloj.
   useEffect(() => {
     if (!user) return;
+
     let timer: ReturnType<typeof setTimeout>;
-    const reset = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => { void supabase.auth.signOut(); }, 30 * 60 * 1000);
+
+    const cerrar = () => {
+      olvidarActividad();
+      void supabase.auth.signOut();
     };
-    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
-    events.forEach(event => window.addEventListener(event, reset, { passive: true }));
-    reset();
+
+    const programar = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        // Otra pestaña pudo haber registrado actividad mientras esta dormía.
+        if (sesionVencidaPorInactividad()) cerrar();
+        else programar();
+      }, restanteDeInactividad());
+    };
+
+    const registrar = () => {
+      anotarActividad();
+      programar();
+    };
+
+    // `visibilitychange` cubre el caso de volver a una pestaña que estuvo en
+    // segundo plano: el navegador puede haber frenado el temporizador.
+    const alVolver = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (sesionVencidaPorInactividad()) cerrar();
+      else programar();
+    };
+
+    const eventos = ['pointerdown', 'keydown', 'touchstart'] as const;
+    eventos.forEach(evento => window.addEventListener(evento, registrar, { passive: true }));
+    document.addEventListener('visibilitychange', alVolver);
+
+    registrar();
+
     return () => {
       clearTimeout(timer);
-      events.forEach(event => window.removeEventListener(event, reset));
+      eventos.forEach(evento => window.removeEventListener(evento, registrar));
+      document.removeEventListener('visibilitychange', alVolver);
     };
   }, [user]);
 

@@ -45,7 +45,7 @@ export default function PedirInsumos() {
   // Sin frecuentes configurados no se muestra una pantalla vacía: se cae a
   // todo el inventario. Bodega puede acotarlo después marcando favoritos.
   const listaFrecuentes = frecuentes.data ?? [];
-  const hayFrecuentes = listaFrecuentes.length > 0;
+  const hayFrecuentes = listaFrecuentes.length> 0;
   const base = hayFrecuentes ? listaFrecuentes : (todos.data ?? []);
 
   const otros = useMemo(() => {
@@ -59,12 +59,12 @@ export default function PedirInsumos() {
 
   // Lo agregado desde el buscador se muestra junto a lo frecuente.
   const agregados = useMemo(
-    () => (todos.data ?? []).filter(p => !base.some(b => b.id === p.id) && cantidades[p.id] > 0),
+    () => (todos.data ?? []).filter(p => !base.some(b => b.id === p.id) && cantidades[p.id]> 0),
     [todos.data, base, cantidades]
   );
 
   const pedido = useMemo(
-    () => [...base, ...agregados].filter(p => (cantidades[p.id] ?? 0) > 0),
+    () => [...base, ...agregados].filter(p => (cantidades[p.id] ?? 0)> 0),
     [base, agregados, cantidades]
   );
 
@@ -125,8 +125,8 @@ export default function PedirInsumos() {
   const totalArticulos = pedido.reduce((s, p) => s + cantidades[p.id], 0);
 
   return (
-    <div className="page-container animate-in" style={{ paddingBottom: pedido.length > 0 ? '120px' : undefined }}>
-      <header className="page-header" style={{ marginBottom: '20px' }}>
+    <div className="page-container animate-in" style={{ paddingBottom: pedido.length> 0 ? '120px' : undefined }}>
+      <header className="page-header mb-5">
         <div>
           <h1 className="page-title">Pedir insumos</h1>
           <p className="page-subtitle">Marca lo que necesitas y envía. {sede.nombre}</p>
@@ -134,60 +134,59 @@ export default function PedirInsumos() {
       </header>
 
       {base.length === 0 ? (
-        <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+        <div className="card py-12 px-6 text-center">
           <PackageCheck size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-          <h3 style={{ marginBottom: '6px' }}>Todavía no hay productos cargados</h3>
+          <h3 className="mb-1">Todavía no hay productos cargados</h3>
           <p className="text-muted">Pídele a bodega que cargue los materiales de la sede.</p>
         </div>
       ) : (
         <>
           {!hayFrecuentes && (
             <p
-              className="text-muted"
-              style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', marginBottom: '16px' }}
+              className="text-muted flex gap-2 items-center text-sm mb-4"
             >
               <Info size={15} /> Bodega todavía no marcó tus productos habituales, así que ves todo el inventario.
             </p>
           )}
 
-          <section style={{ display: 'grid', gap: '10px', marginBottom: '24px' }}>
+          <section className="grid gap-2 mb-6">
             {[...base, ...agregados].map(p => (
               <FilaProducto
                 key={p.id}
                 producto={p}
                 cantidad={cantidades[p.id] ?? 0}
                 onAjustar={delta => ajustar(p.id, delta)}
-              />
+ />
             ))}
           </section>
 
           {/* Buscar algo que no está en la lista corta */}
           {!buscando ? (
-            <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setBuscando(true)}>
+            <button className="btn btn-outline w-full"  onClick={() => setBuscando(true)}>
               <Search size={17} /> Buscar otro producto
             </button>
           ) : (
-            <section style={{ marginBottom: '24px' }}>
-              <div className="search-container" style={{ marginBottom: '12px' }}>
+            <section className="mb-6">
+              <div className="search-container mb-3">
                 <Search size={18} className="search-icon" />
                 <input
                   className="search-input" autoFocus
                   placeholder="Escribe qué necesitas"
                   value={busqueda}
                   onChange={e => setBusqueda(e.target.value)}
-                />
+ />
               </div>
-              <div style={{ display: 'grid', gap: '10px' }}>
+              <div className="grid gap-2">
                 {otros.slice(0, 12).map(p => (
                   <FilaProducto
                     key={p.id}
                     producto={p}
                     cantidad={cantidades[p.id] ?? 0}
                     onAjustar={delta => ajustar(p.id, delta)}
-                  />
+ />
                 ))}
                 {busqueda && otros.length === 0 && (
-                  <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>
+                  <p className="text-muted text-center p-5">
                     No hay ningún producto con ese nombre en la bodega de esta sede.
                   </p>
                 )}
@@ -195,19 +194,19 @@ export default function PedirInsumos() {
             </section>
           )}
 
-          <div className="form-group" style={{ marginTop: '24px' }}>
+          <div className="form-group mt-6">
             <label className="form-label" htmlFor="nota-pedido">¿Algo que agregar? (opcional)</label>
             <textarea
               id="nota-pedido" className="form-textarea" rows={2}
               placeholder="Se acabó el cloro del baño de niños"
               value={nota} onChange={e => setNota(e.target.value)}
-            />
+ />
           </div>
         </>
       )}
 
       {/* Barra de envío: se queda a la vista mientras haya algo elegido */}
-      {pedido.length > 0 && (
+      {pedido.length> 0 && (
         <div
           style={{
             position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 900,
@@ -219,8 +218,8 @@ export default function PedirInsumos() {
           }}
         >
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: '14px' }}>
+            <div className="flex-1">
+              <div className="font-extrabold text-base">
                 {pedido.length} producto{pedido.length === 1 ? '' : 's'} · {totalArticulos} en total
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -228,9 +227,9 @@ export default function PedirInsumos() {
               </div>
             </div>
             <button
-              className="btn btn-gold"
-              style={{ flexShrink: 0 }}
-              disabled={enviar.isPending}
+              className="btn btn-gold shrink-0"
+
+disabled={enviar.isPending}
               onClick={() => enviar.mutate()}
             >
               <Send size={18} /> {enviar.isPending ? 'Enviando…' : 'Enviar'}
@@ -253,7 +252,7 @@ function FilaProducto({
   cantidad: number;
   onAjustar: (delta: number) => void;
 }) {
-  const elegido = cantidad > 0;
+  const elegido = cantidad> 0;
   const sinStock = producto.stockActual <= 0;
 
   return (
@@ -266,8 +265,8 @@ function FilaProducto({
         transition: 'border-color .15s, background .15s',
       }}
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: '15px' }}>{producto.nombre}</div>
+      <div className="flex-1">
+        <div className="font-bold text-md">{producto.nombre}</div>
         <div style={{ fontSize: '12px', color: sinStock ? 'var(--color-warning)' : 'var(--text-muted)' }}>
           {sinStock
             ? 'No queda en bodega — se pedirá igual'
@@ -275,7 +274,7 @@ function FilaProducto({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+      <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"
           className="btn btn-outline"

@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, permission }: ProtectedRouteProps) {
   const { user, isAuthenticated, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div style={{
@@ -20,16 +20,13 @@ export default function ProtectedRoute({ children, permission }: ProtectedRouteP
         minHeight: '100vh',
         background: 'var(--bg-primary)',
       }}>
-        <div className="animate-pulse" style={{
-          fontSize: 'var(--text-lg)',
-          color: 'var(--text-secondary)',
-        }}>
+        <div className="animate-pulse text-lg text-secondary">
           Cargando...
         </div>
       </div>
     );
   }
-  
+
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }

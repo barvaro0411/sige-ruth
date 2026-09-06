@@ -21,7 +21,10 @@ Cubre la gestión administrativa del establecimiento:
 
 ## Desarrollo local
 
-Requisitos: Node.js 20 o superior y un proyecto de Supabase configurado.
+Requisitos: Node.js 22 o superior y un proyecto de Supabase configurado.
+(22 porque el escritor de `.xlsx` comprime con `CompressionStream('deflate-raw')`,
+disponible desde Node 21.2; en versiones anteriores el archivo sale sin comprimir
+pero se abre igual.)
 
 ```bash
 npm install
@@ -34,7 +37,13 @@ Variables públicas necesarias para la aplicación:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY` (se acepta `VITE_SUPABASE_ANON_KEY` como alternativa)
 
-La variable `SUPABASE_SECRET_KEY` se utiliza solamente para tareas administrativas locales. Nunca debe publicarse en Vercel ni incluirse en el repositorio.
+Si falta cualquiera de las dos, la aplicación **no arranca** y dice cuál falta. Antes había valores por defecto en el código y un despliegue mal configurado apuntaba a producción con una clave falsa: todo respondía 401 y el síntoma no decía nada de la causa.
+
+La variable `SUPABASE_SECRET_KEY` se usa solo para `npm run seed:data`, que se corre una vez. **No va en el `.env`**: da acceso total saltándose toda la RLS, y dejarla en el archivo la vuelve legible de forma permanente para cualquier script `postinstall` de cualquier dependencia. Se pasa en línea:
+
+```bash
+SUPABASE_SECRET_KEY=sb_secret_... npm run seed:data
+```
 
 ## Verificación
 

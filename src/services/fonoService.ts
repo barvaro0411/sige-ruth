@@ -1,5 +1,6 @@
 import { supabase } from '../db/database';
 import { Tables } from '../types';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 const CAMPOS_SESION = [
   'id', 'fecha', 'estudiante_id', 'fonoaudiologo_id', 'actividad_realizada',
@@ -44,11 +45,33 @@ export const FonoService = {
    * Eliminar una sesión
    */
   async deleteSesion(id: number): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('sesiones_fono')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
+  },
+
+  /**
+   * Deja constancia de que alguien abrió la ficha clínica de un estudiante.
+   *
+   * `audit_row_change()` registra quién escribe; esto registra quién mira. En
+   * dato sensible de salud de un menor la consulta importa tanto como la
+   * modificación, y Postgres no tiene disparador de SELECT.
+   *
+   * No interrumpe nada si falla: el registro es para la institución, y no
+   * poder anotarlo no es motivo para dejar a la fonoaudióloga sin su ficha.
+   * La RPC ignora las repeticiones dentro de la misma hora.
+   */
+  async registrarConsulta(estudianteId: number): Promise<void> {
+    const { error } = await supabase.rpc('registrar_consulta_clinica', {
+      p_estudiante_id: estudianteId,
+    });
+    if (error && import.meta.env.DEV) {
+      console.warn('[FonoService] No se pudo registrar la consulta clínica:', error.message);
+    }
   },
 };

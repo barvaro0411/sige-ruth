@@ -3,6 +3,7 @@ import { mapEventoHistorial, mapSolicitudMaterial } from '../utils/mappers';
 import {
   EstadoMaterial, EventoHistorial, PrioridadMaterial, SolicitudMaterial,
 } from '../types';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 /**
  * MaterialService
@@ -135,22 +136,44 @@ export const MaterialService = {
   },
 
   async eliminarItem(itemId: number): Promise<void> {
-    const { error } = await supabase.from('solicitudes_materiales_items').delete().eq('id', itemId);
+    const { data, error } = await supabase
+      .from('solicitudes_materiales_items')
+      .delete()
+      .eq('id', itemId)
+      .select('id');
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
-  /** Registro de la compra real, ítem por ítem. */
+  /**
+   * Registro de la compra real, ítem por ítem.
+   *
+   * Lo que se pierde acá si la política filtra la fila es el costo de una
+   * compra que sí ocurrió, así que el silencio no es una opción.
+   */
   async registrarCompraItem(itemId: number, costoReal: number, cantidadComprada: number): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('solicitudes_materiales_items')
       .update({ costo_real: costoReal, cantidad_comprada: cantidadComprada })
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .select('id');
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
+  /**
+   * Solo el propio borrador. `materiales_delete_borrador` ya filtra por estado,
+   * así que el trigger `impedir_borrado_material` nunca llega a dispararse por
+   * esta vía: la fila ajena simplemente no existe para quien la pide.
+   */
   async eliminarBorrador(id: number): Promise<void> {
-    const { error } = await supabase.from('solicitudes_materiales').delete().eq('id', id);
+    const { data, error } = await supabase
+      .from('solicitudes_materiales')
+      .delete()
+      .eq('id', id)
+      .select('id');
     if (error) throw error;
+    exigirFilaAfectada(data, 'No se pudo eliminar: solo se borra un borrador propio.');
   },
 
   // ── Transiciones de estado: todas por RPC ──────────────────────────────
