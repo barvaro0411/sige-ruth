@@ -73,7 +73,7 @@ export default function EstudianteForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -93,7 +93,7 @@ export default function EstudianteForm({
       setFormError('El RUT ingresado no es válido. Revisa el dígito verificador.');
       return;
     }
-    if (formData.fecha_nacimiento && formData.fecha_nacimiento > new Date().toISOString().split('T')[0]) {
+    if (formData.fecha_nacimiento && formData.fecha_nacimiento> new Date().toISOString().split('T')[0]) {
       setFormError('La fecha de nacimiento no puede estar en el futuro.');
       return;
     }
@@ -326,4 +326,3 @@ export default function EstudianteForm({
     </Modal>
   );
 }
-

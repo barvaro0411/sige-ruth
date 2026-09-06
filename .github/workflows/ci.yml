@@ -7,6 +7,9 @@
 # =============================================================================
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -28,7 +31,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       # `npm ci` falla si package.json y package-lock.json no coinciden.
@@ -45,8 +48,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Dependencias de runtime
-        run: npm audit --omit=dev
+      - name: Dependencias de runtime y herramientas
+        run: npm audit
 
       - name: Detectar secretos versionados
         run: npm run security:secrets
@@ -71,7 +74,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - uses: supabase/setup-cli@v3
         with:

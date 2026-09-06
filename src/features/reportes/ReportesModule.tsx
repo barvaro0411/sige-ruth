@@ -263,8 +263,8 @@ export default function ReportesModule() {
       const { rows, filenameBase, sheetName } = await getReportData(type);
 
       if (format === 'xlsx') {
-        downloadExcel(filenameBase, sheetName, rows);
-        addToast('Planilla Excel generada exitosamente', 'success');
+        await downloadExcel(filenameBase, sheetName, rows);
+        addToast('Archivo Excel descargado exitosamente', 'success');
       } else {
         const csv = createCsv(rows.map(r => r.map(c => c ?? '')));
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -286,7 +286,7 @@ export default function ReportesModule() {
 
   return (
     <div className="page-container animate-in">
-      <header className="page-header" style={{ marginBottom: '32px' }}>
+      <header className="page-header mb-8">
         <div>
           <h1 className="page-title">Centro de Reportes</h1>
           <p className="page-subtitle">Exportación oficial de planillas Excel y datos para {sede.nombre}</p>
@@ -342,4 +342,3 @@ export default function ReportesModule() {
     </div>
   );
 }
-

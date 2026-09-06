@@ -19,7 +19,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     setError('');
-    
+
     const result = await login(email, password);
     if (!result.success) {
       setError(result.error || 'Credenciales no válidas o acceso denegado.');
@@ -39,7 +39,7 @@ export default function LoginScreen() {
         </header>
 
         {(error || contextError) && (
-          <div className="login-error" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="login-error flex items-center gap-2" role="alert">
             <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{error || contextError}</span>
           </div>
@@ -60,7 +60,7 @@ export default function LoginScreen() {
                 disabled={loading}
                 autoComplete="username"
                 required
-              />
+ />
             </div>
           </div>
 
@@ -78,7 +78,7 @@ export default function LoginScreen() {
                 disabled={loading}
                 autoComplete="current-password"
                 required
-              />
+ />
               <button
                 type="button"
                 className="input-action-btn"

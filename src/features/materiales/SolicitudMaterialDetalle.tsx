@@ -44,7 +44,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
   const puedePreparar = gestionaBodega && estado === 'aprobada';
   const puedeEntregar = gestionaBodega
     && ['aprobada', 'preparando', 'comprada', 'compra_parcial', 'entregada_parcial'].includes(estado)
-    && solicitud.items.some(i => i.pendiente > 0);
+    && solicitud.items.some(i => i.pendiente> 0);
 
   const { data: historial = [] } = useQuery({
     queryKey: ['material-historial', solicitud.id],
@@ -115,9 +115,9 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
 
   return (
     <Modal isOpen onClose={onClose} title={solicitud.titulo}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="flex flex-col gap-5">
         {/* Cabecera */}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="flex gap-3 flex-wrap items-center">
           <span className="badge" style={{ background: badge.bg, color: badge.color, fontWeight: 800 }}>
             {badge.icono} {badge.label}
           </span>
@@ -125,98 +125,95 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
             Prioridad {PRIORIDADES[solicitud.prioridad].label.toLowerCase()}
           </span>
           {solicitud.solicitanteNombre && (
-            <span style={{ fontSize: '13px', color: 'var(--navy-600)' }}>· {solicitud.solicitanteNombre}</span>
+            <span className="text-sm text-secondary">· {solicitud.solicitanteNombre}</span>
           )}
           {solicitud.fechaNecesidad && (
-            <span style={{ fontSize: '13px', color: 'var(--navy-600)' }}>
+            <span className="text-sm text-secondary">
               · Se necesita el {formatDate(solicitud.fechaNecesidad)}
             </span>
           )}
         </div>
 
         {solicitud.justificacion && (
-          <p style={{ fontSize: '14px', color: 'var(--navy-800)', margin: 0 }}>{solicitud.justificacion}</p>
+          <p className="text-base text-navy">{solicitud.justificacion}</p>
         )}
 
         {/* Materiales */}
-        <div style={{ overflowX: 'auto' }}>
+        <div className="scroll-x">
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '420px' }}>
             <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--navy-600)' }}>
-                <th style={{ padding: '8px 4px' }}>Material</th>
-                <th style={{ padding: '8px 4px' }}>Cantidad</th>
-                <th style={{ padding: '8px 4px' }}>Entregado</th>
-                <th style={{ padding: '8px 4px' }}>Estimado</th>
-                <th style={{ padding: '8px 4px' }}>Real</th>
+              <tr className="text-left text-secondary">
+                <th className="py-2 px-1">Material</th>
+                <th className="py-2 px-1">Cantidad</th>
+                <th className="py-2 px-1">Entregado</th>
+                <th className="py-2 px-1">Estimado</th>
+                <th className="py-2 px-1">Real</th>
               </tr>
             </thead>
             <tbody>
               {solicitud.items.map(item => (
                 <tr key={item.id} style={{ borderTop: '1px solid var(--border-medium)' }}>
-                  <td style={{ padding: '8px 4px', fontWeight: 600 }}>
+                  <td className="py-2 px-1 font-semibold">
                     {item.nombre}
                     {item.itemId && (
                       <Boxes
                         size={13}
                         style={{ marginLeft: '6px', verticalAlign: '-2px', color: 'var(--color-success)' }}
                         aria-label="Se descuenta de bodega"
-                      />
+ />
                     )}
                   </td>
-                  <td style={{ padding: '8px 4px', fontVariantNumeric: 'tabular-nums' }}>
+                  <td className="py-2 px-1 tabular">
                     {item.cantidad} {item.unidad}
                   </td>
-                  <td style={{ padding: '8px 4px', fontVariantNumeric: 'tabular-nums' }}>
-                    {item.cantidadEntregada > 0 ? (
-                      <span style={{ color: item.pendiente > 0 ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 700 }}>
+                  <td className="py-2 px-1 tabular">
+                    {item.cantidadEntregada> 0 ? (
+                      <span style={{ color: item.pendiente> 0 ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 700 }}>
                         {item.cantidadEntregada}
-                        {item.pendiente > 0 && <span style={{ fontWeight: 500 }}> · faltan {item.pendiente}</span>}
+                        {item.pendiente> 0 && <span className="font-medium"> · faltan {item.pendiente}</span>}
                       </span>
                     ) : (
                       <span className="text-muted">—</span>
                     )}
                   </td>
-                  <td style={{ padding: '8px 4px' }}>{formatCLP(item.costoEstimado)}</td>
-                  <td style={{ padding: '8px 4px' }}>{formatCLP(item.costoReal)}</td>
+                  <td className="py-2 px-1">{formatCLP(item.costoEstimado)}</td>
+                  <td className="py-2 px-1">{formatCLP(item.costoReal)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '13px' }}>
+        <div className="flex gap-6 flex-wrap text-sm">
           <div><strong>Estimado:</strong> {formatCLP(solicitud.costoEstimadoTotal)}</div>
           {solicitud.presupuestoAutorizado !== null && (
             <div><strong>Autorizado:</strong> {formatCLP(solicitud.presupuestoAutorizado)}</div>
           )}
-          {solicitud.costoRealTotal > 0 && (
+          {solicitud.costoRealTotal> 0 && (
             <div><strong>Gastado:</strong> {formatCLP(solicitud.costoRealTotal)}</div>
           )}
         </div>
 
         {solicitud.comentarioRevision && (
-          <div style={{
-            padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-main)',
-            fontSize: '13px', color: 'var(--navy-800)'
-          }}>
+          <div className="py-3 px-4 rounded-md bg-main text-sm text-navy">
             <strong>Respuesta de la revisión:</strong> {solicitud.comentarioRevision}
           </div>
         )}
 
         {/* Línea de tiempo */}
         <div>
-          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--navy-600)', marginBottom: '12px' }}>
+          <h4 className="text-sm uppercase text-secondary mb-3">
             Historial
           </h4>
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {historial.map(evento => (
-              <li key={evento.id} style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
+              <li key={evento.id} className="flex gap-3 text-sm">
                 <span aria-hidden="true" style={{ color: 'var(--gold-500)' }}>●</span>
                 <div>
-                  <div style={{ fontWeight: 700, color: 'var(--navy-900)' }}>
+                  <div className="font-bold text-navy">
                     {ESTADOS_MATERIAL[evento.estadoNuevo as keyof typeof ESTADOS_MATERIAL]?.label || evento.estadoNuevo}
                   </div>
-                  <div style={{ color: 'var(--navy-600)' }}>{formatDateTime(evento.createdAt)}</div>
+                  <div className="text-secondary">{formatDateTime(evento.createdAt)}</div>
                   {evento.comentario && (
                     <div style={{ color: 'var(--navy-600)', fontStyle: 'italic' }}>{evento.comentario}</div>
                   )}
@@ -230,7 +227,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
         {(puedeRevisar || puedeComprar || puedeCancelar) && (
           <div>
             <label className="form-label" htmlFor="comentario-material">
-              Comentario {(puedeRevisar) && <span style={{ fontWeight: 500 }}>(obligatorio si rechazas u observas)</span>}
+              Comentario {(puedeRevisar) && <span className="font-medium">(obligatorio si rechazas u observas)</span>}
             </label>
             <textarea id="comentario-material" className="form-textarea" rows={2} value={comentario}
               onChange={e => setComentario(e.target.value)} placeholder="Visible para quien solicitó" />
@@ -241,13 +238,13 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
           <>
             <div>
               <label className="form-label" htmlFor="presupuesto-material">
-                Presupuesto autorizado <span style={{ fontWeight: 500 }}>(si lo dejas vacío se usa el estimado)</span>
+                Presupuesto autorizado <span className="font-medium">(si lo dejas vacío se usa el estimado)</span>
               </label>
               <input id="presupuesto-material" type="number" min="0" step="1" className="form-input"
                 value={presupuesto} onChange={e => setPresupuesto(e.target.value)}
                 placeholder={String(solicitud.costoEstimadoTotal)} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="grid grid-2 gap-3">
               <button className="btn btn-outline" disabled={trabajando}
                 onClick={() => pedirComentario() && revisar.mutate('rechazada')}>
                 <X size={18} /> Rechazar
@@ -256,7 +253,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
                 <Check size={18} /> Aprobar
               </button>
             </div>
-            <button className="btn btn-ghost" style={{ width: '100%' }} disabled={trabajando}
+            <button className="btn btn-ghost w-full"  disabled={trabajando}
               onClick={() => pedirComentario() && revisar.mutate('observada')}>
               <MessageSquare size={18} /> Pedir cambios sin rechazar
             </button>
@@ -264,7 +261,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
         )}
 
         {puedeComprar && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div className="grid grid-3 gap-2">
             <button className="btn btn-outline" disabled={trabajando} onClick={() => compra.mutate('en_compra')}>
               <ShoppingCart size={16} /> En compra
             </button>
@@ -278,7 +275,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
         )}
 
         {puedeEnviar && (
-          <button className="btn btn-gold" style={{ width: '100%' }} disabled={trabajando}
+          <button className="btn btn-gold w-full"  disabled={trabajando}
             onClick={() => enviar.mutate()}>
             <Send size={18} /> Enviar a revisión
           </button>
@@ -286,7 +283,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
 
         {/* Entrega desde bodega: descuenta el stock de lo que está enlazado */}
         {(puedePreparar || puedeEntregar) && (
-          <div style={{ display: 'grid', gap: '8px' }}>
+          <div className="grid gap-2">
             {puedePreparar && (
               <button className="btn btn-outline" disabled={trabajando} onClick={() => preparar.mutate()}>
                 <ClipboardList size={17} /> Estoy preparando el pedido
@@ -301,14 +298,14 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
         )}
 
         {puedeConfirmarEntrega && (
-          <button className="btn btn-gold" style={{ width: '100%' }} disabled={trabajando}
+          <button className="btn btn-gold w-full"  disabled={trabajando}
             onClick={() => entrega.mutate()}>
             <PackageCheck size={18} /> Confirmar que recibí los materiales
           </button>
         )}
 
         {puedeCancelar && (
-          <button className="btn btn-ghost" style={{ width: '100%' }} disabled={trabajando}
+          <button className="btn btn-ghost w-full"  disabled={trabajando}
             onClick={() => cancelar.mutate()}>
             <Ban size={16} /> Cancelar solicitud
           </button>
@@ -320,7 +317,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
           solicitud={solicitud}
           onClose={() => setEntregando(false)}
           onEntregado={() => { setEntregando(false); alTerminar('Materiales entregados'); }}
-        />
+ />
       )}
     </Modal>
   );

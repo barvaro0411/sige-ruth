@@ -38,7 +38,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     queryKey: ['dashboard', sede?.id],
     queryFn: () => DashboardService.getStats(sede.id),
     enabled: Boolean(sede?.id),
-    refetchInterval: 30000,
   });
 
   const badgeMateriales = (can(PERMISSIONS.REVIEW_MATERIALS) || can(PERMISSIONS.CONFIRM_MATERIAL_DELIVERY))
@@ -106,6 +105,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }))
     .filter(section => section.items.length > 0);
 
+  /**
+   * Los títulos de sección aparecen cuando hay algo que ordenar.
+   *
+   * El andamiaje de cinco encabezados se mantenía aunque el menú quedara en
+   * tres ítems: para aseo, «Principal / Académico / Personal y Solicitudes»
+   * sobre una lista de tres enlaces es más estructura que contenido. Sobre seis
+   * ítems la agrupación ayuda a encontrar; por debajo, estorba.
+   */
+  const totalItems = filteredSections.reduce((suma, s) => suma + s.items.length, 0);
+  const mostrarSecciones = totalItems > 6;
+
   return (
     <>
       {/* Overlay móvil con backdrop-blur sobre todo el viewport */}
@@ -143,7 +153,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="sidebar-nav" aria-label="Menú principal">
           {filteredSections.map((section) => (
             <div key={section.title} className="sidebar-section">
-              <span className="sidebar-section-title">{section.title}</span>
+              {mostrarSecciones && (
+                <span className="sidebar-section-title">{section.title}</span>
+              )}
               <div className="sidebar-section-items">
                 {section.items.map((item) => (
                   <NavLink 
@@ -193,309 +205,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       </aside>
 
-      <style>{`
-        .sidebar {
-          width: 280px;
-          background: linear-gradient(180deg, var(--navy-950) 0%, #070e1b 100%);
-          color: white;
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
-        }
-
-        .sidebar-header {
-          padding: 22px 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(0, 0, 0, 0.2);
-        }
-
-        .sidebar-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .sidebar-logo-icon {
-          width: 42px;
-          height: 42px;
-          background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-500) 100%);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          box-shadow: 0 4px 14px rgba(184, 134, 11, 0.35);
-          flex-shrink: 0;
-        }
-
-        .sidebar-brand-text {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .sidebar-brand-name {
-          font-size: 16px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          color: white;
-          line-height: 1.2;
-        }
-
-        .sidebar-brand-tag {
-          font-size: 11px;
-          color: var(--gold-400);
-          font-weight: 600;
-        }
-
-        .sidebar-close {
-          display: none;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: white;
-          cursor: pointer;
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
-        }
-
-        .sidebar-close:hover {
-          background: rgba(255, 255, 255, 0.16);
-          transform: scale(1.05);
-        }
-
-        .sidebar-nav {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
-          padding: 16px 14px 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar {
-          width: 4px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.15);
-          border-radius: 10px;
-        }
-
-        .sidebar-section {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .sidebar-section-title {
-          font-size: 10px;
-          font-weight: 800;
-          color: var(--gold-400);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          padding: 0 12px 6px;
-          opacity: 0.9;
-        }
-
-        .sidebar-section-items {
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-        }
-
-        .sidebar-link {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 14px;
-          color: #cbd5e1;
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 13.5px;
-          border-radius: 10px;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-          min-height: 42px;
-        }
-
-        .sidebar-link:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.07);
-          transform: translateX(3px);
-        }
-
-        .sidebar-link.active {
-          color: white;
-          background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-500) 100%);
-          box-shadow: 0 4px 14px rgba(184, 134, 11, 0.35);
-          font-weight: 700;
-        }
-
-        .sidebar-badge {
-          margin-left: auto;
-          font-size: 11px;
-          font-weight: 800;
-          padding: 2px 7px;
-          border-radius: 999px;
-          line-height: 1.2;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
-        }
-
-        .sidebar-badge-warning {
-          background: rgba(245, 158, 11, 0.25);
-          color: #fbbf24;
-          border: 1px solid rgba(245, 158, 11, 0.4);
-        }
-
-        .sidebar-badge-danger {
-          background: rgba(239, 68, 68, 0.25);
-          color: #f87171;
-          border: 1px solid rgba(239, 68, 68, 0.4);
-        }
-
-        .sidebar-badge-info {
-          background: rgba(59, 130, 246, 0.25);
-          color: #93c5fd;
-          border: 1px solid rgba(59, 130, 246, 0.4);
-        }
-
-        .sidebar-link.active .sidebar-badge {
-          background: rgba(0, 0, 0, 0.25);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .sidebar-icon {
-          flex-shrink: 0;
-          opacity: 0.9;
-        }
-
-        .sidebar-footer {
-          padding: 16px 18px;
-          padding-bottom: max(18px, env(safe-area-inset-bottom));
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(0, 0, 0, 0.28);
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .user-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 4px;
-        }
-
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, var(--gold-600), var(--gold-500));
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 800;
-          font-size: 16px;
-          color: white;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-          flex-shrink: 0;
-        }
-
-        .user-details {
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .user-name {
-          font-size: 13.5px;
-          font-weight: 700;
-          margin: 0;
-          color: white;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          line-height: 1.2;
-        }
-
-        .user-role-badge {
-          font-size: 11px;
-          color: var(--gold-300);
-          font-weight: 700;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .btn-logout {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 9px;
-          background: rgba(239, 68, 68, 0.12);
-          border: 1px solid rgba(239, 68, 68, 0.28);
-          border-radius: 9px;
-          color: #fca5a5;
-          font-weight: 700;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.2s;
-          min-height: 38px;
-        }
-
-        .btn-logout:hover {
-          background: rgba(239, 68, 68, 0.22);
-          color: #fee2e2;
-          border-color: rgba(239, 68, 68, 0.45);
-        }
-
-        @media (max-width: 1024px) {
-          .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            transform: translateX(-100%);
-            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
-            z-index: 1200;
-            width: min(85vw, 300px);
-          }
-          .sidebar.open {
-            transform: translateX(0);
-          }
-          .sidebar-close {
-            display: flex;
-          }
-          .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(7, 13, 24, 0.7);
-            z-index: 1150;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-          }
-        }
-      `}</style>
     </>
   );
 }

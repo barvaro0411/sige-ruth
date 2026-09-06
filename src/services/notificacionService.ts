@@ -29,20 +29,31 @@ export const NotificacionService = {
     return count ?? 0;
   },
 
-  async marcarLeida(id: number): Promise<void> {
-    const { error } = await supabase
+  /**
+   * Devuelve cuántas quedaron marcadas.
+   *
+   * Cero no siempre es un error acá: marcar una que ya estaba leída es un
+   * no-op legítimo, y por eso esto informa en vez de lanzar. Quien llama
+   * decide — la cabecera refresca el contador y sigue.
+   */
+  async marcarLeida(id: number): Promise<number> {
+    const { data, error } = await supabase
       .from('notificaciones')
       .update({ leida_en: new Date().toISOString() })
       .eq('id', id)
-      .is('leida_en', null);
+      .is('leida_en', null)
+      .select('id');
     if (error) throw error;
+    return data?.length ?? 0;
   },
 
-  async marcarTodasLeidas(): Promise<void> {
-    const { error } = await supabase
+  async marcarTodasLeidas(): Promise<number> {
+    const { data, error } = await supabase
       .from('notificaciones')
       .update({ leida_en: new Date().toISOString() })
-      .is('leida_en', null);
+      .is('leida_en', null)
+      .select('id');
     if (error) throw error;
+    return data?.length ?? 0;
   },
 };

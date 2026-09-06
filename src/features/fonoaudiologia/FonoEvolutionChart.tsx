@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Legend, Radar, RadarChart, 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend, Radar, RadarChart,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 
@@ -32,15 +32,15 @@ export default function FonoEvolutionChart({ data }: Props) {
   }, [data]);
 
   if (data.length === 0) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Sin datos de evolución para este alumno.</div>;
+    return <div className="text-center p-10 text-muted">Sin datos de evolución para este alumno.</div>;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="flex flex-col gap-6">
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
         {/* Line Chart for History */}
-        <div className="card" style={{ padding: '16px' }}>
-          <h4 style={{ marginBottom: '16px', fontSize: '14px' }}>Historial de Avance</h4>
+        <div className="card p-4">
+          <h4 className="mb-4 text-base">Historial de Avance</h4>
           <div style={{ height: 250 }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart data={chartData}>
@@ -59,8 +59,8 @@ export default function FonoEvolutionChart({ data }: Props) {
         </div>
 
         {/* Radar Chart for Current Status */}
-        <div className="card" style={{ padding: '16px' }}>
-          <h4 style={{ marginBottom: '16px', fontSize: '14px' }}>Estado Actual</h4>
+        <div className="card p-4">
+          <h4 className="mb-4 text-base">Estado Actual</h4>
           <div style={{ height: 250 }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={latestStats}>
@@ -73,35 +73,28 @@ export default function FonoEvolutionChart({ data }: Props) {
                   stroke="var(--color-gold)"
                   fill="var(--color-gold)"
                   fillOpacity={0.5}
-                />
+ />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '12px',
-        background: 'var(--color-gray-50)',
-        padding: '16px',
-        borderRadius: '12px'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>FONÉTICO</div>
+      <div className="grid grid-4 gap-3 bg-subtle p-4 rounded-md">
+        <div className="text-center">
+          <div className="text-xs text-muted font-semibold">FONÉTICO</div>
           <div style={{ fontWeight: 800, color: '#3B82F6' }}>{data[0].nivel_fonetico}/3</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>SEMÁNTICO</div>
+        <div className="text-center">
+          <div className="text-xs text-muted font-semibold">SEMÁNTICO</div>
           <div style={{ fontWeight: 800, color: '#10B981' }}>{data[0].nivel_semantico}/3</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>MORFOSINTÁCTICO</div>
+        <div className="text-center">
+          <div className="text-xs text-muted font-semibold">MORFOSINTÁCTICO</div>
           <div style={{ fontWeight: 800, color: '#F59E0B' }}>{data[0].nivel_morfosintactico}/3</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>PRAGMÁTICO</div>
+        <div className="text-center">
+          <div className="text-xs text-muted font-semibold">PRAGMÁTICO</div>
           <div style={{ fontWeight: 800, color: '#8B5CF6' }}>{data[0].nivel_pragmatico}/3</div>
         </div>
       </div>

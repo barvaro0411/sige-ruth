@@ -125,7 +125,7 @@ export default function EstudiantesList() {
   const totalManana = useMemo(() => estudiantes.filter(e => e.jornada === 'Mañana').length, [estudiantes]);
   const totalTarde = useMemo(() => estudiantes.filter(e => e.jornada === 'Tarde').length, [estudiantes]);
 
-  function exportarExcel() {
+  async function exportarExcel() {
     if (filtered.length === 0) {
       addToast('No hay estudiantes para exportar con los filtros actuales', 'warning');
       return;
@@ -144,8 +144,12 @@ export default function EstudiantesList() {
     ]);
 
     const fechaHoy = new Date().toISOString().split('T')[0];
-    downloadExcel(`Libro_Matricula_${sede.nombre.replace(/\s+/g, '_')}_${fechaHoy}`, 'Matrícula', [headers, ...rows]);
-    addToast('Nómina oficial exportada a Excel', 'success');
+    try {
+      await downloadExcel(`Libro_Matricula_${sede.nombre.replace(/\s+/g, '_')}_${fechaHoy}`, 'Matrícula', [headers, ...rows]);
+      addToast('Nómina oficial exportada a Excel', 'success');
+    } catch {
+      addToast('No se pudo generar la nómina Excel. Intenta nuevamente.', 'danger');
+    }
   }
 
   function getCursoColorBadge(nivel: string) {
@@ -774,14 +778,14 @@ export default function EstudiantesList() {
           estudiante={editingStudent}
           isLoading={mutation.isPending}
           cursos={cursos}
-        />
+ />
       )}
 
       {/* Modal de Previsualización PDF de Matrícula */}
       {showMatricula && (
         <Suspense fallback={
           <div className="modal-overlay">
-            <div className="modal-box md" style={{ padding: '40px', textAlign: 'center' }}>
+            <div className="modal-box md p-10 text-center">
               <p className="text-muted">Preparando la matrícula…</p>
             </div>
           </div>
@@ -791,7 +795,7 @@ export default function EstudiantesList() {
             onClose={() => setShowMatricula(null)}
             estudiante={showMatricula}
             sede={sede}
-          />
+ />
         </Suspense>
       )}
 
@@ -829,4 +833,3 @@ export default function EstudiantesList() {
     </div>
   );
 }
-

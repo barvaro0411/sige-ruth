@@ -141,19 +141,19 @@ export default function ReportarProblema({
           </button>
         </>
       }
-    >
-      <div style={{ display: 'grid', gap: '16px' }}>
-        <div className="form-group" style={{ margin: 0 }}>
+            >
+      <div className="grid gap-4">
+        <div className="form-group">
           <label className="form-label" htmlFor="mant-lugar">¿Dónde?</label>
           <input
             id="mant-lugar" className="form-input" autoFocus
             placeholder="Baño de niños, sala NT1, patio…"
             value={form.lugar}
             onChange={e => setForm({ ...form, lugar: e.target.value })}
-          />
+ />
         </div>
 
-        <div className="form-group" style={{ margin: 0 }}>
+        <div className="form-group">
           <label className="form-label" htmlFor="mant-categoria">¿De qué se trata?</label>
           <select
             id="mant-categoria" className="form-input"
@@ -167,19 +167,19 @@ export default function ReportarProblema({
           </select>
         </div>
 
-        <div className="form-group" style={{ margin: 0 }}>
+        <div className="form-group">
           <label className="form-label" htmlFor="mant-descripcion">¿Qué pasa?</label>
           <textarea
             id="mant-descripcion" className="form-textarea" rows={3}
             placeholder="La llave del lavamanos gotea todo el día"
             value={form.descripcion}
             onChange={e => setForm({ ...form, descripcion: e.target.value })}
-          />
+ />
         </div>
 
-        <div className="form-group" style={{ margin: 0 }}>
+        <div className="form-group">
           <span className="form-label">¿Qué tan urgente?</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+          <div className="grid grid-4 gap-1">
             {PRIORIDADES.map(p => {
               const activa = form.prioridad === p;
               return (
@@ -201,32 +201,29 @@ export default function ReportarProblema({
             })}
           </div>
           {form.prioridad === 'urgente' && (
-            <p style={{
-              display: 'flex', gap: '6px', alignItems: 'center',
-              fontSize: '12px', color: 'var(--color-danger)', marginTop: '8px',
-            }}>
+            <p className="flex gap-1 items-center text-sm text-danger mt-2">
               <TriangleAlert size={14} /> Urgente le llega a dirección y a mantención de inmediato.
             </p>
           )}
         </div>
 
-        <div className="form-group" style={{ margin: 0 }}>
+        <div className="form-group">
           <span className="form-label">Una foto ayuda (opcional)</span>
           <input
             ref={inputFoto} type="file" accept="image/*" capture="environment"
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={e => elegirFoto(e.target.files?.[0])}
-          />
+ />
 
           {vistaPrevia ? (
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <img
                 src={vistaPrevia} alt="Foto del problema"
                 style={{
                   width: '100%', maxHeight: 240, objectFit: 'cover',
                   borderRadius: 'var(--radius-md)', border: '1px solid var(--border-medium)',
                 }}
-              />
+ />
               <button
                 type="button" className="btn btn-outline btn-sm"
                 style={{ position: 'absolute', top: 8, right: 8, background: 'var(--bg-card)' }}
@@ -235,16 +232,16 @@ export default function ReportarProblema({
                 <Trash2 size={15} /> Quitar
               </button>
               {foto && (
-                <p className="text-muted" style={{ fontSize: '12px', marginTop: '6px' }}>
+                <p className="text-muted text-sm mt-1">
                   {Math.round(foto.size / 1024)} KB tras comprimir
                 </p>
               )}
             </div>
           ) : (
             <button
-              type="button" className="btn btn-outline"
-              style={{ width: '100%', minHeight: 48 }}
-              onClick={() => inputFoto.current?.click()}
+              type="button" className="btn btn-outline w-full min-h-touch"
+
+onClick={() => inputFoto.current?.click()}
             >
               <Camera size={18} /> Tomar o elegir foto
             </button>
@@ -252,7 +249,7 @@ export default function ReportarProblema({
         </div>
 
         {error && (
-          <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>
+          <p className="text-danger text-sm">{error}</p>
         )}
       </div>
     </Modal>

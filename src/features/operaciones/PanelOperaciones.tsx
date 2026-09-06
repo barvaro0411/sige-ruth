@@ -87,7 +87,7 @@ export default function PanelOperaciones() {
     if (!panel.data) return [];
     return COLAS
       .map(c => ({ ...c, valor: panel.data![c.clave] as number }))
-      .filter(c => c.valor > 0);
+      .filter(c => c.valor> 0);
   }, [panel.data]);
 
   const meses = useMemo(() => agruparPorMes(consolidado.data ?? []), [consolidado.data]);
@@ -106,11 +106,11 @@ export default function PanelOperaciones() {
       </header>
 
       {/* Colas abiertas */}
-      <section style={{ marginBottom: '32px' }}>
+      <section className="mb-8">
         {pendientes.length === 0 ? (
-          <div className="card" style={{ padding: '40px 24px', textAlign: 'center' }}>
+          <div className="card py-10 px-6 text-center">
             <CheckCircle2 size={44} style={{ color: 'var(--color-success)', marginBottom: '14px' }} />
-            <h3 style={{ marginBottom: '6px' }}>No hay nada pendiente</h3>
+            <h3 className="mb-1">No hay nada pendiente</h3>
             <p className="text-muted">
               Ninguna solicitud sin revisar, ningún producto bajo mínimo, nada roto sin atender.
             </p>
@@ -137,8 +137,8 @@ export default function PanelOperaciones() {
                   size={22}
                   style={{ color: c.urgente ? 'var(--color-danger)' : 'var(--color-gold)', flexShrink: 0 }}
                   aria-hidden="true"
-                />
-                <div style={{ minWidth: 0 }}>
+ />
+                <div>
                   <div style={{
                     fontSize: '24px', fontWeight: 900, lineHeight: 1.1,
                     fontVariantNumeric: 'tabular-nums',
@@ -146,7 +146,7 @@ export default function PanelOperaciones() {
                   }}>
                     {c.valor}
                   </div>
-                  <div className="text-muted" style={{ fontSize: '12.5px', fontWeight: 600 }}>
+                  <div className="text-muted text-sm font-semibold">
                     {c.label}
                   </div>
                 </div>
@@ -157,18 +157,18 @@ export default function PanelOperaciones() {
       </section>
 
       {/* Consolidación mensual */}
-      <section style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '16px', marginBottom: '4px' }}>En qué se fue la plata</h2>
-        <p className="text-muted" style={{ fontSize: '13px', marginTop: 0, marginBottom: '14px' }}>
+      <section className="mb-8">
+        <h2 className="text-md mb-1">En qué se fue la plata</h2>
+        <p className="text-muted text-sm mb-3">
           Gasto real de los últimos doce meses. Un gasto cuenta en el mes en que se cerró,
           no en el que se pidió.
         </p>
 
         {consolidado.isLoading ? (
-          <div className="skeleton" style={{ height: 200 }} />
+          <div className="skeleton h-50" />
         ) : meses.length === 0 ? (
-          <div className="card" style={{ padding: '32px 24px', textAlign: 'center' }}>
-            <p className="text-muted" style={{ margin: 0 }}>
+          <div className="card py-8 px-6 text-center">
+            <p className="text-muted">
               Todavía no hay gasto registrado. Aparece acá cuando se cierre la primera
               compra o mantención con costo.
             </p>
@@ -180,9 +180,9 @@ export default function PanelOperaciones() {
                 <tr>
                   <th scope="col">Mes</th>
                   {ORIGENES.map(o => (
-                    <th key={o} scope="col" style={{ textAlign: 'right' }}>{ETIQUETA_ORIGEN[o]}</th>
+                    <th key={o} scope="col" className="text-right">{ETIQUETA_ORIGEN[o]}</th>
                   ))}
-                  <th scope="col" style={{ textAlign: 'right' }}>Total</th>
+                  <th scope="col" className="text-right">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,11 +190,11 @@ export default function PanelOperaciones() {
                   <tr key={m.mes}>
                     <td data-label="Mes" style={{ textTransform: 'capitalize' }}>{nombreMes(m.mes)}</td>
                     {ORIGENES.map(o => (
-                      <td key={o} data-label={ETIQUETA_ORIGEN[o]} style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                        {m.porOrigen[o] > 0 ? MONEDA.format(m.porOrigen[o]) : '—'}
+                      <td key={o} data-label={ETIQUETA_ORIGEN[o]} className="text-right tabular">
+                        {m.porOrigen[o]> 0 ? MONEDA.format(m.porOrigen[o]) : '—'}
                       </td>
                     ))}
-                    <td data-label="Total" style={{ textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                    <td data-label="Total" className="text-right font-extrabold tabular">
                       {MONEDA.format(m.total)}
                     </td>
                   </tr>
@@ -207,18 +207,18 @@ export default function PanelOperaciones() {
 
       {/* Lista de compra sugerida */}
       <section>
-        <h2 style={{ fontSize: '16px', marginBottom: '4px' }}>Lista de compra sugerida</h2>
-        <p className="text-muted" style={{ fontSize: '13px', marginTop: 0, marginBottom: '14px' }}>
+        <h2 className="text-md mb-1">Lista de compra sugerida</h2>
+        <p className="text-muted text-sm mb-3">
           Lo que falta para llegar al mínimo más un mes de consumo, medido sobre las
           entregas de los últimos 90 días. Es una sugerencia, no una orden de compra.
         </p>
 
         {compra.isLoading ? (
-          <div className="skeleton" style={{ height: 200 }} />
+          <div className="skeleton h-50" />
         ) : (compra.data ?? []).length === 0 ? (
-          <div className="card" style={{ padding: '32px 24px', textAlign: 'center' }}>
+          <div className="card py-8 px-6 text-center">
             <CheckCircle2 size={36} style={{ color: 'var(--color-success)', marginBottom: '10px' }} />
-            <p className="text-muted" style={{ margin: 0 }}>
+            <p className="text-muted">
               Todos los productos están sobre su mínimo. No hay nada que comprar.
             </p>
           </div>
@@ -229,10 +229,10 @@ export default function PanelOperaciones() {
                 <tr>
                   <th scope="col">Producto</th>
                   <th scope="col">Categoría</th>
-                  <th scope="col" style={{ textAlign: 'right' }}>Hay</th>
-                  <th scope="col" style={{ textAlign: 'right' }}>Mínimo</th>
-                  <th scope="col" style={{ textAlign: 'right' }}>Consumo mensual</th>
-                  <th scope="col" style={{ textAlign: 'right' }}>Comprar</th>
+                  <th scope="col" className="text-right">Hay</th>
+                  <th scope="col" className="text-right">Mínimo</th>
+                  <th scope="col" className="text-right">Consumo mensual</th>
+                  <th scope="col" className="text-right">Comprar</th>
                   <th scope="col">Última compra</th>
                 </tr>
               </thead>
@@ -246,16 +246,16 @@ export default function PanelOperaciones() {
                       )}
                     </td>
                     <td data-label="Categoría">{p.categoria}</td>
-                    <td data-label="Hay" style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    <td data-label="Hay" className="text-right tabular">
                       {p.stockActual}
                     </td>
-                    <td data-label="Mínimo" style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    <td data-label="Mínimo" className="text-right tabular">
                       {p.stockMinimo}
                     </td>
-                    <td data-label="Consumo mensual" style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {p.consumoMensual > 0 ? p.consumoMensual : '—'}
+                    <td data-label="Consumo mensual" className="text-right tabular">
+                      {p.consumoMensual> 0 ? p.consumoMensual : '—'}
                     </td>
-                    <td data-label="Comprar" style={{ textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                    <td data-label="Comprar" className="text-right font-extrabold tabular">
                       {p.sugerido} {p.unidadNombre.toLowerCase()}
                     </td>
                     <td data-label="Última compra">

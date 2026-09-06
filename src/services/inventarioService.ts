@@ -3,6 +3,7 @@ import {
   CategoriaInventario, MovimientoInventario, ProductoInventario,
   TipoMovimiento, UnidadInventario,
 } from '../types';
+import { exigirFilaAfectada, SIN_PERMISO } from './afectadas';
 
 /**
  * InventarioService
@@ -168,7 +169,10 @@ export const InventarioService = {
     id: number,
     cambios: Partial<Omit<NuevoProducto, 'sedeId'>>
   ): Promise<void> {
-    const { error } = await supabase
+    // `items_manage_bodega` exige `gestiona_bodega()`, y ningún trigger levanta
+    // excepción por cambiar el nombre: sin esta comprobación, quien no tiene el
+    // rol ve «guardado» sobre un cambio que la política descartó.
+    const { data, error } = await supabase
       .from('inventario_items')
       .update({
         categoria_id: cambios.categoriaId,
@@ -178,22 +182,26 @@ export const InventarioService = {
         stock_minimo: cambios.stockMinimo,
         ubicacion: cambios.ubicacion?.trim() || null,
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error?.code === '23505') {
       throw new Error('Ya existe un producto con ese nombre en esta sede');
     }
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
   /** Baja lógica: el producto sale de las listas pero su historial queda. */
   async darDeBaja(id: number): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('inventario_items')
       .update({ activo: false, archived_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    exigirFilaAfectada(data, SIN_PERMISO);
   },
 
   async registrarMovimiento(input: NuevoMovimiento): Promise<void> {

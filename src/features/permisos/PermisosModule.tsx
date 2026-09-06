@@ -43,7 +43,7 @@ function calcularDiasHabiles(inicio: string, fin: string, jornada: JornadaPermis
   const ultimo = new Date(`${fin}T12:00:00`);
   while (cursor <= ultimo) {
     const dia = cursor.getDay();
-    if (dia >= 1 && dia <= 5) habiles += 1;
+    if (dia>= 1 && dia <= 5) habiles += 1;
     cursor.setDate(cursor.getDate() + 1);
   }
   return jornada === 'completa' ? habiles : habiles * 0.5;
@@ -153,7 +153,7 @@ export default function PermisosModule() {
 
   const excedeSaldo = form.tipo === 'administrativo'
     && saldo !== null
-    && diasSolicitados > saldo.disponibles;
+    && diasSolicitados> saldo.disponibles;
 
   const isSaving = crearMutation.isPending || cancelarMutation.isPending || reenviarMutation.isPending || resolverMutation.isPending;
 
@@ -203,13 +203,13 @@ export default function PermisosModule() {
 
   const loading = cargandoMias || cargandoSaldo || (puedeAprobar && cargandoPendientes);
 
-  if (loading) return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+  if (loading) return <div className="page-container"><div className="skeleton h-100" /></div>;
 
   const lista = tab === 'mias' ? misSolicitudes : pendientes;
 
   return (
     <div className="page-container animate-in">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', gap: '16px', flexWrap: 'wrap' }}>
+      <header className="flex justify-between items-end mb-10 gap-4 flex-wrap">
         <div>
           <h1 className="page-title">Permisos</h1>
           <p className="page-subtitle">Días administrativos y ausencias del personal · {anio}</p>
@@ -221,20 +221,20 @@ export default function PermisosModule() {
 
       {/* Saldo del año */}
       {saldo ? (
-        <section className="grid grid-3" style={{ marginBottom: '32px' }}>
+        <section className="grid grid-3 mb-8">
           {[
             { label: 'Días asignados', val: saldo.asignados, color: 'var(--navy-900)' },
             { label: 'Días usados', val: saldo.usados, color: 'var(--gold-600)' },
-            { label: 'Disponibles', val: saldo.disponibles, color: saldo.disponibles > 0 ? 'var(--color-success)' : 'var(--color-danger)' },
+            { label: 'Disponibles', val: saldo.disponibles, color: saldo.disponibles> 0 ? 'var(--color-success)' : 'var(--color-danger)' },
           ].map(s => (
             <div key={s.label} className="card" style={{ padding: '20px', textAlign: 'center', borderBottom: `4px solid ${s.color}` }}>
-              <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '4px' }}>{s.label}</div>
+              <div className="text-xs font-extrabold text-secondary uppercase mb-1">{s.label}</div>
               <div style={{ fontSize: '24px', fontWeight: 900, color: s.color }}>{s.val}</div>
             </div>
           ))}
         </section>
       ) : (
-        <div className="card" style={{ padding: '16px 20px', marginBottom: '32px', fontSize: '13px', color: 'var(--navy-600)' }}>
+        <div className="card py-4 px-5 mb-8 text-sm text-secondary">
           El director todavía no te asignó cupo de días administrativos para {anio}. Puedes solicitar permisos igual,
           pero no se mostrará el saldo.
         </div>
@@ -242,37 +242,37 @@ export default function PermisosModule() {
 
       {/* Pestañas */}
       {puedeAprobar && (
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div className="flex gap-3 mb-6 flex-wrap">
           <button className={`btn ${tab === 'mias' ? 'btn-gold' : 'btn-outline'}`} onClick={() => setTab('mias')}>
             <CalendarDays size={18} /> Mis solicitudes
           </button>
           <button className={`btn ${tab === 'bandeja' ? 'btn-gold' : 'btn-outline'}`} onClick={() => setTab('bandeja')}>
-            <Inbox size={18} /> Por aprobar {pendientes.length > 0 && `(${pendientes.length})`}
+            <Inbox size={18} /> Por aprobar {pendientes.length> 0 && `(${pendientes.length})`}
           </button>
         </div>
       )}
 
       {/* Listado */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {lista.map(s => {
           const estilo = ESTADOS[s.estado];
           const mismoDia = s.fechaInicio === s.fechaFin;
           return (
-            <article key={s.id} className="card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <article key={s.id} className="card p-5 flex items-center gap-5 flex-wrap">
               <div style={{ flex: 1, minWidth: '240px' }}>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--navy-900)', marginBottom: '4px' }}>
+                <div className="text-md font-extrabold text-navy mb-1">
                   {tipoLabel(s.tipo)}
                   {tab === 'bandeja' && s.solicitanteNombre && (
-                    <span style={{ fontWeight: 600, color: 'var(--navy-600)' }}> · {s.solicitanteNombre}</span>
+                    <span className="font-semibold text-secondary"> · {s.solicitanteNombre}</span>
                   )}
                 </div>
-                <div style={{ fontSize: '13px', color: 'var(--navy-600)', fontWeight: 600 }}>
+                <div className="text-sm text-secondary font-semibold">
                   {mismoDia ? formatDate(s.fechaInicio) : `${formatDate(s.fechaInicio)} al ${formatDate(s.fechaFin)}`}
                   {' · '}{s.diasHabiles} {s.diasHabiles === 1 ? 'día hábil' : 'días hábiles'}
                   {s.jornada !== 'completa' && ` · ${s.jornada === 'manana' ? 'mañana' : 'tarde'}`}
                 </div>
                 {s.motivo && (
-                  <div style={{ fontSize: '13px', color: 'var(--navy-600)', marginTop: '8px' }}>{s.motivo}</div>
+                  <div className="text-sm text-secondary mt-2">{s.motivo}</div>
                 )}
                 {s.comentarioResolucion && (
                   <div style={{ fontSize: '12px', color: 'var(--navy-600)', marginTop: '8px', fontStyle: 'italic' }}>
@@ -290,7 +290,7 @@ export default function PermisosModule() {
                   Revisar
                 </button>
               ) : s.estado === 'observada' ? (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="flex gap-2">
                   <button className="btn btn-gold" disabled={isSaving} onClick={() => reenviarMutation.mutate(s.id)}>Reenviar</button>
                   <button className="btn btn-outline" disabled={isSaving} onClick={() => cancelarMutation.mutate(s.id)}>
                     <Ban size={16} /> Cancelar
@@ -306,7 +306,7 @@ export default function PermisosModule() {
         })}
 
         {lista.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '80px', color: 'var(--navy-600)' }}>
+          <div className="text-center p-20 text-secondary">
             <Inbox size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
             <p>{tab === 'mias' ? 'Todavía no has solicitado permisos.' : 'No hay solicitudes esperando respuesta.'}</p>
           </div>
@@ -315,7 +315,7 @@ export default function PermisosModule() {
 
       {/* Nueva solicitud */}
       <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nueva solicitud de permiso">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           <div>
             <label className="form-label">Tipo de permiso</label>
             <select className="form-select" value={form.tipo}
@@ -324,7 +324,7 @@ export default function PermisosModule() {
             </select>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-2 gap-3">
             <div>
               <label className="form-label">Desde</label>
               <input type="date" className="form-input" value={form.fechaInicio}
@@ -347,14 +347,14 @@ export default function PermisosModule() {
 
           <div>
             <label className="form-label">
-              Motivo {form.tipo === 'administrativo' && <span style={{ fontWeight: 500 }}>(opcional)</span>}
+              Motivo {form.tipo === 'administrativo' && <span className="font-medium">(opcional)</span>}
             </label>
             <textarea className="form-textarea" rows={3} value={form.motivo}
               placeholder={form.tipo === 'administrativo' ? 'Un día administrativo no requiere justificación' : 'Describe el motivo'}
               onChange={e => setForm({ ...form, motivo: e.target.value })} />
           </div>
 
-          {diasSolicitados > 0 && (
+          {diasSolicitados> 0 && (
             <div style={{
               padding: '12px 16px', borderRadius: '12px',
               background: excedeSaldo ? 'var(--color-danger-soft)' : 'var(--bg-main)',
@@ -369,7 +369,7 @@ export default function PermisosModule() {
             </div>
           )}
 
-          <button className="btn btn-gold" style={{ width: '100%', padding: '14px' }} disabled={isSaving} onClick={enviarSolicitud}>
+          <button className="btn btn-gold w-full p-3"  disabled={isSaving} onClick={enviarSolicitud}>
             {crearMutation.isPending ? 'Enviando...' : 'Enviar solicitud'}
           </button>
         </div>
@@ -378,26 +378,26 @@ export default function PermisosModule() {
       {/* Resolución */}
       <Modal isOpen={!!resolviendo} onClose={() => setResolviendo(null)} title="Revisar solicitud">
         {resolviendo && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="card" style={{ padding: '16px', background: 'var(--bg-main)' }}>
-              <div style={{ fontWeight: 800, color: 'var(--navy-900)' }}>
+          <div className="flex flex-col gap-4">
+            <div className="card p-4 bg-main">
+              <div className="font-extrabold text-navy">
                 {resolviendo.solicitanteNombre || 'Funcionario'} · {tipoLabel(resolviendo.tipo)}
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--navy-600)', marginTop: '4px' }}>
+              <div className="text-sm text-secondary mt-1">
                 {formatDate(resolviendo.fechaInicio)} al {formatDate(resolviendo.fechaFin)} · {resolviendo.diasHabiles} días hábiles
               </div>
               {resolviendo.motivo && (
-                <div style={{ fontSize: '13px', color: 'var(--navy-600)', marginTop: '8px' }}>{resolviendo.motivo}</div>
+                <div className="text-sm text-secondary mt-2">{resolviendo.motivo}</div>
               )}
             </div>
 
             <div>
-              <label className="form-label">Comentario <span style={{ fontWeight: 500 }}>(obligatorio si rechazas)</span></label>
+              <label className="form-label">Comentario <span className="font-medium">(obligatorio si rechazas)</span></label>
               <textarea className="form-textarea" rows={3} value={comentario}
                 onChange={e => setComentario(e.target.value)} placeholder="Visible para quien solicitó" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="grid grid-2 gap-3">
               <button className="btn btn-outline" disabled={isSaving} onClick={() => resolver('rechazada')}>
                 <X size={18} /> Rechazar
               </button>
@@ -405,7 +405,7 @@ export default function PermisosModule() {
                 <Check size={18} /> Aprobar
               </button>
             </div>
-            <button className="btn btn-ghost" style={{ width: '100%' }} disabled={isSaving}
+            <button className="btn btn-ghost w-full"  disabled={isSaving}
               onClick={() => resolver('observada')}>
               <MessageSquare size={18} /> Pedir cambios sin rechazar
             </button>

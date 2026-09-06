@@ -109,11 +109,11 @@ export default function UsuariosModule() {
     updateMutation.mutate({ id: editing.id, payload: editForm });
   }
 
-  if (isLoading) return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
+  if (isLoading) return <div className="page-container"><div className="skeleton h-100" /></div>;
 
   return (
     <div className="page-container animate-in">
-      <header className="page-header" style={{ marginBottom: '32px' }}>
+      <header className="page-header mb-8">
         <div>
           <h1 className="page-title">Administración de Usuarios</h1>
           <p className="page-subtitle">Roles, sedes y acceso del personal</p>
@@ -124,7 +124,7 @@ export default function UsuariosModule() {
       </header>
 
       {error ? (
-        <div className="card" style={{ padding: '32px', color: 'var(--danger)' }}>
+        <div className="card p-8 text-danger">
           No se pudo cargar el listado de usuarios.
         </div>
       ) : (
@@ -137,8 +137,8 @@ export default function UsuariosModule() {
               {perfiles.map(perfil => (
                 <tr key={perfil.id}>
                   <td>
-                    <div style={{ fontWeight: 700 }}>{perfil.nombre}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{perfil.email}</div>
+                    <div className="font-bold">{perfil.nombre}</div>
+                    <div className="text-sm text-muted">{perfil.email}</div>
                   </td>
                   <td><span className="badge badge-navy"><ShieldCheck size={13} /> {ROLE_LABELS[perfil.rol]}</span></td>
                   <td>{esRolTransversal(perfil.rol)
@@ -158,7 +158,7 @@ export default function UsuariosModule() {
                 </tr>
               ))}
               {perfiles.length === 0 && (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '48px' }}><Users size={32} /> Sin usuarios registrados</td></tr>
+                <tr><td colSpan={5} className="text-center p-12"><Users size={32} /> Sin usuarios registrados</td></tr>
               )}
             </tbody>
           </table>
@@ -167,7 +167,7 @@ export default function UsuariosModule() {
 
       <Modal isOpen={showCreate} onClose={() => !createMutation.isPending && setShowCreate(false)} title="Crear usuario" size="lg">
         <form onSubmit={submitCreate}>
-          {formError && <div className="login-error" role="alert" style={{ marginBottom: '16px' }}>{formError}</div>}
+          {formError && <div className="login-error mb-4" role="alert">{formError}</div>}
           <UserFields
             nombre={createForm.nombre}
             rol={createForm.rol}
@@ -177,8 +177,8 @@ export default function UsuariosModule() {
             onNombre={nombre => setCreateForm(prev => ({ ...prev, nombre }))}
             onRol={rol => setCreateForm(prev => ({ ...prev, rol, sede_ids: esRolTransversal(rol) ? [] : prev.sede_ids }))}
             onSedes={sede_ids => setCreateForm(prev => ({ ...prev, sede_ids }))}
-          />
-          <div className="grid grid-2" style={{ gap: '16px', marginTop: '16px' }}>
+ />
+          <div className="grid grid-2 gap-4 mt-4">
             <div className="form-group">
               <label className="form-label">Correo *</label>
               <input required type="email" className="form-input" autoComplete="off" disabled={createMutation.isPending} value={createForm.email} onChange={e => setCreateForm(prev => ({ ...prev, email: e.target.value }))} />
@@ -195,7 +195,7 @@ export default function UsuariosModule() {
       <Modal isOpen={!!editing} onClose={() => !updateMutation.isPending && setEditing(null)} title="Editar usuario" size="lg">
         {editing && editForm && (
           <form onSubmit={submitEdit}>
-            {formError && <div className="login-error" role="alert" style={{ marginBottom: '16px' }}>{formError}</div>}
+            {formError && <div className="login-error mb-4" role="alert">{formError}</div>}
             <UserFields
               nombre={editForm.nombre}
               rol={editForm.rol}
@@ -206,14 +206,14 @@ export default function UsuariosModule() {
               onNombre={nombre => setEditForm(prev => prev && ({ ...prev, nombre }))}
               onRol={rol => setEditForm(prev => prev && ({ ...prev, rol, sede_ids: esRolTransversal(rol) ? [] : prev.sede_ids }))}
               onSedes={sede_ids => setEditForm(prev => prev && ({ ...prev, sede_ids }))}
-            />
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', fontWeight: 700 }}>
+ />
+            <label className="flex items-center gap-2 mt-5 font-bold">
               <input
                 type="checkbox"
                 checked={editForm.activo}
                 disabled={updateMutation.isPending || editing.id === user?.id}
                 onChange={e => setEditForm(prev => prev && ({ ...prev, activo: e.target.checked }))}
-              />
+ />
               Usuario activo
             </label>
             <ModalActions pending={updateMutation.isPending} onCancel={() => setEditing(null)} submitLabel="Guardar cambios" />
@@ -244,7 +244,7 @@ function UserFields({ nombre, rol, sedeIds, sedes, disabled, lockAccess = false,
   };
 
   return (
-    <div className="grid grid-2" style={{ gap: '16px' }}>
+    <div className="grid grid-2 gap-4">
       <div className="form-group">
         <label className="form-label">Nombre completo *</label>
         <input required className="form-input" disabled={disabled} value={nombre} onChange={e => onNombre(e.target.value)} />
@@ -255,22 +255,22 @@ function UserFields({ nombre, rol, sedeIds, sedes, disabled, lockAccess = false,
           {ROLES.map(item => <option key={item} value={item}>{ROLE_LABELS[item]}</option>)}
         </select>
       </div>
-      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+      <div className="form-group col-span-full">
         <label className="form-label">Sedes autorizadas *</label>
         {esRolTransversal(rol) ? (
-          <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--bg-main)', fontWeight: 700 }}>
+          <div className="p-3 rounded-md bg-main font-bold">
             {ROLE_LABELS[rol]} tiene acceso a todas las sedes.
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="flex gap-3 flex-wrap">
             {sedes.map(item => (
-              <label key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', border: '1px solid var(--border-medium)', borderRadius: '12px', fontWeight: 700 }}>
+              <label key={item.id} className="flex items-center gap-2 py-3 px-4 border rounded-md font-bold">
                 <input
                   type="checkbox"
                   checked={sedeIds.includes(item.id)}
                   disabled={disabled || lockAccess}
                   onChange={() => toggleSede(item.id)}
-                />
+ />
                 {item.nombre}
               </label>
             ))}

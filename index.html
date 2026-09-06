@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1B2A4A" />
+    <!-- `color-scheme` le dice al navegador que pinte sus propios controles y
+         el fondo del lienzo en el tema correcto: sin esto, el modo oscuro deja
+         barras de scroll y campos nativos en blanco sobre la interfaz oscura. -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#1B2A4A" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#080f1c" media="(prefers-color-scheme: dark)" />
     
     <!-- Esto es una plataforma interna: no debe aparecer en buscadores.
          `robots.txt` por si solo NO alcanza — bloquea el rastreo, no la
@@ -41,8 +46,16 @@
     <link rel="preconnect" href="https://iltrnhrmshsjfwokcpia.supabase.co" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Fuentes.
+         Se descargaba Inter (6 pesos) y Outfit (5) desde acá, mas Plus Jakarta
+         Sans por un `@import` dentro del CSS. De las tres, la unica que la hoja
+         de estilos usa es Plus Jakarta Sans; Outfit no aparecia en ninguna
+         regla. Y el `@import` es lo peor de todo: el navegador no sabe que esa
+         fuente existe hasta que termina de bajar y parsear el CSS, asi que la
+         pide en serie en vez de en paralelo.
+         Queda una familia, pedida desde el <head>. Inter sigue en la pila de
+         respaldo: si esta instalada localmente se usa, pero no se descarga. -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     
     <!-- PWA & Icons -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

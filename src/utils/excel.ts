@@ -1,62 +1,59 @@
-import * as XLSX from 'xlsx';
+import { escribirXlsx, CeldaXlsx } from './xlsx';
 
-export type ExcelRow = (string | number | boolean | null | undefined)[];
+export type ExcelRow = CeldaXlsx[];
 
-/**
- * Genera y descarga un archivo Excel (.xlsx) nativo en el navegador.
- * 
- * Configura tipos de celda adecuados, anchos de columna automáticos
- * y asegura compatibilidad con Microsoft Excel, LibreOffice y Google Sheets.
- */
-export function createExcelBuffer(
-  sheetName: string,
-  rows: ExcelRow[],
-  customColWidths?: number[]
-): Uint8Array {
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+/** Ancho mínimo y máximo de columna, en caracteres. */
+const ANCHO_MINIMO = 10;
+const ANCHO_MAXIMO = 50;
 
-  // Calcular anchos automáticos de columna si no se proporcionan
-  if (!customColWidths && rows.length > 0) {
-    const colCount = Math.max(...rows.map(r => r.length));
-    const colWidths: { wch: number }[] = [];
+function calcularAnchos(rows: ExcelRow[]): number[] {
+  if (rows.length === 0) return [];
 
-    for (let c = 0; c < colCount; c++) {
-      let maxLen = 10;
-      for (let r = 0; r < rows.length; r++) {
-        const val = rows[r][c];
-        if (val !== null && val !== undefined) {
-          const strLen = String(val).length;
-          if (strLen > maxLen) maxLen = strLen;
-        }
-      }
-      // Añadir margen para legibilidad y limitar a 50
-      colWidths.push({ wch: Math.min(maxLen + 3, 50) });
+  const columnas = Math.max(...rows.map(r => r.length));
+  const anchos: number[] = [];
+
+  for (let c = 0; c < columnas; c++) {
+    let mayor = ANCHO_MINIMO;
+    for (const fila of rows) {
+      const valor = fila[c];
+      if (valor === null || valor === undefined) continue;
+      const largo = String(valor).length;
+      if (largo > mayor) mayor = largo;
     }
-    ws['!cols'] = colWidths;
-  } else if (customColWidths) {
-    ws['!cols'] = customColWidths.map(wch => ({ wch }));
+    anchos.push(Math.min(mayor + 3, ANCHO_MAXIMO));
   }
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
-
-  const excelBuffer = XLSX.write(wb, {
-    bookType: 'xlsx',
-    type: 'array',
-  });
-
-  return new Uint8Array(excelBuffer);
+  return anchos;
 }
 
-export function downloadExcel(
+/**
+ * Genera un archivo Excel (.xlsx) nativo, con anchos de columna calculados,
+ * la primera fila en negrita y fija al desplazarse.
+ *
+ * Es asíncrono porque comprime el ZIP con `CompressionStream`, que es la
+ * diferencia entre un reporte de 25 KB y uno de 200 KB — y acá se descarga
+ * con datos móviles.
+ */
+export async function createExcelBuffer(
+  sheetName: string,
+  rows: ExcelRow[],
+  customColWidths?: number[],
+): Promise<Uint8Array> {
+  return escribirXlsx(sheetName, rows, {
+    anchos: customColWidths ?? calcularAnchos(rows),
+    cabecera: rows.length > 0,
+  });
+}
+
+export async function downloadExcel(
   filename: string,
   sheetName: string,
   rows: ExcelRow[],
-  customColWidths?: number[]
-): void {
-  const buffer = createExcelBuffer(sheetName, rows, customColWidths);
-  const blob = new Blob([buffer.buffer as ArrayBuffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+  customColWidths?: number[],
+): Promise<void> {
+  const buffer = await createExcelBuffer(sheetName, rows, customColWidths);
+  const blob = new Blob([buffer as BlobPart], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 
   const finalFilename = filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`;

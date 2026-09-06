@@ -6,9 +6,16 @@ import { useSedeStatus } from './SedeContext';
 
 /**
  * useRealtimeSync
- * 
- * Gestiona las suscripciones de Supabase Realtime para mantener
- * sincronizadas en vivo las notificaciones y bandejas de trabajo sin sondeos pesados.
+ *
+ * Mantiene al día notificaciones, bandejas y panel de control sin sondeos.
+ *
+ * Lo de «sin sondeos» ahora es cierto: convivía con un `refetchInterval` de 30
+ * segundos en el panel y otro de 2 minutos en la cabecera, así que el mismo
+ * trabajo se hacía dos veces. Los intervalos se fueron; lo que quedó es esto,
+ * que solo consulta cuando la base avisa que algo cambió.
+ *
+ * `['dashboard']` entra en todas las invalidaciones porque el panel resume
+ * justamente lo que estos cuatro canales mueven.
  */
 export function useRealtimeSync() {
   const { user } = useAuth();
@@ -59,6 +66,7 @@ export function useRealtimeSync() {
         () => {
           void queryClient.invalidateQueries({ queryKey: ['mantenciones'] });
           void queryClient.invalidateQueries({ queryKey: ['operaciones'] });
+          void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
       )
       .on(
@@ -72,6 +80,7 @@ export function useRealtimeSync() {
         () => {
           void queryClient.invalidateQueries({ queryKey: ['permisos'] });
           void queryClient.invalidateQueries({ queryKey: ['operaciones'] });
+          void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
       )
       .on(
@@ -86,6 +95,7 @@ export function useRealtimeSync() {
           void queryClient.invalidateQueries({ queryKey: ['materiales'] });
           void queryClient.invalidateQueries({ queryKey: ['frecuentes'] });
           void queryClient.invalidateQueries({ queryKey: ['operaciones'] });
+          void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
       )
       .on(
@@ -99,6 +109,7 @@ export function useRealtimeSync() {
         () => {
           void queryClient.invalidateQueries({ queryKey: ['prestamos'] });
           void queryClient.invalidateQueries({ queryKey: ['operaciones'] });
+          void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
       )
       .subscribe();

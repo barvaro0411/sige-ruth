@@ -57,6 +57,16 @@ export default function FonoaudiologiaModule() {
   const [filtroAlumnoId, setFiltroAlumnoId] = useState('');
   const [busquedaTexto, setBusquedaTexto] = useState('');
 
+  /**
+   * Abrir la evolución de un alumno es leer su ficha clínica, y eso queda
+   * registrado. La anotación no bloquea la apertura: si no se puede escribir,
+   * la ficha se muestra igual.
+   */
+  function abrirEvolucion(alumno: EstudianteResumen) {
+    setAlumnoParaEvolucion(alumno);
+    void FonoService.registrarConsulta(alumno.id);
+  }
+
   // Form State
   const [sesionEnEdicion, setSesionEnEdicion] = useState<SesionConEstudiante | null>(null);
   const [fechaSesion, setFechaSesion] = useState(getToday());
@@ -145,7 +155,7 @@ export default function FonoaudiologiaModule() {
       addToast('Completa la fecha, el estudiante y la actividad', 'warning');
       return;
     }
-    if (fechaSesion > getToday()) {
+    if (fechaSesion> getToday()) {
       addToast('La fecha de la sesión no puede estar en el futuro', 'warning');
       return;
     }
@@ -153,7 +163,7 @@ export default function FonoaudiologiaModule() {
       addToast('Describe la actividad con al menos 5 caracteres', 'warning');
       return;
     }
-    if (Object.values(nivelesLogrados).some(nivel => nivel < 1 || nivel > 3)) {
+    if (Object.values(nivelesLogrados).some(nivel => nivel < 1 || nivel> 3)) {
       addToast('Evalúa los cuatro niveles antes de guardar', 'warning');
       return;
     }
@@ -180,7 +190,7 @@ export default function FonoaudiologiaModule() {
   if (estaCargando) {
     return (
       <div className="page-container">
-        <div className="skeleton" style={{ height: 400 }} />
+        <div className="skeleton h-100" />
       </div>
     );
   }
@@ -204,7 +214,7 @@ export default function FonoaudiologiaModule() {
 
   return (
     <div className="page-container animate-in">
-      <header className="page-header" style={{ marginBottom: '32px' }}>
+      <header className="page-header mb-8">
         <div>
           <h1 className="page-title">Fonoaudiología</h1>
           <p className="page-subtitle">Seguimiento clínico y avance fonoaudiológico en {sede.nombre}</p>
@@ -217,7 +227,7 @@ export default function FonoaudiologiaModule() {
       </header>
 
       {/* KPI Cards */}
-      <section className="grid grid-2" style={{ marginBottom: '32px' }}>
+      <section className="grid grid-2 mb-8">
         <article className="card stat-card">
           <div className="stat-header">
             <span className="stat-label">Intervenciones ({getMonthName(new Date().getMonth())})</span>
@@ -297,7 +307,7 @@ export default function FonoaudiologiaModule() {
             </select>
           </div>
         </div>
-        
+
         <div className="data-table-container">
           <table className="data-table">
             <thead>
@@ -351,7 +361,7 @@ export default function FonoaudiologiaModule() {
                               type="button"
                               className="btn btn-ghost btn-sm" 
                               title="Ver Evolución Gráfica"
-                              onClick={() => setAlumnoParaEvolucion(est)}
+                              onClick={() => abrirEvolucion(est)}
                             >
                               <TrendingUp size={16} /> <span style={{ fontSize: '12px' }}>Evolución</span>
                             </button>
@@ -394,8 +404,8 @@ export default function FonoaudiologiaModule() {
                 className="form-input" 
                 value={fechaSesion} 
                 max={getToday()}
-                onChange={e => setFechaSesion(e.target.value)} 
-              />
+                onChange={e => setFechaSesion(e.target.value)}
+ />
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="fono-estudiante">Estudiante *</label>
@@ -463,7 +473,7 @@ export default function FonoaudiologiaModule() {
                   style={{
                     fontSize: '11.5px', fontWeight: 600, padding: '4px 9px', borderRadius: '14px',
                     background: descripcionActividad.includes(preset) ? 'var(--gold-100)' : 'var(--bg-main)',
-                    color: descripcionActividad.includes(preset) ? 'var(--gold-800)' : 'var(--navy-700)',
+                    color: descripcionActividad.includes(preset) ? 'var(--gold-700)' : 'var(--navy-700)',
                     border: `1px solid ${descripcionActividad.includes(preset) ? 'var(--gold-400)' : 'var(--border-medium)'}`,
                     cursor: 'pointer',
                     transition: 'all var(--transition-fast)'
@@ -482,7 +492,7 @@ export default function FonoaudiologiaModule() {
               placeholder="Describe el trabajo fonético, fonológico o semántico ejecutado…"
               value={descripcionActividad}
               onChange={e => setDescripcionActividad(e.target.value)}
-            />
+ />
           </div>
 
           <div className="form-group">
@@ -494,7 +504,7 @@ export default function FonoaudiologiaModule() {
               placeholder="Conducta, nivel de fatiga, recomendaciones al docente o apoderado…"
               value={notasAdicionales}
               onChange={e => setNotasAdicionales(e.target.value)}
-            />
+ />
           </div>
 
           <div className="modal-footer-sticky" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
@@ -516,14 +526,13 @@ export default function FonoaudiologiaModule() {
         size="lg"
       >
         {alumnoParaEvolucion && (
-          <Suspense fallback={<div className="skeleton" style={{ height: 350 }} />}>
-            <FonoEvolutionChart 
-              data={historialSesiones.filter(s => s.estudiante_id === alumnoParaEvolucion.id)} 
-            />
+          <Suspense fallback={<div className="skeleton h-88" />}>
+            <FonoEvolutionChart
+              data={historialSesiones.filter(s => s.estudiante_id === alumnoParaEvolucion.id)}
+ />
           </Suspense>
         )}
       </Modal>
     </div>
   );
 }
-

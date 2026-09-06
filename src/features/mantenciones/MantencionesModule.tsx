@@ -112,21 +112,14 @@ export default function MantencionesModule() {
         </button>
       </header>
 
-      {urgentes > 0 && tab !== 'preventivas' && (
-        <div
-          style={{
-            display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '18px',
-            padding: '12px 14px', borderRadius: 'var(--radius-md)',
-            background: 'var(--color-danger-soft)', color: 'var(--color-danger)',
-            fontWeight: 700, fontSize: '13.5px',
-          }}
-        >
+      {urgentes> 0 && tab !== 'preventivas' && (
+        <div className="alerta alerta-danger" role="status">
           <TriangleAlert size={18} />
           {urgentes} incidencia{urgentes === 1 ? '' : 's'} urgente{urgentes === 1 ? '' : 's'} sin resolver
         </div>
       )}
 
-      <div className="tabs" style={{ marginBottom: '20px' }}>
+      <div className="tabs mb-5">
         {pestanas.filter(p => p.visible).map(p => (
           <button
             key={p.id}
@@ -143,9 +136,9 @@ export default function MantencionesModule() {
       ) : cargando ? (
         <div className="skeleton" style={{ height: 320 }} />
       ) : listaActiva.length === 0 ? (
-        <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+        <div className="card py-12 px-6 text-center">
           <Wrench size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-          <h3 style={{ marginBottom: '6px' }}>
+          <h3 className="mb-1">
             {tab === 'mias' ? 'No has reportado nada'
               : tab === 'historial' ? 'Todavía no hay nada cerrado'
               : 'No hay nada roto por ahora'}
@@ -157,14 +150,14 @@ export default function MantencionesModule() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '10px' }}>
+        <div className="grid gap-2">
           {listaActiva.map(m => (
             <FilaMantencion
               key={m.id}
               mantencion={m}
               mostrarReportante={tab !== 'mias'}
               onAbrir={() => setDetalle(m)}
-            />
+ />
           ))}
         </div>
       )}
@@ -204,10 +197,10 @@ function FilaMantencion({
         opacity: cerrada ? 0.75 : 1,
       }}
     >
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <strong style={{ fontSize: '15px' }}>{mantencion.lugar}</strong>
+      <div className="flex gap-2 items-start flex-wrap">
+        <div className="flex-1 min-w-50">
+          <div className="flex gap-2 items-center flex-wrap">
+            <strong className="text-md">{mantencion.lugar}</strong>
             {mantencion.categoria && <span className="badge">{mantencion.categoria}</span>}
           </div>
           <p style={{
@@ -216,22 +209,22 @@ function FilaMantencion({
           }}>
             {mantencion.descripcion}
           </p>
-          <div className="text-muted" style={{ fontSize: '12px', marginTop: '6px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div className="text-muted text-sm mt-1 flex gap-2 flex-wrap">
+            <span className="flex gap-1 items-center">
               <Clock size={12} /> {formatDate(mantencion.createdAt)}
             </span>
             {mostrarReportante && mantencion.reportadoPorNombre && (
               <span>{mantencion.reportadoPorNombre}</span>
             )}
             {mantencion.asignadoANombre && (
-              <span style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <span className="flex gap-1 items-center">
                 <Wrench size={12} /> {mantencion.asignadoANombre}
               </span>
             )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+        <div className="flex flex-col gap-1 items-end">
           <span className={`badge ${resuelta ? 'badge-success' : 'badge-navy'}`}>
             {resuelta && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
             {ETIQUETA_ESTADO[mantencion.estado as EstadoMantencion]}

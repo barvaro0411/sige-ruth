@@ -169,21 +169,14 @@ export default function PrestamosModule() {
         )}
       </header>
 
-      {atrasados > 0 && (
-        <div
-          style={{
-            display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '18px',
-            padding: '12px 14px', borderRadius: 'var(--radius-md)',
-            background: 'var(--color-danger-soft)', color: 'var(--color-danger)',
-            fontWeight: 700, fontSize: '13.5px',
-          }}
-        >
+      {atrasados> 0 && (
+        <div className="alerta alerta-danger" role="status">
           <TriangleAlert size={18} />
           {atrasados} equipo{atrasados === 1 ? '' : 's'} pasado{atrasados === 1 ? '' : 's'} de plazo
         </div>
       )}
 
-      <div className="tabs" style={{ marginBottom: '20px' }}>
+      <div className="tabs mb-5">
         <button className={`tab ${tab === 'afuera' ? 'active' : ''}`} onClick={() => setTab('afuera')}>
           Afuera ahora
         </button>
@@ -196,49 +189,49 @@ export default function PrestamosModule() {
       </div>
 
       {tab === 'afuera' && (
-        activos.isLoading ? <div className="skeleton" style={{ height: 300 }} />
+        activos.isLoading ? <div className="skeleton h-75" />
         : (activos.data ?? []).length === 0 ? (
-          <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <div className="card py-12 px-6 text-center">
             <ArrowLeftRight size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-            <h3 style={{ marginBottom: '6px' }}>No hay nada prestado</h3>
+            <h3 className="mb-1">No hay nada prestado</h3>
             <p className="text-muted">Todos los equipos están en su lugar.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
+          <div className="grid gap-2">
             {(activos.data ?? []).map(p => (
               <FilaPrestamo
                 key={p.id} prestamo={p} administra={administra}
                 onDevolver={() => { setDevolviendo(p); setError(''); }}
-              />
+ />
             ))}
           </div>
         )
       )}
 
       {tab === 'equipos' && (
-        recursos.isLoading ? <div className="skeleton" style={{ height: 300 }} />
+        recursos.isLoading ? <div className="skeleton h-75" />
         : (recursos.data ?? []).length === 0 ? (
-          <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <div className="card py-12 px-6 text-center">
             <Laptop size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-            <h3 style={{ marginBottom: '6px' }}>Todavía no hay equipos cargados</h3>
+            <h3 className="mb-1">Todavía no hay equipos cargados</h3>
             <p className="text-muted">Notebooks, proyectores, parlantes: lo que se presta y vuelve.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
+          <div className="grid gap-2">
             {(recursos.data ?? []).map(r => (
-              <article key={r.id} className="card" style={{ padding: '14px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <strong style={{ fontSize: '15px' }}>{r.nombre}</strong>
+              <article key={r.id} className="card p-3 flex gap-3 items-center flex-wrap">
+                <div className="flex-1 min-w-50">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <strong className="text-md">{r.nombre}</strong>
                     <span className={`badge ${CLASE_ESTADO[r.estado]}`}>
                       {ETIQUETA_ESTADO_RECURSO[r.estado]}
                     </span>
                   </div>
-                  <div className="text-muted" style={{ fontSize: '12.5px', marginTop: '4px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <div className="text-muted text-sm mt-1 flex gap-2 flex-wrap">
                     {r.codigo && <span>Código {r.codigo}</span>}
                     {r.tipo && <span>{r.tipo}</span>}
                     {r.ubicacion && (
-                      <span style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <span className="flex gap-1 items-center">
                         <MapPin size={12} /> {r.ubicacion}
                       </span>
                     )}
@@ -246,7 +239,7 @@ export default function PrestamosModule() {
                 </div>
 
                 {administra && (
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <div className="flex gap-1 flex-wrap">
                     {r.estado === 'disponible' && (
                       <button className="btn btn-gold btn-sm" onClick={() => { setPrestando(r); setError(''); }}>
                         <ArrowLeftRight size={15} /> Prestar
@@ -277,14 +270,14 @@ export default function PrestamosModule() {
       )}
 
       {tab === 'devueltos' && (
-        devueltos.isLoading ? <div className="skeleton" style={{ height: 300 }} />
+        devueltos.isLoading ? <div className="skeleton h-75" />
         : (devueltos.data ?? []).length === 0 ? (
-          <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <div className="card py-12 px-6 text-center">
             <Undo2 size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
-            <h3 style={{ marginBottom: '6px' }}>Todavía no hay devoluciones</h3>
+            <h3 className="mb-1">Todavía no hay devoluciones</h3>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
+          <div className="grid gap-2">
             {(devueltos.data ?? []).map(p => (
               <FilaPrestamo key={p.id} prestamo={p} administra={false} onDevolver={() => {}} />
             ))}
@@ -304,9 +297,9 @@ export default function PrestamosModule() {
               </button>
             </>
           }
-        >
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <div className="form-group" style={{ margin: 0 }}>
+              >
+          <div className="grid gap-3">
+            <div className="form-group">
               <label className="form-label" htmlFor="prest-quien">¿A quién?</label>
               <select
                 id="prest-quien" className="form-input" autoFocus
@@ -317,37 +310,37 @@ export default function PrestamosModule() {
                 {(colegas.data ?? []).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
+            <div className="grid grid-2 gap-2">
+              <div className="form-group">
                 <label className="form-label" htmlFor="prest-desde">Se lleva el</label>
                 <input
                   id="prest-desde" type="date" className="form-input"
                   value={formPrestamo.fechaEntrega}
                   onChange={e => setFormPrestamo({ ...formPrestamo, fechaEntrega: e.target.value })}
-                />
+ />
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className="form-group">
                 <label className="form-label" htmlFor="prest-hasta">Lo devuelve el</label>
                 <input
                   id="prest-hasta" type="date" className="form-input"
                   value={formPrestamo.fechaDevolucionEsperada}
                   onChange={e => setFormPrestamo({ ...formPrestamo, fechaDevolucionEsperada: e.target.value })}
-                />
+ />
               </div>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="prest-estado">¿Cómo va el equipo? (opcional)</label>
               <input
                 id="prest-estado" className="form-input"
                 placeholder="Con cargador y funda"
                 value={formPrestamo.estadoAlEntregar}
                 onChange={e => setFormPrestamo({ ...formPrestamo, estadoAlEntregar: e.target.value })}
-              />
-              <p className="text-muted" style={{ fontSize: '12px', marginTop: '6px' }}>
+ />
+              <p className="text-muted text-sm mt-1">
                 Anotarlo ahora evita la discusión de después.
               </p>
             </div>
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
           </div>
         </Modal>
       )}
@@ -364,30 +357,30 @@ export default function PrestamosModule() {
               </button>
             </>
           }
-        >
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <p className="text-muted" style={{ margin: 0, fontSize: '13.5px' }}>
+                >
+          <div className="grid gap-3">
+            <p className="text-muted text-base">
               Lo tenía {devolviendo.prestadoANombre} desde el {formatDate(devolviendo.fechaEntrega)}.
               {devolviendo.estadoAlEntregar && ` Se entregó: ${devolviendo.estadoAlEntregar}.`}
             </p>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="dev-fecha">¿Cuándo volvió?</label>
               <input
                 id="dev-fecha" type="date" className="form-input"
                 value={formDevolucion.fecha}
                 onChange={e => setFormDevolucion({ ...formDevolucion, fecha: e.target.value })}
-              />
+ />
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="dev-estado">¿Cómo volvió? (opcional)</label>
               <input
                 id="dev-estado" className="form-input"
                 placeholder="Sin el cargador"
                 value={formDevolucion.estado}
                 onChange={e => setFormDevolucion({ ...formDevolucion, estado: e.target.value })}
-              />
+ />
             </div>
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
           </div>
         </Modal>
       )}
@@ -411,44 +404,44 @@ export default function PrestamosModule() {
               </button>
             </>
           }
-        >
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <div className="form-group" style={{ margin: 0 }}>
+              >
+          <div className="grid gap-3">
+            <div className="form-group">
               <label className="form-label" htmlFor="rec-nombre">Nombre</label>
               <input
                 id="rec-nombre" className="form-input" autoFocus
                 placeholder="Notebook Lenovo sala 2"
                 value={formRecurso.nombre}
                 onChange={e => setFormRecurso({ ...formRecurso, nombre: e.target.value })}
-              />
+ />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
+            <div className="grid grid-2 gap-2">
+              <div className="form-group">
                 <label className="form-label" htmlFor="rec-tipo">Tipo (opcional)</label>
                 <input
                   id="rec-tipo" className="form-input" placeholder="Notebook"
                   value={formRecurso.tipo}
                   onChange={e => setFormRecurso({ ...formRecurso, tipo: e.target.value })}
-                />
+ />
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className="form-group">
                 <label className="form-label" htmlFor="rec-codigo">Código (opcional)</label>
                 <input
                   id="rec-codigo" className="form-input" placeholder="NB-002"
                   value={formRecurso.codigo}
                   onChange={e => setFormRecurso({ ...formRecurso, codigo: e.target.value })}
-                />
+ />
               </div>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="rec-ubicacion">Dónde se guarda (opcional)</label>
               <input
                 id="rec-ubicacion" className="form-input" placeholder="Armario de dirección"
                 value={formRecurso.ubicacion}
                 onChange={e => setFormRecurso({ ...formRecurso, ubicacion: e.target.value })}
-              />
+ />
             </div>
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
           </div>
         </Modal>
       )}
@@ -475,13 +468,13 @@ function FilaPrestamo({
         opacity: devuelto ? 0.75 : 1,
       }}
     >
-      <div style={{ flex: 1, minWidth: 200 }}>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <strong style={{ fontSize: '15px' }}>{prestamo.recurso}</strong>
+      <div className="flex-1 min-w-50">
+        <div className="flex gap-2 items-center flex-wrap">
+          <strong className="text-md">{prestamo.recurso}</strong>
           {prestamo.codigo && <span className="badge">{prestamo.codigo}</span>}
           {atrasado && <span className="badge badge-danger">Atrasado</span>}
         </div>
-        <div className="text-muted" style={{ fontSize: '12.5px', marginTop: '4px' }}>
+        <div className="text-muted text-sm mt-1">
           {prestamo.prestadoANombre} · desde el {formatDate(prestamo.fechaEntrega)}
         </div>
         <div
@@ -499,7 +492,7 @@ function FilaPrestamo({
               : `Vence el ${formatDate(prestamo.fechaDevolucionEsperada)}`}
         </div>
         {devuelto && prestamo.estadoAlDevolver && (
-          <div className="text-muted" style={{ fontSize: '12px', marginTop: '4px' }}>
+          <div className="text-muted text-sm mt-1">
             Volvió: {prestamo.estadoAlDevolver}
           </div>
         )}
