@@ -1,4 +1,5 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.112.4';
+import { canCreateUsers, InvalidRequest, isStrongPassword, readJsonBody } from './security.ts';
 
 // Origenes autorizados. Configurar con `supabase secrets set APP_ORIGINS=...`
 // (lista separada por comas). Sin la variable solo se admite desarrollo local.
@@ -29,18 +30,10 @@ const allowedRoles = new Set([
 // update_user_profile de la base.
 const rolesTransversales = new Set(['director', 'sostenedor']);
 
-function isStrongPassword(password: string) {
-  return password.length >= 12
-    && /[a-z]/.test(password)
-    && /[A-Z]/.test(password)
-    && /[0-9]/.test(password)
-    && /[^A-Za-z0-9]/.test(password);
-}
-
 function json(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
   });
 }
 
@@ -109,13 +102,11 @@ Deno.serve(async (request) => {
 
   let body: Record<string, unknown>;
   try {
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > 16 * 1024) {
-      return json({ success: false, error: 'Solicitud demasiado grande' }, 413, corsHeaders);
+    body = await readJsonBody(request);
+  } catch (error) {
+    if (error instanceof InvalidRequest) {
+      return json({ success: false, error: error.message }, error.status, corsHeaders);
     }
-    body = JSON.parse(rawBody);
-    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Cuerpo inválido');
-  } catch {
     return json({ success: false, error: 'Solicitud inválida' }, 400, corsHeaders);
   }
 
@@ -156,8 +147,8 @@ Deno.serve(async (request) => {
   if (body.action !== 'create') {
     return json({ success: false, error: 'Acción no permitida' }, 400, corsHeaders);
   }
-  if (!caller?.activo || caller.rol !== 'director') {
-    return json({ success: false, error: 'Solo el director puede crear usuarios' }, 403, corsHeaders);
+  if (!canCreateUsers(caller, authData.user.app_metadata)) {
+    return json({ success: false, error: 'Se requiere un director activo que haya cambiado su contraseña inicial' }, 403, corsHeaders);
   }
 
   const { data: permitido, error: rateError } = await admin.rpc(

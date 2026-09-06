@@ -5,6 +5,7 @@ import {
   olvidarActividad,
   restanteDeInactividad,
   sesionVencidaPorInactividad,
+  iniciarControlDeInactividad,
 } from './inactividad';
 
 /** `localStorage` mínimo: vitest corre en Node y no trae uno. */
@@ -29,6 +30,7 @@ describe('inactividad', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     instalarAlmacenamiento();
+    olvidarActividad();
   });
 
   it('no da por vencida una sesión sin marca previa', () => {
@@ -80,5 +82,26 @@ describe('inactividad', () => {
   it('ignora una marca corrupta', () => {
     instalarAlmacenamiento().set('sige_ultima_actividad', 'ayer');
     expect(sesionVencidaPorInactividad()).toBe(false);
+  });
+
+  it('hace vencer la sesión también con localStorage bloqueado', () => {
+    instalarAlmacenamiento(true);
+    const ahora = 1_000_000_000;
+    anotarActividad(ahora);
+    expect(restanteDeInactividad(ahora + PLAZO_INACTIVIDAD_MS)).toBe(0);
+    expect(sesionVencidaPorInactividad(ahora + PLAZO_INACTIVIDAD_MS)).toBe(true);
+  });
+
+  it('restaurar el control no renueva la última actividad', () => {
+    const ahora = Date.now();
+    anotarActividad(ahora - PLAZO_INACTIVIDAD_MS);
+    iniciarControlDeInactividad();
+    expect(sesionVencidaPorInactividad(ahora)).toBe(true);
+  });
+
+  it('una marca futura no programa un temporizador mayor al plazo', () => {
+    const ahora = Date.now();
+    anotarActividad(ahora + 24 * 60 * 60 * 1000);
+    expect(restanteDeInactividad(ahora)).toBe(PLAZO_INACTIVIDAD_MS);
   });
 });

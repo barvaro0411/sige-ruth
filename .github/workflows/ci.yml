@@ -7,6 +7,9 @@
 # =============================================================================
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -45,8 +48,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Dependencias de runtime
-        run: npm audit --omit=dev
+      - name: Dependencias de runtime y herramientas
+        run: npm audit
 
       - name: Detectar secretos versionados
         run: npm run security:secrets

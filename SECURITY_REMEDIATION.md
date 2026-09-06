@@ -1,5 +1,49 @@
 # Remediación y despliegue seguro
 
+## Refuerzo del 6 de septiembre de 2026
+
+- La caché de consultas y mutaciones se vacía al cerrar sesión, cambiar de
+  cuenta o revalidar un cambio de rol, sedes o contraseña temporal. Las
+  respuestas de perfil anteriores al cierre no pueden restaurar la sesión.
+- El cierre oculta los datos inmediatamente, incluso mientras espera la red.
+  El refresco automático del token no renueva el plazo de inactividad y un
+  clic después del vencimiento no lo reinicia. Si localStorage está bloqueado,
+  el plazo se mantiene en memoria durante la vida de la pestaña.
+- `admin-users` exige que el director haya reemplazado su contraseña temporal
+  antes de crear cuentas. El cuerpo JSON se limita a 16 KiB durante la lectura,
+  incluso sin Content-Length; ambas contraseñas admiten como máximo 128
+  caracteres. Las respuestas llevan `Cache-Control: no-store` y la dependencia
+  de Supabase de la función queda fijada a una versión concreta.
+- Browserslist se actualizó de 4.28.2 a 4.28.9 para resolver los avisos
+  [GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) y
+  [GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g).
+  CI audita también dependencias de desarrollo y usa un token de GitHub de
+  solo lectura. El escáner de secretos muestra únicamente nombres de archivos
+  y falla si no puede completar el análisis.
+
+Validación local: pruebas unitarias y de ciclo de sesión, TypeScript, ESLint,
+compilación de producción, escáneres de secretos/privacidad y `npm audit`.
+Las pruebas de sesión usan servicios simulados; no acreditan la configuración
+del Supabase desplegado ni sustituyen las pruebas RLS. En este entorno no se
+dispone de Deno, Docker ni psql para ejecutar la función y la base localmente.
+
+Este refuerzo no introduce migraciones SQL. El frontend se publicó en producción
+el 6 de septiembre de 2026 en https://sige-ruth.vercel.app, despliegue Vercel
+`dpl_LCDs1oLgmxsbNCbuxwwAZuSw33jE` (READY). Se verificaron HTTP 200, la pantalla
+de inicio de sesión, las cabeceras CSP/DENY/nosniff y ausencia de errores de
+JavaScript durante esa visita. Los assets coinciden con la compilación local.
+La actualización de `admin-users` sigue pendiente de autenticar la CLI de
+Supabase; la función existente responde al preflight del dominio de producción.
+No se modificó la base de datos. Los cambios de CI se incluyen en la rama
+`remediacion-auditoria-septiembre`; el workflow se ejecuta en pushes a `main`
+y en pull requests dirigidos a `main`.
+El cierre por inactividad es una protección del navegador: para imponer plazos
+a clientes externos se requiere también configurar sesiones en Supabase Auth.
+
+Referencias de implementación:
+[limpieza de QueryClient](https://tanstack.com/query/latest/docs/reference/QueryClient#queryclientclear)
+y [cierre de sesión de Supabase](https://supabase.com/docs/reference/javascript/auth-signout).
+
 Este cambio corrige el código y deja las migraciones preparadas, pero **no
 modifica automáticamente producción ni reescribe el historial remoto**. Esas
 operaciones requieren una ventana coordinada, respaldo y revisión del estado

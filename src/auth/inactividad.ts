@@ -15,6 +15,7 @@
 export const PLAZO_INACTIVIDAD_MS = 30 * 60 * 1000;
 
 const CLAVE = 'sige_ultima_actividad';
+let ultimaEnMemoria: number | null = null;
 
 /**
  * En modo privado o con el almacenamiento bloqueado, `localStorage` lanza al
@@ -28,20 +29,21 @@ function leer(): number | null {
     const marca = Number(crudo);
     return Number.isFinite(marca) ? marca : null;
   } catch {
-    return null;
+    return ultimaEnMemoria;
   }
 }
 
 export function anotarActividad(ahora: number = Date.now()): void {
+  ultimaEnMemoria = ahora;
   try {
     localStorage.setItem(CLAVE, String(ahora));
   } catch {
-    // Sin almacenamiento el plazo dura lo que dure la pestaña. Es peor, pero
-    // no es motivo para impedir el uso del sistema.
+    // La copia en memoria mantiene el cierre por inactividad en esta pestaña.
   }
 }
 
 export function olvidarActividad(): void {
+  ultimaEnMemoria = null;
   try {
     localStorage.removeItem(CLAVE);
   } catch {
@@ -49,11 +51,16 @@ export function olvidarActividad(): void {
   }
 }
 
+/** Inicializa una sesión restaurada sin renovar una marca existente. */
+export function iniciarControlDeInactividad(): void {
+  if (leer() === null) anotarActividad();
+}
+
 /** Milisegundos que faltan para el cierre. Nunca menos de cero. */
 export function restanteDeInactividad(ahora: number = Date.now()): number {
   const ultima = leer();
   if (ultima === null) return PLAZO_INACTIVIDAD_MS;
-  return Math.max(0, ultima + PLAZO_INACTIVIDAD_MS - ahora);
+  return Math.max(0, Math.min(PLAZO_INACTIVIDAD_MS, ultima + PLAZO_INACTIVIDAD_MS - ahora));
 }
 
 export function sesionVencidaPorInactividad(ahora: number = Date.now()): boolean {

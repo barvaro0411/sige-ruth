@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../db/database';
 import { hasPermission, getDefaultRoute, ROLE_LABELS, ROLE_COLORS, Permiso } from './permissions';
 import { User } from '../types';
 import { mapPerfil } from '../utils/mappers';
 import {
-  anotarActividad, olvidarActividad, restanteDeInactividad, sesionVencidaPorInactividad,
+  anotarActividad, olvidarActividad, restanteDeInactividad, sesionVencidaPorInactividad, iniciarControlDeInactividad,
 } from './inactividad';
 
 interface AuthContextType {
@@ -29,6 +30,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const queryClient = useQueryClient();
+  const sessionRevision = useRef(0);
+  const authorizationKey = useRef<string | null>(null);
+  const sessionUserId = useRef<string | null>(null);
+  const closing = useRef(false);
+
+  const clearPrivateState = useCallback(() => {
+    sessionRevision.current += 1;
+    authorizationKey.current = null;
+    sessionUserId.current = null;
+    queryClient.clear();
+    setUser(null);
+    setMustChangePassword(false);
+  }, [queryClient]);
+
+  const logout = useCallback(async () => {
+    closing.current = true;
+    clearPrivateState();
+    olvidarActividad();
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      closing.current = false;
+    }
+  }, [clearPrivateState]);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     const { data, error: profileError } = await supabase
@@ -49,23 +75,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    async function syncSession(userId: string) {
-      const profile = await fetchUserProfile(userId);
-      if (!active) return;
+    async function syncSession(userId: string, passwordRequired: boolean, revision: number) {
+      if (!active || closing.current || revision !== sessionRevision.current) return;
+      if (sesionVencidaPorInactividad()) {
+        await logout();
+        return;
+      }
+      const profile = await fetchUserProfile(userId).catch(() => null);
+      if (!active || closing.current || revision !== sessionRevision.current) return;
       if (profile) {
+        const nextKey = JSON.stringify([profile.id, profile.rol, [...profile.sedeIds].sort(), passwordRequired]);
+        if (authorizationKey.current !== nextKey) {
+          queryClient.clear();
+          authorizationKey.current = nextKey;
+        }
+        setMustChangePassword(passwordRequired);
+        sessionUserId.current = profile.id;
         setUser(profile);
       } else {
-        setUser(null);
-        await supabase.auth.signOut();
+        await logout();
       }
     }
 
     async function init() {
+      const revision = sessionRevision.current;
       setLoading(true);
       setError(null);
       try {
         // 1. Verificar si hay una sesión activa en Supabase Auth
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (!active || revision !== sessionRevision.current) return;
         
         if (sessionError) throw sessionError;
 
@@ -74,13 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // en memoria: si no, cerrar la pestaña y volver más tarde reinicia
           // el plazo y la sesión olvidada sigue viva.
           if (sesionVencidaPorInactividad()) {
-            await supabase.auth.signOut();
-            olvidarActividad();
+            await logout();
             return;
           }
-          setMustChangePassword(Boolean(session.user.app_metadata?.must_change_password));
           // Si el perfil no existe o fue desactivado, se cierra la sesión.
-          await syncSession(session.user.id);
+          await syncSession(session.user.id, Boolean(session.user.app_metadata?.must_change_password), revision);
         }
       } catch (err: any) {
         if (import.meta.env.DEV) console.error('[AuthContext] Critical error during initialization:', err);
@@ -95,13 +132,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')
           && session?.user) {
-        setMustChangePassword(Boolean(session.user.app_metadata?.must_change_password));
+        if (closing.current) return;
+        if (sessionUserId.current && sessionUserId.current !== session.user.id) clearPrivateState();
+        const revision = ++sessionRevision.current;
         // Se difiere para no ejecutar otra llamada Supabase dentro del lock de Auth.
         // Revalida `activo` en cada refresco: una cuenta desactivada pierde la sesión.
-        setTimeout(() => { void syncSession(session.user.id); }, 0);
+        setTimeout(() => {
+          void syncSession(session.user.id, Boolean(session.user.app_metadata?.must_change_password), revision);
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setMustChangePassword(false);
+        clearPrivateState();
+        olvidarActividad();
       }
     });
 
@@ -111,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, logout, clearPrivateState, queryClient]);
 
   // En equipos compartidos, una sesión olvidada no debe quedar abierta todo el
   // día. Cada gesto anota la hora y renueva el plazo; a los 30 minutos se
@@ -124,8 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let timer: ReturnType<typeof setTimeout>;
 
     const cerrar = () => {
-      olvidarActividad();
-      void supabase.auth.signOut();
+      void logout();
     };
 
     const programar = () => {
@@ -138,6 +178,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const registrar = () => {
+      // Un gesto al volver no puede revivir una sesión que ya venció.
+      if (sesionVencidaPorInactividad()) {
+        cerrar();
+        return;
+      }
       anotarActividad();
       programar();
     };
@@ -154,17 +199,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     eventos.forEach(evento => window.addEventListener(evento, registrar, { passive: true }));
     document.addEventListener('visibilitychange', alVolver);
 
-    registrar();
+    // Montar el efecto o refrescar el token no cuenta como actividad humana.
+    iniciarControlDeInactividad();
+    programar();
 
     return () => {
       clearTimeout(timer);
       eventos.forEach(evento => window.removeEventListener(evento, registrar));
       document.removeEventListener('visibilitychange', alVolver);
     };
-  }, [user]);
+  }, [user?.id, logout]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
+      if (closing.current) return { success: false, error: 'Espera a que termine el cierre de sesión.' };
+      anotarActividad();
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -176,13 +225,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        setMustChangePassword(Boolean(data.user.app_metadata?.must_change_password));
+        const revision = sessionRevision.current;
         const profile = await fetchUserProfile(data.user.id);
+        if (closing.current || revision !== sessionRevision.current) {
+          return { success: false, error: 'La sesión cambió. Vuelve a iniciar sesión.' };
+        }
         if (profile) {
-          setUser(profile);
           return { success: true, defaultRoute: getDefaultRoute(profile.rol) };
         } else {
-          await supabase.auth.signOut();
+          await logout();
           return { success: false, error: 'La cuenta no tiene un perfil activo. Contacta al director.' };
         }
       }
@@ -192,24 +243,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (import.meta.env.DEV) console.error('[Auth] Login error:', err);
       return { success: false, error: 'Error de conexión.' };
     }
-  }, [fetchUserProfile]);
-
-  const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setMustChangePassword(false);
-  }, []);
+  }, [fetchUserProfile, logout]);
 
   const changeInitialPassword = useCallback(async (password: string) => {
+    const revision = sessionRevision.current;
     const { data, error: changeError } = await supabase.functions.invoke('admin-users', {
       body: { action: 'change_initial_password', password },
     });
     if (changeError || !data?.success) {
       return { success: false, error: data?.error || changeError?.message || 'No se pudo cambiar la contraseña.' };
     }
+    if (closing.current || revision !== sessionRevision.current) {
+      return { success: false, error: 'La sesión cambió. Vuelve a iniciar sesión.' };
+    }
     const { error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) return { success: false, error: 'La contraseña cambió, pero debes volver a iniciar sesión.' };
-    setMustChangePassword(false);
+    // TOKEN_REFRESHED revalida el perfil y publica el estado de la contraseña.
     return { success: true };
   }, []);
 
