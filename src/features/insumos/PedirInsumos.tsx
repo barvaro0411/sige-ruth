@@ -258,7 +258,7 @@ function FilaProducto({
     >
       <div className="flex-1">
         <div className="font-bold text-md">{producto.nombre}</div>
-        <div style={{ fontSize: '12px', color: sinStock ? 'var(--color-warning)' : 'var(--text-muted)' }}>
+        <div style={{ fontSize: '12px', color: sinStock ? 'var(--color-warning-dark)' : 'var(--text-muted)' }}>
           {sinStock
             ? 'No queda en bodega — se pedirá igual'
             : `Hay ${producto.stockActual} ${producto.unidadNombre.toLowerCase()}`}

@@ -231,7 +231,7 @@ export default function FonoaudiologiaModule() {
         <article className="card stat-card">
           <div className="stat-header">
             <span className="stat-label">Intervenciones ({getMonthName(new Date().getMonth())})</span>
-            <div className="stat-icon" style={{ background: 'rgba(212, 168, 67, 0.15)', color: 'var(--color-gold)' }}>
+            <div className="stat-icon" style={{ background: 'var(--gold-100)', color: 'var(--gold-700)' }}>
               <Calendar size={20} />
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function FonoaudiologiaModule() {
         <article className="card stat-card">
           <div className="stat-header">
             <span className="stat-label">Alumnos Atendidos este Mes</span>
-            <div className="stat-icon" style={{ background: 'rgba(27, 42, 74, 0.1)', color: 'var(--color-navy)' }}>
+            <div className="stat-icon" style={{ background: 'var(--navy-100)', color: 'var(--navy-800)' }}>
               <Activity size={20} />
             </div>
           </div>

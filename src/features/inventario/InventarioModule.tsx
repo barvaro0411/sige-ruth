@@ -213,12 +213,8 @@ export default function InventarioModule() {
               <button
                 key={p.id}
                 onClick={() => { setSoloFaltantes(true); setBusqueda(p.nombre); }}
-                className="badge"
-                style={{
-                  cursor: 'pointer', border: 'none', fontFamily: 'inherit',
-                  background: p.estadoStock === 'agotado' ? 'var(--color-danger-soft)' : 'var(--color-warning-soft)',
-                  color: p.estadoStock === 'agotado' ? 'var(--color-danger)' : 'var(--color-warning)',
-                }}
+                className={`badge ${p.estadoStock === 'agotado' ? 'badge-danger' : 'badge-warning'}`}
+                style={{ cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {p.nombre}: quedan {p.stockActual} {p.unidadNombre.toLowerCase()}
               </button>

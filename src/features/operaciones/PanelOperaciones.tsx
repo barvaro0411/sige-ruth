@@ -135,9 +135,9 @@ export default function PanelOperaciones() {
               >
                 <c.icono
                   size={22}
-                  style={{ color: c.urgente ? 'var(--color-danger)' : 'var(--color-gold)', flexShrink: 0 }}
+                  style={{ color: c.urgente ? 'var(--color-danger)' : 'var(--gold-600)', flexShrink: 0 }}
                   aria-hidden="true"
- />
+                />
                 <div>
                   <div style={{
                     fontSize: '24px', fontWeight: 900, lineHeight: 1.1,
