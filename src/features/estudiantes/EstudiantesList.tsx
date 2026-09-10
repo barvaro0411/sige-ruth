@@ -194,24 +194,24 @@ export default function EstudiantesList() {
             <Users size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Total Matriculados
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--navy-900)', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1.1 }}>
               {totalMatriculados} <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>alumnos</span>
             </div>
           </div>
         </div>
 
         <div className="card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--color-navy-soft)', color: 'var(--navy-800)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--bg-subtle)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <GraduationCap size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Cursos Habilitados
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--navy-900)', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1.1 }}>
               {cursos.length} <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>cursos</span>
             </div>
           </div>
@@ -222,16 +222,16 @@ export default function EstudiantesList() {
             <Clock size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Distribución Jornadas
             </div>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--navy-900)', display: 'flex', gap: '10px', marginTop: '2px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', gap: '10px', marginTop: '2px' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                 <Sun size={14} style={{ color: 'var(--gold-600)' }} /> {totalManana} Mañana
               </span>
               <span>·</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Moon size={14} style={{ color: 'var(--navy-500)' }} /> {totalTarde} Tarde
+                <Moon size={14} style={{ color: 'var(--text-muted)' }} /> {totalTarde} Tarde
               </span>
             </div>
           </div>
@@ -297,8 +297,8 @@ export default function EstudiantesList() {
             style={{
               padding: '6px 12px',
               minHeight: '36px',
-              background: viewMode === 'table' ? 'white' : 'transparent',
-              color: viewMode === 'table' ? 'var(--navy-900)' : 'var(--text-muted)',
+              background: viewMode === 'table' ? 'var(--bg-card)' : 'transparent',
+              color: viewMode === 'table' ? 'var(--text-primary)' : 'var(--text-muted)',
               boxShadow: viewMode === 'table' ? 'var(--shadow-xs)' : 'none',
             }}
             onClick={() => setViewMode('table')}
@@ -312,8 +312,8 @@ export default function EstudiantesList() {
             style={{
               padding: '6px 12px',
               minHeight: '36px',
-              background: viewMode === 'grid' ? 'white' : 'transparent',
-              color: viewMode === 'grid' ? 'var(--navy-900)' : 'var(--text-muted)',
+              background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent',
+              color: viewMode === 'grid' ? 'var(--text-primary)' : 'var(--text-muted)',
               boxShadow: viewMode === 'grid' ? 'var(--shadow-xs)' : 'none',
             }}
             onClick={() => setViewMode('grid')}
@@ -360,10 +360,10 @@ export default function EstudiantesList() {
 
                 return (
                   <tr key={est.id}>
-                    <td style={{ textAlign: 'center', fontWeight: 800, color: 'var(--navy-400)', fontSize: '12px' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 800, color: 'var(--text-muted)', fontSize: '12px' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--navy-900)', fontSize: '13.5px' }}>
+                    <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)', fontSize: '13.5px' }}>
                       {formatRut(est.rut)}
                     </td>
                     <td>
@@ -371,18 +371,18 @@ export default function EstudiantesList() {
                         <div
                           style={{
                             width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                            background: 'var(--color-navy-soft)', color: 'var(--navy-900)',
+                            background: 'var(--bg-subtle)', color: 'var(--text-primary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 800, border: '1px solid var(--navy-200)'
+                            fontSize: '12px', fontWeight: 800, border: '1px solid var(--border-medium)'
                           }}
                         >
                           {est.nombre[0]}{(est.apellidoPaterno || '')[0]}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 800, color: 'var(--navy-900)', fontSize: '14px' }}>
+                          <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '14px' }}>
                             {est.apellidoPaterno} {est.apellidoMaterno}
                           </div>
-                          <div style={{ fontSize: '12px', color: 'var(--navy-600)', fontWeight: 500 }}>
+                          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                             {est.nombre}
                           </div>
                         </div>
@@ -397,10 +397,10 @@ export default function EstudiantesList() {
                       <span
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: '5px',
-                          fontSize: '12.5px', fontWeight: 700, color: 'var(--navy-700)'
+                          fontSize: '12.5px', fontWeight: 700, color: 'var(--text-secondary)'
                         }}
                       >
-                        {est.jornada === 'Mañana' ? <Sun size={14} style={{ color: 'var(--gold-600)' }} /> : <Moon size={14} style={{ color: 'var(--navy-500)' }} />}
+                        {est.jornada === 'Mañana' ? <Sun size={14} style={{ color: 'var(--gold-600)' }} /> : <Moon size={14} style={{ color: 'var(--text-muted)' }} />}
                         {est.jornada}
                       </span>
                     </td>
@@ -496,10 +496,10 @@ export default function EstudiantesList() {
                         {est.nombre[0]}{(est.apellidoPaterno || '')[0]}
                       </div>
                       <div>
-                        <h3 style={{ fontSize: '15.5px', fontWeight: 800, color: 'var(--navy-900)', lineHeight: 1.2, margin: 0 }}>
+                        <h3 style={{ fontSize: '15.5px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2, margin: 0 }}>
                           {est.apellidoPaterno} {est.apellidoMaterno}
                         </h3>
-                        <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--navy-600)', margin: '2px 0 0' }}>
+                        <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
                           {est.nombre}
                         </p>
                       </div>
@@ -515,15 +515,15 @@ export default function EstudiantesList() {
                       className="badge badge-navy"
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
                     >
-                      {est.jornada === 'Mañana' ? <Sun size={12} style={{ color: 'var(--gold-600)' }} /> : <Moon size={12} style={{ color: 'var(--navy-500)' }} />}
+                      {est.jornada === 'Mañana' ? <Sun size={12} style={{ color: 'var(--gold-600)' }} /> : <Moon size={12} style={{ color: 'var(--text-muted)' }} />}
                       {est.jornada}
                     </span>
                   </div>
 
                   {/* RUN en bloque limpio */}
                   <div style={{ background: 'var(--bg-main)', padding: '10px 14px', borderRadius: 'var(--radius-md)', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase' }}>RUN</span>
-                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--navy-900)', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>RUN</span>
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatRut(est.rut)}
                     </span>
                   </div>
@@ -622,11 +622,11 @@ export default function EstudiantesList() {
                 {showDetail.nombre[0]}{(showDetail.apellidoPaterno || '')[0]}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--navy-900)', margin: 0 }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                   {showDetail.nombre} {showDetail.apellidoPaterno} {showDetail.apellidoMaterno}
                 </h3>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginTop: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--navy-700)', fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                     RUN: {formatRut(showDetail.rut)}
                   </span>
                   <span className={`badge ${getCursoColorBadge(showDetail.nivel)}`}>
@@ -641,7 +641,7 @@ export default function EstudiantesList() {
             <div className="grid grid-2" style={{ gap: '16px' }}>
               {/* Bloque 1: Identificación y Académico */}
               <div className="card" style={{ padding: '16px 18px', border: '1px solid var(--border-medium)' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <GraduationCap size={15} /> Asignación Académica
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
@@ -666,7 +666,7 @@ export default function EstudiantesList() {
 
               {/* Bloque 2: Diagnóstico y Fonoaudiología */}
               <div className="card" style={{ padding: '16px 18px', border: '1px solid var(--border-medium)' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Activity size={15} /> Diagnóstico y Fonoaudiología
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
@@ -691,12 +691,12 @@ export default function EstudiantesList() {
 
               {/* Bloque 3: Apoderado y Contacto */}
               <div className="card" style={{ padding: '16px 18px', border: '1px solid var(--border-medium)', gridColumn: '1 / -1' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--navy-600)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Phone size={15} /> Apoderado y Contacto de Emergencia
                 </h4>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--navy-900)' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
                       {showDetail.nombreApoderado || 'Sin apoderado registrado'}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
@@ -805,7 +805,7 @@ export default function EstudiantesList() {
         onClose={() => !deactivateMutation.isPending && setDeactivatingStudent(null)}
         title="Desactivar Matrícula"
       >
-        <p style={{ marginBottom: '24px', color: 'var(--navy-700)', lineHeight: 1.6, fontSize: '14px' }}>
+        <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '14px' }}>
           {deactivatingStudent
             ? `¿Confirmas que deseas desactivar la matrícula de ${deactivatingStudent.nombre} ${deactivatingStudent.apellidoPaterno}? El historial se conservará en el sistema.`
             : ''}

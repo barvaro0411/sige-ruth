@@ -105,4 +105,30 @@ describe('sistema de diseño', () => {
 
     expect(conEstilo).toEqual([]);
   });
+
+  it('mantiene las superficies y el texto adaptables al modo oscuro', () => {
+    const bloqueOscuro = css.slice(css.indexOf('@media (prefers-color-scheme: dark)'));
+
+    expect(bloqueOscuro).toContain('color-scheme: dark');
+    expect(bloqueOscuro).toContain('--bg-login-card:');
+    expect(css).not.toMatch(/background:\s*(?:white|#fff(?:fff)?)(?:\s|;)/i);
+
+    const superficiesBlancas = archivos
+      .filter(archivo => !relativo(archivo).endsWith('features/matricula/MatriculaPreviewModal.tsx'))
+      .flatMap(archivo => {
+        const texto = fs.readFileSync(archivo, 'utf8');
+        return [...texto.matchAll(/(?:background|backgroundColor)[^,\n]{0,120}['"](?:white|#fff(?:fff)?)['"]/gi)]
+          .map(uso => `${relativo(archivo)}: ${uso[0]}`);
+      });
+
+    expect(superficiesBlancas).toEqual([]);
+
+    const coloresDeMarcaEnTexto = archivos.flatMap(archivo => {
+      const texto = fs.readFileSync(archivo, 'utf8');
+      return [...texto.matchAll(/color:\s*['"]var\(--navy-\d+\)['"]/g)]
+        .map(uso => `${relativo(archivo)}: ${uso[0]}`);
+    });
+
+    expect(coloresDeMarcaEnTexto).toEqual([]);
+  });
 });

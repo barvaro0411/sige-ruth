@@ -29,7 +29,7 @@ const ESTADOS: Record<EstadoPermiso, { label: string; color: string; bg: string 
   observada: { label: 'Con observaciones', color: 'var(--color-info)', bg: 'var(--color-info-soft)' },
   aprobada: { label: 'Aprobada', color: 'var(--color-success)', bg: 'var(--color-success-soft)' },
   rechazada: { label: 'Rechazada', color: 'var(--color-danger)', bg: 'var(--color-danger-soft)' },
-  cancelada: { label: 'Cancelada', color: 'var(--navy-600)', bg: 'var(--bg-main)' },
+  cancelada: { label: 'Cancelada', color: 'var(--text-secondary)', bg: 'var(--bg-main)' },
 };
 
 const tipoLabel = (t: TipoPermiso) => TIPOS.find(x => x.value === t)?.label || t;
@@ -223,7 +223,7 @@ export default function PermisosModule() {
       {saldo ? (
         <section className="grid grid-3 mb-8">
           {[
-            { label: 'Días asignados', val: saldo.asignados, color: 'var(--navy-900)' },
+            { label: 'Días asignados', val: saldo.asignados, color: 'var(--text-primary)' },
             { label: 'Días usados', val: saldo.usados, color: 'var(--gold-600)' },
             { label: 'Disponibles', val: saldo.disponibles, color: saldo.disponibles> 0 ? 'var(--color-success)' : 'var(--color-danger)' },
           ].map(s => (
@@ -275,7 +275,7 @@ export default function PermisosModule() {
                   <div className="text-sm text-secondary mt-2">{s.motivo}</div>
                 )}
                 {s.comentarioResolucion && (
-                  <div style={{ fontSize: '12px', color: 'var(--navy-600)', marginTop: '8px', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>
                     Respuesta: {s.comentarioResolucion}
                   </div>
                 )}
@@ -358,7 +358,7 @@ export default function PermisosModule() {
             <div style={{
               padding: '12px 16px', borderRadius: '12px',
               background: excedeSaldo ? 'var(--color-danger-soft)' : 'var(--bg-main)',
-              color: excedeSaldo ? 'var(--color-danger)' : 'var(--navy-600)',
+              color: excedeSaldo ? 'var(--color-danger)' : 'var(--text-secondary)',
               fontSize: '13px', fontWeight: 600
             }}>
               {diasSolicitados} {diasSolicitados === 1 ? 'día hábil' : 'días hábiles'}

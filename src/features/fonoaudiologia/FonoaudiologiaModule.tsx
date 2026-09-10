@@ -244,7 +244,7 @@ export default function FonoaudiologiaModule() {
         <article className="card stat-card">
           <div className="stat-header">
             <span className="stat-label">Alumnos Atendidos este Mes</span>
-            <div className="stat-icon" style={{ background: 'var(--navy-100)', color: 'var(--navy-800)' }}>
+            <div className="stat-icon" style={{ background: 'var(--bg-subtle)', color: 'var(--text-secondary)' }}>
               <Activity size={20} />
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function FonoaudiologiaModule() {
         <div className="card-header" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--navy-900)' }}>Registro de Intervenciones Clínicas</h3>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)' }}>Registro de Intervenciones Clínicas</h3>
               <p className="text-muted" style={{ fontSize: '13px' }}>Historial clínico de sesiones y avance por estudiante</p>
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function FonoaudiologiaModule() {
                     <tr key={s.id}>
                       <td style={{ fontWeight: 700, fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>{s.fecha}</td>
                       <td>
-                        <div style={{ fontWeight: 800, color: 'var(--navy-900)' }}>{est ? `${est.nombre} ${est.apellidoPaterno}` : 'Alumno no asignado'}</div>
+                        <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{est ? `${est.nombre} ${est.apellidoPaterno}` : 'Alumno no asignado'}</div>
                         <div className="text-muted" style={{ fontSize: '11.5px', fontWeight: 600 }}>{est?.nivel || ''}</div>
                       </td>
                       <td>
@@ -429,7 +429,7 @@ export default function FonoaudiologiaModule() {
             <div className="grid grid-2" style={{ gap: '12px' }}>
               {NIVELES_EVALUACION.map(n => (
                 <div key={n.id} style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-                  <div style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '8px', color: 'var(--navy-900)' }}>{n.label}</div>
+                  <div style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>{n.label}</div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {ESCALA_EVALUACION.map(esc => (
                       <button
@@ -438,7 +438,7 @@ export default function FonoaudiologiaModule() {
                         style={{
                           flex: 1, padding: '6px 4px', fontSize: '11.5px', fontWeight: 700, borderRadius: '8px',
                           border: `1.5px solid ${nivelesLogrados[n.id] === esc.valor ? esc.color : 'var(--border-medium)'}`,
-                          background: nivelesLogrados[n.id] === esc.valor ? esc.color : 'white',
+                          background: nivelesLogrados[n.id] === esc.valor ? esc.color : 'var(--bg-card)',
                           color: nivelesLogrados[n.id] === esc.valor ? 'white' : 'var(--text-primary)',
                           cursor: 'pointer',
                           transition: 'all var(--transition-fast)'
@@ -473,7 +473,7 @@ export default function FonoaudiologiaModule() {
                   style={{
                     fontSize: '11.5px', fontWeight: 600, padding: '4px 9px', borderRadius: '14px',
                     background: descripcionActividad.includes(preset) ? 'var(--gold-100)' : 'var(--bg-main)',
-                    color: descripcionActividad.includes(preset) ? 'var(--gold-700)' : 'var(--navy-700)',
+                    color: descripcionActividad.includes(preset) ? 'var(--gold-700)' : 'var(--text-secondary)',
                     border: `1px solid ${descripcionActividad.includes(preset) ? 'var(--gold-400)' : 'var(--border-medium)'}`,
                     cursor: 'pointer',
                     transition: 'all var(--transition-fast)'

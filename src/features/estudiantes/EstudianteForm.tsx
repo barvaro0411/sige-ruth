@@ -131,7 +131,7 @@ export default function EstudianteForm({
         <section>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '8px' }}>
             <User size={18} style={{ color: 'var(--gold-600)' }} />
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--navy-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               1. Identificación del Alumno(a)
             </h4>
           </div>
@@ -183,7 +183,7 @@ export default function EstudianteForm({
         <section>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '8px' }}>
             <School size={18} style={{ color: 'var(--gold-600)' }} />
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--navy-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               2. Asignación de Curso y Jornada
             </h4>
           </div>
@@ -226,7 +226,7 @@ export default function EstudianteForm({
         <section>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '8px' }}>
             <Activity size={18} style={{ color: 'var(--gold-600)' }} />
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--navy-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               3. Diagnóstico y Expediente Fonoaudiológico
             </h4>
           </div>
@@ -250,7 +250,7 @@ export default function EstudianteForm({
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '12px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
                 border: `1.5px solid ${formData.anamnesis ? 'var(--color-success)' : 'var(--border-medium)'}`,
-                background: formData.anamnesis ? 'var(--color-success-soft)' : 'white',
+                background: formData.anamnesis ? 'var(--color-success-soft)' : 'var(--bg-card)',
                 fontWeight: 700, fontSize: '13px', flex: '1 1 200px'
               }}
             >
@@ -268,7 +268,7 @@ export default function EstudianteForm({
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '12px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
                 border: `1.5px solid ${formData.prueba_inicial ? 'var(--color-success)' : 'var(--border-medium)'}`,
-                background: formData.prueba_inicial ? 'var(--color-success-soft)' : 'white',
+                background: formData.prueba_inicial ? 'var(--color-success-soft)' : 'var(--bg-card)',
                 fontWeight: 700, fontSize: '13px', flex: '1 1 200px'
               }}
             >
@@ -287,7 +287,7 @@ export default function EstudianteForm({
         <section>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '8px' }}>
             <Phone size={18} style={{ color: 'var(--gold-600)' }} />
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--navy-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               4. Apoderado y Contacto de Emergencia
             </h4>
           </div>

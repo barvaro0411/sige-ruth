@@ -446,7 +446,7 @@ function FormularioProducto({
                       display: 'flex', alignItems: 'center', gap: '8px',
                       padding: '10px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
                       border: `1.5px solid ${marcado ? 'var(--color-gold)' : 'var(--border-medium)'}`,
-                      background: marcado ? 'var(--gold-50)' : 'white',
+                      background: marcado ? 'var(--gold-50)' : 'var(--bg-card)',
                       fontWeight: 700, fontSize: '13.5px',
                     }}
                   >
@@ -572,7 +572,7 @@ function FormularioMovimiento({
                       display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
                       border: `1.5px solid ${tipo === t.tipo ? 'var(--color-gold)' : 'var(--border-medium)'}`,
                       borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                      background: tipo === t.tipo ? 'var(--gold-50)' : 'white',
+                      background: tipo === t.tipo ? 'var(--gold-50)' : 'var(--bg-card)',
                     }}
                   >
                     <input

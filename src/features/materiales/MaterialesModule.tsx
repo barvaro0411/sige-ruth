@@ -163,7 +163,7 @@ export default function MaterialesModule() {
           </button>
         )}
         <div className="flex items-center gap-2 ml-auto">
-          <Filter size={16} aria-hidden="true" style={{ color: 'var(--navy-600)' }} />
+          <Filter size={16} aria-hidden="true" style={{ color: 'var(--text-secondary)' }} />
           <label className="sr-only" htmlFor="filtro-estado">Filtrar por estado</label>
           <select id="filtro-estado" className="form-select" style={{ minWidth: '180px' }}
             value={filtroEstado} onChange={e => setFiltroEstado(e.target.value as EstadoMaterial | '')}>

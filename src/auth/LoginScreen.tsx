@@ -101,7 +101,7 @@ export default function LoginScreen() {
 
         <footer className="login-footer">
           <p>© 2026 Escuela de Lenguaje Ruth</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px', color: 'var(--navy-400)', fontSize: '11px', fontWeight: 700 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 700 }}>
              <span>Conchalí, Chile</span>
              <span>•</span>
              <span>Sedes Gambino & Vascongados</span>

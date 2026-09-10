@@ -79,7 +79,7 @@ export default function Dashboard() {
 
   const chartData: BarraNivel[] = [
     { name: 'Medio Mayor', alumnos: stats.porNivel.mm, color: 'var(--gold-600)' },
-    { name: 'NT1', alumnos: stats.porNivel.nt1, color: 'var(--navy-800)' },
+    { name: 'NT1', alumnos: stats.porNivel.nt1, color: 'var(--color-info)' },
     { name: 'NT2', alumnos: stats.porNivel.nt2, color: 'var(--color-success-dark)' },
   ];
 

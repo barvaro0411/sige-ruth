@@ -300,7 +300,7 @@ export default function ReportesModule() {
               <div style={{ background: `${report.color}15`, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
                 <report.icon size={26} color={report.color} />
               </div>
-              <h2 style={{ fontSize: '19px', fontWeight: 800, marginBottom: '10px', color: 'var(--navy-900)' }}>{report.title}</h2>
+              <h2 style={{ fontSize: '19px', fontWeight: 800, marginBottom: '10px', color: 'var(--text-primary)' }}>{report.title}</h2>
               <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>{report.desc}</p>
               
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>

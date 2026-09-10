@@ -215,7 +215,7 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
                   </div>
                   <div className="text-secondary">{formatDateTime(evento.createdAt)}</div>
                   {evento.comentario && (
-                    <div style={{ color: 'var(--navy-600)', fontStyle: 'italic' }}>{evento.comentario}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>{evento.comentario}</div>
                   )}
                 </div>
               </li>

@@ -210,7 +210,7 @@ export default function PedirInsumos() {
         <div className="insumos-floating-bar">
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--navy-900)' }}>
+              <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>
                 {pedido.length} producto{pedido.length === 1 ? '' : 's'} · {totalArticulos} en total
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

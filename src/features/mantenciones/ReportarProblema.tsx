@@ -12,7 +12,7 @@ import { PrioridadMantencion } from '../../types';
 const PRIORIDADES: PrioridadMantencion[] = ['baja', 'media', 'alta', 'urgente'];
 
 const COLOR_PRIORIDAD: Record<PrioridadMantencion, string> = {
-  baja: 'var(--navy-600)',
+  baja: 'var(--text-secondary)',
   media: 'var(--color-info)',
   alta: 'var(--color-warning)',
   urgente: 'var(--color-danger)',

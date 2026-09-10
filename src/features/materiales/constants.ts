@@ -7,7 +7,7 @@ import { EstadoMaterial, PrioridadMaterial } from '../../types';
 export const ESTADOS_MATERIAL: Record<EstadoMaterial, {
   label: string; color: string; bg: string; icono: string;
 }> = {
-  borrador:       { label: 'Borrador',        color: 'var(--navy-600)',      bg: 'var(--bg-main)',              icono: '✎' },
+  borrador:       { label: 'Borrador',        color: 'var(--text-secondary)', bg: 'var(--bg-main)',              icono: '✎' },
   pendiente:      { label: 'Por revisar',     color: 'var(--gold-600)',      bg: 'var(--gold-50)',              icono: '⏳' },
   observada:      { label: 'Con observaciones', color: 'var(--color-info)',  bg: 'var(--color-info-soft)',      icono: '↩' },
   aprobada:       { label: 'Aprobada',        color: 'var(--color-success)', bg: 'var(--color-success-soft)',   icono: '✓' },
@@ -17,13 +17,13 @@ export const ESTADOS_MATERIAL: Record<EstadoMaterial, {
   comprada:       { label: 'Comprada',        color: 'var(--color-success)', bg: 'var(--color-success-soft)',   icono: '📦' },
   preparando:     { label: 'Preparando',      color: 'var(--color-info)',    bg: 'var(--color-info-soft)',      icono: '🧺' },
   entregada_parcial: { label: 'Entregada en parte', color: 'var(--color-warning)', bg: 'var(--color-warning-soft)', icono: '◐' },
-  entregada:      { label: 'Entregada',       color: 'var(--navy-900)',      bg: 'var(--color-navy-soft)',      icono: '✓✓' },
-  cancelada:      { label: 'Cancelada',       color: 'var(--navy-600)',      bg: 'var(--bg-main)',              icono: '—' },
+  entregada:      { label: 'Entregada',       color: 'var(--text-primary)',  bg: 'var(--bg-subtle)',            icono: '✓✓' },
+  cancelada:      { label: 'Cancelada',       color: 'var(--text-secondary)', bg: 'var(--bg-main)',             icono: '—' },
 };
 
 export const PRIORIDADES: Record<PrioridadMaterial, { label: string; color: string }> = {
-  baja:    { label: 'Baja',    color: 'var(--navy-600)' },
-  normal:  { label: 'Normal',  color: 'var(--navy-800)' },
+  baja:    { label: 'Baja',    color: 'var(--text-secondary)' },
+  normal:  { label: 'Normal',  color: 'var(--text-primary)' },
   alta:    { label: 'Alta',    color: 'var(--color-warning)' },
   urgente: { label: 'Urgente', color: 'var(--color-danger)' },
 };
