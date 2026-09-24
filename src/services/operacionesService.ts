@@ -51,7 +51,7 @@ export const OperacionesService = {
     const { data, error } = await supabase
       .from('lista_compra_sugerida_vista')
       .select('*')
-      .eq('sede_id', sedeId)
+      .or(`sede_id.eq.${sedeId},compartido.eq.true`)
       .order('estado_stock')
       .order('sugerido', { ascending: false });
 

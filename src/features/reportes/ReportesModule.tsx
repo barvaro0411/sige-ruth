@@ -147,7 +147,7 @@ export default function ReportesModule() {
       const productos = await InventarioService.getProductos(sede.id);
 
       const rows: ExcelRow[] = [
-        ['ID', 'Categoría', 'Artículo / Producto', 'Stock Actual', 'Stock Mínimo', 'Unidad', 'Estado de Stock', 'Ubicación']
+        ['ID', 'Categoría', 'Artículo / Producto', 'Alcance', 'Detalles', 'Stock Actual', 'Stock Mínimo', 'Unidad', 'Estado de Stock', 'Ubicación']
       ];
 
       productos.forEach(p => {
@@ -161,6 +161,8 @@ export default function ReportesModule() {
           p.id,
           p.categoria,
           p.nombre,
+          p.compartido ? 'Compartido entre ambas escuelas' : 'Solo esta sede',
+          p.descripcion ?? '',
           p.stockActual,
           p.stockMinimo,
           p.unidadNombre || p.unidad,

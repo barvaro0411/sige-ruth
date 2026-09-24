@@ -359,6 +359,7 @@ export interface CategoriaInventario {
 export interface ProductoInventario {
   id: number;
   sedeId: string;
+  compartido: boolean;
   categoriaId: number;
   categoria: string;
   nombre: string;

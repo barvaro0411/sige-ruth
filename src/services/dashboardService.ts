@@ -50,8 +50,8 @@ export const DashboardService = {
     const { count: countInventario } = await supabase
       .from('inventario_estado_vista')
       .select('id', { count: 'exact', head: true })
-      .eq('sede_id', sedeId)
-      .in('estado_stock', ['agotado', 'bajo_minimo']);
+      .or(`sede_id.eq.${sedeId},compartido.eq.true`)
+      .in('estado_stock', ['agotado', 'bajo']);
 
     return {
       totalEstudiantes: listaEstudiantes.length,

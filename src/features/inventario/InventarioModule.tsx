@@ -127,6 +127,7 @@ export default function InventarioModule() {
       if (filtroCategoria && String(p.categoriaId) !== filtroCategoria) return false;
       if (!texto) return true;
       return p.nombre.toLowerCase().includes(texto)
+        || (p.descripcion ?? '').toLowerCase().includes(texto)
         || p.categoria.toLowerCase().includes(texto)
         || (p.ubicacion ?? '').toLowerCase().includes(texto);
     });
@@ -174,7 +175,7 @@ export default function InventarioModule() {
         <div>
           <h1 className="page-title">Bodega</h1>
           <p className="page-subtitle">
-            Materiales de {sede.nombre} — el stock sale de los movimientos registrados
+            Materiales de {sede.nombre} y bodega compartida — el stock sale de los movimientos registrados
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -278,7 +279,8 @@ export default function InventarioModule() {
                 <div className="flex justify-between gap-2 mb-2">
                   <div>
                     <h3 className="text-md font-extrabold">{p.nombre}</h3>
-                    <p className="text-sm text-muted">{p.categoria}</p>
+                    <p className="text-sm text-muted">{p.categoria}{p.compartido ? ' · Compartido entre ambas escuelas' : ''}</p>
+                    {p.descripcion && <p className="text-sm text-muted">{p.descripcion}</p>}
                   </div>
                   <span className={`badge ${estado.clase}`} style={{ height: 'fit-content' }}>{estado.texto}</span>
                 </div>

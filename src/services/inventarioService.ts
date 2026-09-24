@@ -31,6 +31,7 @@ function mapProducto(d: any): ProductoInventario {
   return {
     id: d.id,
     sedeId: d.sede_id,
+    compartido: d.compartido,
     categoriaId: d.categoria_id,
     categoria: d.categoria,
     nombre: d.nombre,
@@ -84,7 +85,7 @@ export const InventarioService = {
     const { data, error } = await supabase
       .from('inventario_estado_vista')
       .select('*')
-      .eq('sede_id', sedeId)
+      .or(`sede_id.eq.${sedeId},compartido.eq.true`)
       .eq('activo', true)
       .order('nombre');
 
@@ -97,7 +98,7 @@ export const InventarioService = {
     const { data, error } = await supabase
       .from('inventario_estado_vista')
       .select('*')
-      .eq('sede_id', sedeId)
+      .or(`sede_id.eq.${sedeId},compartido.eq.true`)
       .eq('activo', true)
       .in('estado_stock', ['agotado', 'bajo'])
       .order('estado_stock')
@@ -245,7 +246,7 @@ export const InventarioService = {
     const { data, error } = await supabase
       .from('mis_productos_frecuentes_vista')
       .select('*')
-      .eq('sede_id', sedeId)
+      .or(`sede_id.eq.${sedeId},compartido.eq.true`)
       .eq('activo', true)
       .order('orden')
       .order('nombre');
