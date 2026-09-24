@@ -50,6 +50,9 @@ export interface NuevoItem {
    * la entrega descuenta el stock sola.
    */
   itemId?: number | null;
+  /** Solo en líneas pedidas como cajas. `cantidad` sigue en unidades base. */
+  cantidadCajas?: number;
+  unidadesPorCajaSolicitada?: number | null;
 }
 
 export const MaterialService = {
@@ -130,6 +133,8 @@ export const MaterialService = {
         unidad: i.unidad,
         costo_estimado: i.costoEstimado,
         item_id: i.itemId ?? null,
+        cantidad_cajas: i.cantidadCajas ?? 0,
+        unidades_por_caja_solicitada: i.unidadesPorCajaSolicitada ?? null,
       }))
     );
     if (error) throw error;

@@ -10,6 +10,7 @@ import { supabase } from '../../db/database';
 import { EstadoMaterial, PrioridadMaterial, SolicitudMaterial } from '../../types';
 import { formatDate } from '../../utils/dates';
 import { ESTADOS_MATERIAL, PRIORIDADES, UNIDADES, formatCLP, estaAtrasada } from './constants';
+import { nombreUnidad, permiteFracciones } from '../../utils/presentaciones';
 import SolicitudMaterialDetalle from './SolicitudMaterialDetalle';
 import Modal from '../../components/Modal';
 import { Package, PackagePlus, Inbox, Plus, Trash2, AlertTriangle, Filter } from 'lucide-react';
@@ -78,7 +79,20 @@ export default function MaterialesModule() {
         prioridad: form.prioridad,
         fechaNecesidad: form.fechaNecesidad || null,
       });
-      await MaterialService.agregarItems(id, items.filter(i => i.nombre.trim()));
+      await MaterialService.agregarItems(id, items.filter(i => i.nombre.trim()).map(i => {
+        const producto = (productosBodega.data ?? []).find(p => p.id === i.itemId);
+        if (producto?.unidadesPorCaja && i.unidad === 'caja') {
+          return {
+            ...i,
+            cantidad: i.cantidad * producto.unidadesPorCaja,
+            unidad: producto.unidad,
+            costoEstimado: i.costoEstimado == null ? null : i.costoEstimado / producto.unidadesPorCaja,
+            cantidadCajas: i.cantidad,
+            unidadesPorCajaSolicitada: producto.unidadesPorCaja,
+          };
+        }
+        return i;
+      }));
       if (enviarAhora) await MaterialService.enviar(id);
     },
     onSuccess: (_data, enviarAhora) => {
@@ -119,7 +133,7 @@ export default function MaterialesModule() {
     );
     actualizarItem(indice, coincide
       ? { nombre, itemId: coincide.id, unidad: coincide.unidad }
-      : { nombre, itemId: null });
+      : { nombre, itemId: null, unidad: items[indice].itemId ? 'unidad' : items[indice].unidad });
   }
 
   function validarYEnviar(enviarAhora: boolean) {
@@ -131,6 +145,15 @@ export default function MaterialesModule() {
     }
     if (items.some(i => i.nombre.trim() && (!i.cantidad || i.cantidad <= 0))) {
       addToast('Cada material necesita una cantidad mayor que cero', 'warning'); return;
+    }
+    if (items.some(i => i.itemId && i.unidad === 'caja' && !Number.isInteger(i.cantidad))) {
+      addToast('La cantidad de cajas debe ser un número entero', 'warning'); return;
+    }
+    if (items.some(i => {
+      const producto = (productosBodega.data ?? []).find(p => p.id === i.itemId);
+      return producto && !permiteFracciones(producto.unidad) && !Number.isInteger(i.cantidad);
+    })) {
+      addToast('Los materiales por unidad se piden en cantidades enteras', 'warning'); return;
     }
     crear.mutate(enviarAhora);
   }
@@ -292,31 +315,47 @@ export default function MaterialesModule() {
               ))}
             </datalist>
             <div className="flex flex-col gap-2">
-              {items.map((item, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 70px 1fr 1fr 36px', gap: '6px', alignItems: 'center' }}>
-                  <input className="form-input" placeholder="Nombre" value={item.nombre}
+              {items.map((item, i) => {
+                const producto = (productosBodega.data ?? []).find(p => p.id === item.itemId);
+                return (
+                <div key={i} className="material-item-row">
+                  <input className="form-input material-item-name" placeholder="Nombre" value={item.nombre}
                     aria-label={`Material ${i + 1}`}
                     list="productos-bodega"
                     onChange={e => escribirNombreMaterial(i, e.target.value)} />
-                  <input className="form-input" type="number" min="0.01" step="0.01" value={item.cantidad}
+                  <input className="form-input material-item-quantity" type="number"
+                    min={producto && !permiteFracciones(producto.unidad) ? '1' : '0.01'}
+                    step={producto && !permiteFracciones(producto.unidad) ? '1' : '0.01'} value={item.cantidad}
                     aria-label={`Cantidad del material ${i + 1}`}
                     onChange={e => actualizarItem(i, { cantidad: Number(e.target.value) })} />
-                  <select className="form-select" value={item.unidad}
+                  <select className="form-select material-item-unit" value={item.unidad}
                     aria-label={`Unidad del material ${i + 1}`}
                     onChange={e => actualizarItem(i, { unidad: e.target.value })}>
-                    {UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
+                    {producto ? (
+                      <>
+                        <option value={producto.unidad}>{nombreUnidad(producto.unidad, 2)}</option>
+                        {producto.unidadesPorCaja && producto.unidad !== 'caja' && (
+                          <option value="caja">Cajas de {producto.unidadesPorCaja}</option>
+                        )}
+                      </>
+                    ) : UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
-                  <input className="form-input" type="number" min="0" step="1" placeholder="$ c/u"
+                  <input className="form-input material-item-cost" type="number" min="0" step="1" placeholder="$ c/u"
                     aria-label={`Costo estimado del material ${i + 1}`}
                     value={item.costoEstimado ?? ''}
                     onChange={e => actualizarItem(i, { costoEstimado: e.target.value ? Number(e.target.value) : null })} />
-                  <button type="button" className="btn btn-ghost" aria-label={`Quitar material ${i + 1}`}
+                  <button type="button" className="btn btn-ghost material-item-remove" aria-label={`Quitar material ${i + 1}`}
                     disabled={items.length === 1}
                     onClick={() => setItems(prev => prev.filter((_, idx) => idx !== i))}>
                     <Trash2 size={16} />
                   </button>
+                  {producto?.unidadesPorCaja && item.unidad === 'caja' && (
+                    <span className="text-sm text-secondary material-item-equivalence">
+                      {item.cantidad} {nombreUnidad('caja', item.cantidad)} = {item.cantidad * producto.unidadesPorCaja} {nombreUnidad(producto.unidad, item.cantidad * producto.unidadesPorCaja)} de stock
+                    </span>
+                  )}
                 </div>
-              ))}
+              ); })}
             </div>
             <button type="button" className="btn btn-ghost mt-2"
 onClick={() => setItems(prev => [...prev, { ...ITEM_VACIO }])}>

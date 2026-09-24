@@ -38,6 +38,7 @@ function mapProducto(d: any): ProductoInventario {
     descripcion: d.descripcion,
     unidad: d.unidad,
     unidadNombre: d.unidad_nombre,
+    unidadesPorCaja: d.unidades_por_caja == null ? null : Number(d.unidades_por_caja),
     stockActual: Number(d.stock_actual),
     stockMinimo: Number(d.stock_minimo),
     ubicacion: d.ubicacion,
@@ -69,6 +70,7 @@ export interface NuevoProducto {
   unidad: string;
   stockMinimo: number;
   ubicacion: string | null;
+  unidadesPorCaja: number | null;
 }
 
 export interface NuevoMovimiento {
@@ -153,6 +155,7 @@ export const InventarioService = {
         unidad: input.unidad,
         stock_minimo: input.stockMinimo,
         ubicacion: input.ubicacion?.trim() || null,
+        unidades_por_caja: input.unidadesPorCaja,
       })
       .select('id')
       .single();
@@ -182,6 +185,7 @@ export const InventarioService = {
         unidad: cambios.unidad,
         stock_minimo: cambios.stockMinimo,
         ubicacion: cambios.ubicacion?.trim() || null,
+        unidades_por_caja: cambios.unidadesPorCaja,
       })
       .eq('id', id)
       .select('id');

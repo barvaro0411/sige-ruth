@@ -137,6 +137,8 @@ export interface Tables {
     /** Producto de bodega enlazado. Null si se pidió algo que no está en inventario. */
     item_id: number | null;
     cantidad_entregada: number;
+    cantidad_cajas: number;
+    unidades_por_caja_solicitada: number | null;
     comentario: string | null;
     created_at: string;
     updated_at: string;
@@ -282,7 +284,8 @@ export interface SolicitudPermiso extends Omit<Tables['solicitudes_permiso'],
 
 export interface ItemMaterial extends Omit<Tables['solicitudes_materiales_items'],
   'solicitud_id' | 'costo_estimado' | 'costo_real' | 'cantidad_comprada'
-  | 'item_id' | 'cantidad_entregada' | 'updated_at'> {
+  | 'item_id' | 'cantidad_entregada' | 'cantidad_cajas'
+  | 'unidades_por_caja_solicitada' | 'updated_at'> {
   solicitudId: number;
   costoEstimado: number | null;
   costoReal: number | null;
@@ -290,6 +293,8 @@ export interface ItemMaterial extends Omit<Tables['solicitudes_materiales_items'
   /** Producto de bodega enlazado. Null si no está en inventario. */
   itemId: number | null;
   cantidadEntregada: number;
+  cantidadCajas: number;
+  unidadesPorCajaSolicitada: number | null;
   /** Lo que todavía falta entregar. */
   pendiente: number;
 }
@@ -366,6 +371,8 @@ export interface ProductoInventario {
   descripcion: string | null;
   unidad: string;
   unidadNombre: string;
+  /** Null si se entrega solo en la unidad base. */
+  unidadesPorCaja: number | null;
   stockActual: number;
   stockMinimo: number;
   ubicacion: string | null;

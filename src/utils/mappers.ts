@@ -122,6 +122,9 @@ export function mapItemMaterial(d: any): ItemMaterial {
     cantidadComprada: Number(d.cantidad_comprada),
     itemId: d.item_id ?? null,
     cantidadEntregada: entregada,
+    cantidadCajas: Number(d.cantidad_cajas ?? 0),
+    unidadesPorCajaSolicitada: d.unidades_por_caja_solicitada == null
+      ? null : Number(d.unidades_por_caja_solicitada),
     pendiente: Math.max(cantidad - entregada, 0),
     cantidad,
   };

@@ -7,6 +7,7 @@ import { MaterialService } from '../../services/materialService';
 import { SolicitudMaterial } from '../../types';
 import { formatDate, formatDateTime } from '../../utils/dates';
 import { ESTADOS_MATERIAL, PRIORIDADES, formatCLP } from './constants';
+import { descripcionCaja, nombreUnidad } from '../../utils/presentaciones';
 import Modal from '../../components/Modal';
 import EntregaMaterialesModal from './EntregaMaterialesModal';
 import { Check, X, MessageSquare, ShoppingCart, PackageCheck, Ban, Send, Boxes, ClipboardList } from 'lucide-react';
@@ -164,13 +165,20 @@ export default function SolicitudMaterialDetalle({ solicitud, onClose }: Props) 
                     )}
                   </td>
                   <td className="py-2 px-1 tabular">
-                    {item.cantidad} {item.unidad}
+                    {item.cantidadCajas > 0 && item.unidadesPorCajaSolicitada
+                      ? <>{descripcionCaja(item.cantidadCajas, item.unidadesPorCajaSolicitada, item.unidad)}
+                        <span className="text-muted"> · {item.cantidad} {nombreUnidad(item.unidad, item.cantidad)}</span></>
+                      : <>{item.cantidad} {nombreUnidad(item.unidad, item.cantidad)}</>}
                   </td>
                   <td className="py-2 px-1 tabular">
                     {item.cantidadEntregada> 0 ? (
                       <span style={{ color: item.pendiente> 0 ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 700 }}>
-                        {item.cantidadEntregada}
-                        {item.pendiente> 0 && <span className="font-medium"> · faltan {item.pendiente}</span>}
+                        {item.cantidadCajas > 0 && item.unidadesPorCajaSolicitada
+                          ? `${item.cantidadEntregada / item.unidadesPorCajaSolicitada} ${nombreUnidad('caja', item.cantidadEntregada / item.unidadesPorCajaSolicitada)}`
+                          : `${item.cantidadEntregada} ${nombreUnidad(item.unidad, item.cantidadEntregada)}`}
+                        {item.pendiente> 0 && <span className="font-medium"> · faltan {item.cantidadCajas > 0 && item.unidadesPorCajaSolicitada
+                          ? `${item.pendiente / item.unidadesPorCajaSolicitada} ${nombreUnidad('caja', item.pendiente / item.unidadesPorCajaSolicitada)}`
+                          : `${item.pendiente} ${nombreUnidad(item.unidad, item.pendiente)}`}</span>}
                       </span>
                     ) : (
                       <span className="text-muted">—</span>

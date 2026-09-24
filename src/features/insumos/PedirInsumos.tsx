@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Minus, Plus, Search, Send, PackageCheck, Info } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
@@ -8,6 +8,7 @@ import { useToast } from '../../components/Toast';
 import { InventarioService } from '../../services/inventarioService';
 import { MaterialService } from '../../services/materialService';
 import { ProductoInventario } from '../../types';
+import { lineasPedido, nombreUnidad } from '../../utils/presentaciones';
 
 /**
  * Pedir insumos — pantalla mínima, pensada para el celular.
@@ -27,6 +28,7 @@ export default function PedirInsumos() {
   const queryClient = useQueryClient();
 
   const [cantidades, setCantidades] = useState<Record<number, number>>({});
+  const [cajas, setCajas] = useState<Record<number, number>>({});
   const [nota, setNota] = useState('');
   const [buscando, setBuscando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
@@ -47,29 +49,38 @@ export default function PedirInsumos() {
   const listaFrecuentes = frecuentes.data ?? [];
   const hayFrecuentes = listaFrecuentes.length> 0;
   const base = hayFrecuentes ? listaFrecuentes : (todos.data ?? []);
+  const visiblesBase = hayFrecuentes || !busqueda.trim()
+    ? base
+    : base.filter(p => `${p.nombre} ${p.descripcion ?? ''} ${p.categoria}`
+      .toLowerCase().includes(busqueda.trim().toLowerCase()));
 
   const otros = useMemo(() => {
     const idsBase = new Set(base.map(p => p.id));
     const texto = busqueda.trim().toLowerCase();
     return (todos.data ?? [])
-      .filter(p => !idsBase.has(p.id))
+      .filter(p => !idsBase.has(p.id) && !(cantidades[p.id] > 0 || cajas[p.id] > 0))
       .filter(p => !texto || p.nombre.toLowerCase().includes(texto)
         || p.categoria.toLowerCase().includes(texto));
-  }, [todos.data, base, busqueda]);
+  }, [todos.data, base, busqueda, cantidades, cajas]);
 
   // Lo agregado desde el buscador se muestra junto a lo frecuente.
   const agregados = useMemo(
-    () => (todos.data ?? []).filter(p => !base.some(b => b.id === p.id) && cantidades[p.id]> 0),
-    [todos.data, base, cantidades]
+    () => (todos.data ?? []).filter(p => !base.some(b => b.id === p.id)
+      && ((cantidades[p.id] ?? 0) > 0 || (cajas[p.id] ?? 0) > 0)),
+    [todos.data, base, cantidades, cajas]
   );
 
   const pedido = useMemo(
-    () => [...base, ...agregados].filter(p => (cantidades[p.id] ?? 0)> 0),
-    [base, agregados, cantidades]
+    () => [...base, ...agregados].filter(p => (cantidades[p.id] ?? 0) > 0 || (cajas[p.id] ?? 0) > 0),
+    [base, agregados, cantidades, cajas]
   );
 
-  function ajustar(id: number, delta: number) {
-    setCantidades(prev => {
+  function ajustar(
+    setValores: Dispatch<SetStateAction<Record<number, number>>>,
+    id: number,
+    delta: number
+  ) {
+    setValores(prev => {
       const nuevo = Math.max((prev[id] ?? 0) + delta, 0);
       if (nuevo === 0) {
         const { [id]: _quitado, ...resto } = prev;
@@ -97,19 +108,14 @@ export default function PedirInsumos() {
         fechaNecesidad: null,
       });
 
-      await MaterialService.agregarItems(id, pedido.map(p => ({
-        nombre: p.nombre,
-        cantidad: cantidades[p.id],
-        unidad: p.unidad,
-        costoEstimado: null,
-        itemId: p.id,
-      })));
+      await MaterialService.agregarItems(id, lineasPedido(pedido, cantidades, cajas));
 
       await MaterialService.enviar(id);
     },
     onSuccess: () => {
       addToast('Pedido enviado. Bodega ya lo tiene.', 'success');
       setCantidades({});
+      setCajas({});
       setNota('');
       setBusqueda('');
       setBuscando(false);
@@ -121,8 +127,6 @@ export default function PedirInsumos() {
   if (frecuentes.isLoading || todos.isLoading) {
     return <div className="page-container"><div className="skeleton" style={{ height: 380 }} /></div>;
   }
-
-  const totalArticulos = pedido.reduce((s, p) => s + cantidades[p.id], 0);
 
   return (
     <div className="page-container animate-in" style={{ paddingBottom: pedido.length> 0 ? '120px' : undefined }}>
@@ -142,26 +146,37 @@ export default function PedirInsumos() {
       ) : (
         <>
           {!hayFrecuentes && (
-            <p
-              className="text-muted flex gap-2 items-center text-sm mb-4"
-            >
-              <Info size={15} /> Bodega todavía no marcó tus productos habituales, así que ves todo el inventario.
-            </p>
+            <>
+              <p className="text-muted flex gap-2 items-center text-sm mb-4">
+                <Info size={15} /> Ves todo el inventario. Puedes buscar por nombre o marca.
+              </p>
+              <div className="search-container mb-4">
+                <Search size={18} className="search-icon" />
+                <input className="search-input" aria-label="Buscar producto"
+                  placeholder="Buscar producto o marca"
+                  value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+              </div>
+            </>
           )}
 
           <section className="grid gap-2 mb-6">
-            {[...base, ...agregados].map(p => (
+            {[...visiblesBase, ...agregados].map(p => (
               <FilaProducto
                 key={p.id}
                 producto={p}
                 cantidad={cantidades[p.id] ?? 0}
-                onAjustar={delta => ajustar(p.id, delta)}
+                cantidadCajas={cajas[p.id] ?? 0}
+                onAjustar={delta => ajustar(setCantidades, p.id, delta)}
+                onAjustarCajas={delta => ajustar(setCajas, p.id, delta)}
  />
             ))}
+            {!hayFrecuentes && visiblesBase.length === 0 && (
+              <p className="text-muted text-center p-5">No hay productos que coincidan con la búsqueda.</p>
+            )}
           </section>
 
           {/* Buscar algo que no está en la lista corta */}
-          {!buscando ? (
+          {hayFrecuentes && (!buscando ? (
             <button className="btn btn-outline w-full"  onClick={() => setBuscando(true)}>
               <Search size={17} /> Buscar otro producto
             </button>
@@ -182,17 +197,19 @@ export default function PedirInsumos() {
                     key={p.id}
                     producto={p}
                     cantidad={cantidades[p.id] ?? 0}
-                    onAjustar={delta => ajustar(p.id, delta)}
+                    cantidadCajas={cajas[p.id] ?? 0}
+                    onAjustar={delta => ajustar(setCantidades, p.id, delta)}
+                    onAjustarCajas={delta => ajustar(setCajas, p.id, delta)}
  />
                 ))}
                 {busqueda && otros.length === 0 && (
                   <p className="text-muted text-center p-5">
-                    No hay ningún producto con ese nombre en la bodega de esta sede.
+                    No hay más productos con ese nombre. Los seleccionados aparecen arriba.
                   </p>
                 )}
               </div>
             </section>
-          )}
+          ))}
 
           <div className="form-group mt-6">
             <label className="form-label" htmlFor="nota-pedido">¿Algo que agregar? (opcional)</label>
@@ -211,10 +228,15 @@ export default function PedirInsumos() {
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>
-                {pedido.length} producto{pedido.length === 1 ? '' : 's'} · {totalArticulos} en total
+                {pedido.length} producto{pedido.length === 1 ? '' : 's'} seleccionado{pedido.length === 1 ? '' : 's'}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {pedido.map(p => `${cantidades[p.id]} ${p.nombre}`).join(' · ')}
+                {pedido.map(p => {
+                  const detalle = [];
+                  if (cajas[p.id]) detalle.push(`${cajas[p.id]} ${cajas[p.id] === 1 ? 'caja' : 'cajas'}`);
+                  if (cantidades[p.id]) detalle.push(`${cantidades[p.id]} ${nombreUnidad(p.unidad, cantidades[p.id])}`);
+                  return `${p.nombre}: ${detalle.join(' + ')}`;
+                }).join(' · ')}
               </div>
             </div>
             <button
@@ -237,34 +259,60 @@ export default function PedirInsumos() {
  * con una mano, y a veces con guantes.
  */
 function FilaProducto({
-  producto, cantidad, onAjustar,
+  producto, cantidad, cantidadCajas, onAjustar, onAjustarCajas,
 }: {
   producto: ProductoInventario;
   cantidad: number;
+  cantidadCajas: number;
   onAjustar: (delta: number) => void;
+  onAjustarCajas: (delta: number) => void;
 }) {
-  const elegido = cantidad> 0;
+  const elegido = cantidad > 0 || cantidadCajas > 0;
   const sinStock = producto.stockActual <= 0;
+  const total = cantidad + cantidadCajas * (producto.unidadesPorCaja ?? 0);
 
   return (
-    <div
-      style={{
-        display: 'flex', alignItems: 'center', gap: '12px',
-        padding: '12px 14px', borderRadius: 'var(--radius-md)',
-        border: `1.5px solid ${elegido ? 'var(--color-gold)' : 'var(--border-medium)'}`,
-        background: elegido ? 'var(--gold-50)' : 'var(--bg-card)',
-        transition: 'border-color .15s, background .15s',
-      }}
-    >
+    <div className={`insumo-producto ${elegido ? 'insumo-producto-elegido' : ''}`}>
       <div className="flex-1">
         <div className="font-bold text-md">{producto.nombre}</div>
         <div style={{ fontSize: '12px', color: sinStock ? 'var(--color-warning-dark)' : 'var(--text-muted)' }}>
           {sinStock
             ? 'No queda en bodega — se pedirá igual'
-            : `Hay ${producto.stockActual} ${producto.unidadNombre.toLowerCase()}`}
+            : `Hay ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)}`}
         </div>
+        {elegido && <div className="insumo-total">Pedido: {total} {nombreUnidad(producto.unidad, total)}</div>}
       </div>
+      <div className="insumo-controles">
+        {producto.unidadesPorCaja && (
+          <ControlCantidad
+            etiqueta={`Cajas · ${producto.unidadesPorCaja} ${nombreUnidad(producto.unidad, producto.unidadesPorCaja)} c/u`}
+            cantidad={cantidadCajas}
+            onAjustar={onAjustarCajas}
+            nombre={producto.nombre}
+          />
+        )}
+        <ControlCantidad
+          etiqueta={producto.unidadesPorCaja
+            ? `${nombreUnidad(producto.unidad, 2)} sueltos`
+            : nombreUnidad(producto.unidad, 2)}
+          cantidad={cantidad}
+          onAjustar={onAjustar}
+          nombre={producto.nombre}
+        />
+      </div>
+    </div>
+  );
+}
 
+function ControlCantidad({ etiqueta, cantidad, onAjustar, nombre }: {
+  etiqueta: string;
+  cantidad: number;
+  onAjustar: (delta: number) => void;
+  nombre: string;
+}) {
+  return (
+    <div className="insumo-control">
+      <span className="insumo-control-etiqueta">{etiqueta}</span>
       <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"
@@ -272,7 +320,7 @@ function FilaProducto({
           style={{ width: 48, minHeight: 48, padding: 0, borderRadius: '12px' }}
           onClick={() => onAjustar(-1)}
           disabled={cantidad === 0}
-          aria-label={`Quitar uno de ${producto.nombre}`}
+          aria-label={`Quitar ${etiqueta} de ${nombre}`}
         >
           <Minus size={20} />
         </button>
@@ -280,10 +328,10 @@ function FilaProducto({
           style={{
             minWidth: 44, textAlign: 'center', fontSize: '19px', fontWeight: 900,
             fontVariantNumeric: 'tabular-nums',
-            color: elegido ? 'var(--color-navy)' : 'var(--text-muted)',
+            color: cantidad > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
           }}
           aria-live="polite"
-          aria-label={`${cantidad} de ${producto.nombre}`}
+          aria-label={`${cantidad} ${etiqueta} de ${nombre}`}
         >
           {cantidad}
         </span>
@@ -292,7 +340,7 @@ function FilaProducto({
           className="btn btn-outline"
           style={{ width: 48, minHeight: 48, padding: 0, borderRadius: '12px' }}
           onClick={() => onAjustar(1)}
-          aria-label={`Agregar uno de ${producto.nombre}`}
+          aria-label={`Agregar ${etiqueta} de ${nombre}`}
         >
           <Plus size={20} />
         </button>

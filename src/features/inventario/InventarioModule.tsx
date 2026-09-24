@@ -13,12 +13,40 @@ import {
   ETIQUETA_MOVIMIENTO, InventarioService, NuevoProducto,
 } from '../../services/inventarioService';
 import { EstadoStock, ProductoInventario, TipoMovimiento } from '../../types';
+import { descripcionCaja, nombreUnidad, permiteFracciones } from '../../utils/presentaciones';
 
-const ESTILO_ESTADO: Record<EstadoStock, { clase: string; texto: string }> = {
-  agotado: { clase: 'badge-danger', texto: 'Agotado' },
-  bajo: { clase: 'badge-warning', texto: 'Stock bajo' },
-  ok: { clase: 'badge-success', texto: 'Suficiente' },
+const ESTILO_ESTADO: Record<EstadoStock, { clase: string; itemClase: string; texto: string }> = {
+  agotado: { clase: 'badge-danger', itemClase: 'inventory-item-agotado', texto: 'Agotado' },
+  bajo: { clase: 'badge-warning', itemClase: 'inventory-item-bajo', texto: 'Stock bajo' },
+  ok: { clase: 'badge-success', itemClase: '', texto: 'Suficiente' },
 };
+
+function detallesProducto(descripcion: string | null) {
+  const detalles: {
+    marca?: string;
+    codigo?: string;
+    presentacion?: string;
+    empaque?: string;
+    nota: string;
+  } = { nota: '' };
+  const textoLibre: string[] = [];
+
+  for (const fragmento of (descripcion ?? '').split(' · ')) {
+    const match = /^(Marca|Código|Presentación|Empaque):\s*(.+)$/i.exec(fragmento);
+    if (match) {
+      const campo = match[1].toLowerCase();
+      if (campo === 'marca') detalles.marca = match[2];
+      if (campo === 'código') detalles.codigo = match[2];
+      if (campo === 'presentación') detalles.presentacion = match[2];
+      if (campo === 'empaque') detalles.empaque = match[2];
+    } else if (fragmento && !fragmento.startsWith('Ref. listado:')) {
+      textoLibre.push(fragmento);
+    }
+  }
+
+  detalles.nota = textoLibre.join(' · ');
+  return detalles;
+}
 
 const FORM_VACIO = {
   categoriaId: 0,
@@ -27,6 +55,7 @@ const FORM_VACIO = {
   unidad: 'unidad',
   stockMinimo: 0,
   ubicacion: '',
+  unidadesPorCaja: null as number | null,
   rolesFrecuentes: [] as string[],
 };
 
@@ -86,6 +115,7 @@ export default function InventarioModule() {
         unidad: form.unidad,
         stockMinimo: Number(form.stockMinimo) || 0,
         ubicacion: form.ubicacion || null,
+        unidadesPorCaja: form.unidadesPorCaja,
       };
       let id: number;
       if (editandoId) {
@@ -137,6 +167,10 @@ export default function InventarioModule() {
     () => productos.filter(p => p.estadoStock !== 'ok'),
     [productos]
   );
+  const compartidos = useMemo(
+    () => productos.filter(p => p.compartido).length,
+    [productos]
+  );
 
   function abrirNuevo() {
     setErrorForm('');
@@ -154,6 +188,7 @@ export default function InventarioModule() {
       unidad: p.unidad,
       stockMinimo: p.stockMinimo,
       ubicacion: p.ubicacion ?? '',
+      unidadesPorCaja: p.unidadesPorCaja,
       rolesFrecuentes: [],
     });
     // Se cargan aparte para no demorar la apertura del formulario.
@@ -170,12 +205,13 @@ export default function InventarioModule() {
   }
 
   return (
-    <div className="page-container animate-in">
-      <header className="page-header">
+    <div className="page-container animate-in inventory-page">
+      <header className="page-header inventory-header">
         <div>
-          <h1 className="page-title">Bodega</h1>
+          <p className="inventory-eyebrow">Materiales y suministros</p>
+          <h1 className="page-title">Bodega y stock</h1>
           <p className="page-subtitle">
-            Materiales de {sede.nombre} y bodega compartida — el stock sale de los movimientos registrados
+            Consulta lo disponible y registra cada entrada o salida de material.
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -197,47 +233,54 @@ export default function InventarioModule() {
         </div>
       </header>
 
-      {/* Lo primero que se necesita saber: qué falta */}
+      <section className="inventory-summary" aria-label="Resumen de bodega">
+        <div className="inventory-summary-main">
+          <div className="inventory-summary-icon"><Boxes size={25} /></div>
+          <div>
+            <span className="inventory-summary-label">Artículos guardados</span>
+            <strong className="inventory-summary-value">{productos.length}</strong>
+            <span className="inventory-summary-caption">Disponibles para {sede.nombre}</span>
+          </div>
+        </div>
+        <div className="inventory-summary-stat">
+          <span className="inventory-summary-label">Para ambas escuelas</span>
+          <strong className="inventory-summary-value">{compartidos}</strong>
+          <span className="inventory-summary-caption">Stock compartido</span>
+        </div>
+        <div className={`inventory-summary-stat ${faltantes.length ? 'inventory-summary-attention' : ''}`}>
+          <span className="inventory-summary-label">Por reponer</span>
+          <strong className="inventory-summary-value">{faltantes.length}</strong>
+          <span className="inventory-summary-caption">{faltantes.length ? 'Requieren atención' : 'Todo al día'}</span>
+        </div>
+      </section>
+
       {faltantes.length> 0 && (
-        <section
-          className="card"
-          style={{ padding: '20px 24px', marginBottom: '24px', borderColor: 'var(--color-warning)' }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={20} style={{ color: 'var(--color-warning)' }} />
-            <h2 className="text-md font-extrabold">
-              Hay que reponer {faltantes.length} producto{faltantes.length === 1 ? '' : 's'}
-            </h2>
+        <section className="inventory-alert" aria-label="Aviso de reposición">
+          <div className="inventory-alert-icon"><AlertTriangle size={20} /></div>
+          <div className="inventory-alert-copy">
+            <strong>{faltantes.length} artículo{faltantes.length === 1 ? '' : 's'} por reponer</strong>
+            <span>Revisa cuáles necesitan una nueva entrada de stock.</span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {faltantes.map(p => (
-              <button
-                key={p.id}
-                onClick={() => { setSoloFaltantes(true); setBusqueda(p.nombre); }}
-                className={`badge ${p.estadoStock === 'agotado' ? 'badge-danger' : 'badge-warning'}`}
-                style={{ cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                {p.nombre}: quedan {p.stockActual} {p.unidadNombre.toLowerCase()}
-              </button>
-            ))}
-          </div>
+          <button className="btn btn-outline btn-sm" onClick={() => { setSoloFaltantes(true); setBusqueda(''); setFiltroCategoria(''); }}>
+            Ver artículos
+          </button>
         </section>
       )}
 
-      {/* Filtros */}
-      <section className="flex gap-3 flex-wrap mb-5">
-        <div className="search-container" style={{ flex: '1 1 260px' }}>
+      <section className="inventory-toolbar" aria-label="Buscar y filtrar artículos">
+        <div className="search-container inventory-search">
           <Search size={18} className="search-icon" />
           <input
             className="search-input"
-            placeholder="Buscar producto, categoría o ubicación"
+            aria-label="Buscar artículos"
+            placeholder="Buscar por nombre, marca o código"
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
  />
         </div>
         <select
-          className="form-select"
-          style={{ flex: '0 1 220px' }}
+          className="form-select inventory-category-filter"
+          aria-label="Filtrar por categoría"
           value={filtroCategoria}
           onChange={e => setFiltroCategoria(e.target.value)}
         >
@@ -247,10 +290,16 @@ export default function InventarioModule() {
         <button
           className={`btn ${soloFaltantes ? 'btn-gold' : 'btn-outline'}`}
           onClick={() => setSoloFaltantes(v => !v)}
+          aria-pressed={soloFaltantes}
         >
-          <AlertTriangle size={16} /> Solo lo que falta
+          <AlertTriangle size={16} /> Por reponer
         </button>
       </section>
+
+      <div className="inventory-list-heading">
+        <h2>Artículos <span>{visibles.length}</span></h2>
+        <p>La cantidad disponible se actualiza con cada movimiento.</p>
+      </div>
 
       {visibles.length === 0 ? (
         <div className="card py-12 px-6 text-center">
@@ -271,47 +320,59 @@ export default function InventarioModule() {
           </p>
         </div>
       ) : (
-        <section className="grid grid-fluid">
+        <section className="inventory-list" aria-label="Artículos de bodega">
           {visibles.map(p => {
             const estado = ESTILO_ESTADO[p.estadoStock];
+            const detalle = detallesProducto(p.descripcion);
             return (
-              <article key={p.id} className="card p-5">
-                <div className="flex justify-between gap-2 mb-2">
-                  <div>
-                    <h3 className="text-md font-extrabold">{p.nombre}</h3>
-                    <p className="text-sm text-muted">{p.categoria}{p.compartido ? ' · Compartido entre ambas escuelas' : ''}</p>
-                    {p.descripcion && <p className="text-sm text-muted">{p.descripcion}</p>}
+              <article key={p.id} className={`inventory-item ${estado.itemClase}`}>
+                <div className="inventory-item-info">
+                  <div className="inventory-item-meta">
+                    <span className="inventory-category">{p.categoria}</span>
+                    {p.compartido && <span className="inventory-shared">Ambas escuelas</span>}
                   </div>
-                  <span className={`badge ${estado.clase}`} style={{ height: 'fit-content' }}>{estado.texto}</span>
+                  <h3>{p.nombre}</h3>
+                  {(detalle.marca || detalle.codigo) && (
+                    <p className="inventory-item-identity">
+                      {detalle.marca && <strong>{detalle.marca}</strong>}
+                      {detalle.codigo && <span>Cód. {detalle.codigo}</span>}
+                    </p>
+                  )}
+                  {(detalle.presentacion || detalle.nota) && (
+                    <p className="inventory-item-description">{[detalle.presentacion, detalle.nota].filter(Boolean).join(' · ')}</p>
+                  )}
+                  <div className="inventory-item-footnotes">
+                    {p.unidadesPorCaja && (
+                      <span>Equivalencia: 1 caja = {p.unidadesPorCaja} {nombreUnidad(p.unidad, p.unidadesPorCaja)}</span>
+                    )}
+                    {p.ubicacion && <span><MapPin size={13} /> {p.ubicacion}</span>}
+                  </div>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', margin: '14px 0 6px' }}>
-                  <span style={{ fontSize: '30px', fontWeight: 900, color: 'var(--color-navy)', fontVariantNumeric: 'tabular-nums' }}>
-                    {p.stockActual}
-                  </span>
-                  <span className="text-sm text-secondary font-semibold">
-                    {p.unidadNombre.toLowerCase()}
-                  </span>
+                <div className="inventory-item-stock">
+                  <span className={`badge ${estado.clase}`}>{estado.texto}</span>
+                  <div className="inventory-stock-quantity">
+                    <strong>{p.stockActual}</strong>
+                    <span>{nombreUnidad(p.unidad, p.stockActual)}</span>
+                  </div>
+                  {p.stockMinimo > 0 && (
+                    <span className="inventory-stock-minimum">
+                      Mínimo: {p.stockMinimo}
+                      {p.faltante > 0 && <b> · Faltan {p.faltante}</b>}
+                    </span>
+                  )}
                 </div>
-
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px' }}>
-                  {p.stockMinimo> 0 ? <>Mínimo {p.stockMinimo}</> : 'Sin mínimo definido'}
-                  {p.faltante> 0 && <> · <strong className="text-warning">faltan {p.faltante}</strong></>}
-                  {p.ubicacion && <> · <MapPin size={11} style={{ verticalAlign: '-1px' }} /> {p.ubicacion}</>}
-                </p>
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+                <div className="inventory-item-actions">
                   {puedeMover && (
-                    <button className="btn btn-outline btn-sm" style={{ flex: '1 1 auto', minHeight: '38px' }} onClick={() => setMoviendo(p)}>
-                      <Box size={14} /> Movimiento
+                    <button className="btn btn-gold btn-sm" onClick={() => setMoviendo(p)}>
+                      <Box size={15} /> Entrada / salida
                     </button>
                   )}
-                  <button className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px' }} onClick={() => setViendoHistorial(p)} title="Ver historial">
-                    <History size={15} /> <span>Historial</span>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setViendoHistorial(p)} title="Ver historial">
+                    <History size={15} /> Historial
                   </button>
                   {puedeAdministrar && (
-                    <button className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px' }} onClick={() => abrirEdicion(p)} title="Editar producto">
-                      <Edit2 size={15} /> <span>Editar</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => abrirEdicion(p)} title="Editar producto">
+                      <Edit2 size={15} /> Editar
                     </button>
                   )}
                 </div>
@@ -402,10 +463,24 @@ function FormularioProducto({
             <select
               id="prod-unidad" required className="form-select" disabled={guardando}
               value={form.unidad}
-              onChange={e => onChange({ ...form, unidad: e.target.value })}
+              onChange={e => onChange({ ...form, unidad: e.target.value,
+                unidadesPorCaja: e.target.value === 'caja' ? null : form.unidadesPorCaja })}
             >
               {unidades.map(u => <option key={u.codigo} value={u.codigo}>{u.nombre}</option>)}
             </select>
+          </div>
+
+          <div className="form-group col-span-full">
+            <label className="form-label" htmlFor="prod-caja">Unidades de stock por caja (opcional)</label>
+            <input
+              id="prod-caja" type="number" min={2} max={1000} step={1} className="form-input"
+              disabled={guardando || form.unidad === 'caja'} value={form.unidadesPorCaja ?? ''}
+              placeholder="Ej.: 12 lápices por caja"
+              onChange={e => onChange({ ...form, unidadesPorCaja: e.target.value ? Number(e.target.value) : null })}
+            />
+            <p className="text-muted text-sm">
+              Solo si también se piden cajas completas. El stock siempre se cuenta en la unidad elegida arriba.
+            </p>
           </div>
 
           <div className="form-group">
@@ -511,6 +586,7 @@ function FormularioMovimiento({
   const [modo, setModo] = useState<'movimiento' | 'conteo'>('movimiento');
   const [tipo, setTipo] = useState<TipoMovimiento>('ingreso');
   const [cantidad, setCantidad] = useState('');
+  const [presentacion, setPresentacion] = useState<'unidad' | 'caja'>('unidad');
   const [contado, setContado] = useState('');
   const [motivo, setMotivo] = useState('');
   const [error, setError] = useState('');
@@ -524,7 +600,10 @@ function FormularioMovimiento({
         );
       }
       return InventarioService.registrarMovimiento({
-        itemId: producto.id, tipo, cantidad: Number(cantidad), motivo,
+        itemId: producto.id, tipo, cantidad: magnitud, motivo,
+        observaciones: presentacion === 'caja' && producto.unidadesPorCaja
+          ? descripcionCaja(Number(cantidad), producto.unidadesPorCaja, producto.unidad)
+          : null,
       });
     },
     onSuccess: () => { addToast('Movimiento registrado', 'success'); onHecho(); },
@@ -532,7 +611,8 @@ function FormularioMovimiento({
   });
 
   const resta = tipo === 'entrega' || tipo === 'baja';
-  const magnitud = Number(cantidad) || 0;
+  const cantidadIngresada = Number(cantidad) || 0;
+  const magnitud = cantidadIngresada * (presentacion === 'caja' ? producto.unidadesPorCaja ?? 1 : 1);
   const resultante = modo === 'conteo'
     ? Number(contado) || 0
     : producto.stockActual + (resta ? -magnitud : magnitud);
@@ -541,8 +621,12 @@ function FormularioMovimiento({
   function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    if (modo === 'movimiento' && presentacion === 'caja' && !Number.isInteger(cantidadIngresada)) {
+      setError('La cantidad de cajas debe ser un número entero.');
+      return;
+    }
     if (insuficiente) {
-      setError(`No alcanza: hay ${producto.stockActual} y estás sacando ${magnitud}.`);
+      setError(`No alcanza: hay ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)} y estás sacando ${magnitud}.`);
       return;
     }
     registrar.mutate();
@@ -588,14 +672,31 @@ function FormularioMovimiento({
               </div>
             </div>
 
+            {producto.unidadesPorCaja && (
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="mov-presentacion">Cómo se cuenta</label>
+                <select
+                  id="mov-presentacion" className="form-select" value={presentacion}
+                  onChange={e => { setPresentacion(e.target.value as 'unidad' | 'caja'); setCantidad(''); }}
+                >
+                  <option value="unidad">{nombreUnidad(producto.unidad, 2)}</option>
+                  <option value="caja">Cajas de {producto.unidadesPorCaja} {nombreUnidad(producto.unidad, producto.unidadesPorCaja)}</option>
+                </select>
+              </div>
+            )}
+
             <div className="form-group">
               <label className="form-label" htmlFor="mov-cant">
-                Cuánto {resta ? 'sale' : 'entra'} ({producto.unidadNombre.toLowerCase()}) *
+                Cuánto {resta ? 'sale' : 'entra'} ({presentacion === 'caja' ? 'cajas' : nombreUnidad(producto.unidad, 2)}) *
               </label>
               <input
-                id="mov-cant" required type="number" min="0.01" step="0.01" className="form-input"
+                id="mov-cant" required type="number" min={presentacion === 'caja' || !permiteFracciones(producto.unidad) ? '1' : '0.01'}
+                step={presentacion === 'caja' || !permiteFracciones(producto.unidad) ? '1' : '0.01'} className="form-input"
                 value={cantidad} onChange={e => setCantidad(e.target.value)} autoFocus
  />
+              {presentacion === 'caja' && cantidadIngresada > 0 && (
+                <p className="text-sm text-secondary">Equivale a {magnitud} {nombreUnidad(producto.unidad, magnitud)}.</p>
+              )}
             </div>
           </>
         ) : (
@@ -606,10 +707,11 @@ function FormularioMovimiento({
             </p>
             <div className="form-group">
               <label className="form-label" htmlFor="mov-cont">
-                Cuánto hay realmente ({producto.unidadNombre.toLowerCase()}) *
+                Cuánto hay realmente ({nombreUnidad(producto.unidad, 2)}) *
               </label>
               <input
-                id="mov-cont" required type="number" min="0" step="0.01" className="form-input"
+                id="mov-cont" required type="number" min="0"
+                step={permiteFracciones(producto.unidad) ? '0.01' : '1'} className="form-input"
                 value={contado} onChange={e => setContado(e.target.value)} autoFocus
  />
             </div>
@@ -640,10 +742,10 @@ function FormularioMovimiento({
           <span
             style={{
               fontSize: '20px', fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-              color: insuficiente ? 'var(--color-danger)' : 'var(--color-navy)',
+              color: insuficiente ? 'var(--color-danger)' : 'var(--text-primary)',
             }}
           >
-            {insuficiente ? 'No alcanza' : `${resultante} ${producto.unidadNombre.toLowerCase()}`}
+            {insuficiente ? 'No alcanza' : `${resultante} ${nombreUnidad(producto.unidad, resultante)}`}
           </span>
         </div>
 
@@ -704,6 +806,7 @@ function HistorialProducto({ producto, onClose }: { producto: ProductoInventario
                     {ETIQUETA_MOVIMIENTO[m.tipo]}
                     {m.motivo && <span className="font-medium text-secondary"> — {m.motivo}</span>}
                   </div>
+                  {m.observaciones && <div className="text-xs text-secondary">{m.observaciones}</div>}
                   <div className="text-xs text-muted">
                     {new Date(m.createdAt).toLocaleString('es-CL', {
                       day: '2-digit', month: '2-digit', year: 'numeric',

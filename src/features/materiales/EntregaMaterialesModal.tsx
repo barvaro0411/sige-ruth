@@ -5,6 +5,7 @@ import Modal from '../../components/Modal';
 import { useToast } from '../../components/Toast';
 import { EntregaItem, MaterialService } from '../../services/materialService';
 import { SolicitudMaterial } from '../../types';
+import { descripcionCaja, nombreUnidad, permiteFracciones } from '../../utils/presentaciones';
 
 interface Props {
   solicitud: SolicitudMaterial;
@@ -31,8 +32,17 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
   );
 
   const [cantidades, setCantidades] = useState<Record<number, string>>(
-    () => Object.fromEntries(pendientes.map(i => [i.id, String(i.pendiente)]))
+    () => Object.fromEntries(pendientes.map(i => [
+      i.id, String(i.cantidadCajas > 0 && i.unidadesPorCajaSolicitada
+        ? i.pendiente / i.unidadesPorCajaSolicitada : i.pendiente),
+    ]))
   );
+
+  function cantidadBase(item: SolicitudMaterial['items'][number]): number {
+    const cantidad = Number(cantidades[item.id]) || 0;
+    return item.cantidadCajas > 0 && item.unidadesPorCajaSolicitada
+      ? cantidad * item.unidadesPorCajaSolicitada : cantidad;
+  }
 
   const entregar = useMutation({
     mutationFn: (entregas: EntregaItem[]) => MaterialService.entregar(solicitud.id, entregas),
@@ -46,15 +56,12 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
     onError: (e: Error) => setError(e.message),
   });
 
-  const seleccionadas = useMemo(
-    () => pendientes
-      .map(i => ({ itemId: i.id, cantidad: Number(cantidades[i.id]) || 0 }))
-      .filter(e => e.cantidad> 0),
-    [pendientes, cantidades]
-  );
+  const seleccionadas = pendientes
+    .map(i => ({ itemId: i.id, cantidad: cantidadBase(i) }))
+    .filter(e => e.cantidad > 0);
 
   const entregaCompleta = pendientes.every(
-    i => (Number(cantidades[i.id]) || 0)>= i.pendiente
+    i => cantidadBase(i) >= i.pendiente
   );
 
   function submit(e: FormEvent) {
@@ -65,9 +72,15 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
       setError('Indica cuánto entregas de al menos un material.');
       return;
     }
-    const excedida = pendientes.find(i => (Number(cantidades[i.id]) || 0)> i.pendiente);
+    const cajaFraccionada = pendientes.find(i => i.cantidadCajas > 0
+      && !Number.isInteger(Number(cantidades[i.id]) || 0));
+    if (cajaFraccionada) {
+      setError(`Las cajas de "${cajaFraccionada.nombre}" se entregan completas.`);
+      return;
+    }
+    const excedida = pendientes.find(i => cantidadBase(i) > i.pendiente);
     if (excedida) {
-      setError(`De "${excedida.nombre}" solo faltan ${excedida.pendiente} ${excedida.unidad}.`);
+      setError(`De "${excedida.nombre}" solo faltan ${excedida.pendiente} ${nombreUnidad(excedida.unidad, excedida.pendiente)}.`);
       return;
     }
     entregar.mutate(seleccionadas);
@@ -86,8 +99,10 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
 
         <div className="flex flex-col gap-2">
           {pendientes.map(item => {
-            const valor = Number(cantidades[item.id]) || 0;
-            const excede = valor> item.pendiente;
+            const esCaja = item.cantidadCajas > 0 && !!item.unidadesPorCajaSolicitada;
+            const valor = cantidadBase(item);
+            const excede = valor > item.pendiente;
+            const factor = item.unidadesPorCajaSolicitada ?? 1;
             return (
               <div
                 key={item.id}
@@ -106,11 +121,18 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                       : null}
                   </div>
                   <div className="text-sm text-muted">
-                    Pidió {item.cantidad} {item.unidad}
-                    {item.cantidadEntregada> 0 && <> · ya recibió {item.cantidadEntregada}</>}
-                    {' '}· <strong>faltan {item.pendiente}</strong>
+                    Pidió {esCaja
+                      ? `${descripcionCaja(item.cantidadCajas, factor, item.unidad)} (${item.cantidad} ${nombreUnidad(item.unidad, item.cantidad)})`
+                      : `${item.cantidad} ${nombreUnidad(item.unidad, item.cantidad)}`}
+                    {item.cantidadEntregada > 0 && <> · ya recibió {esCaja
+                      ? `${item.cantidadEntregada / factor} ${nombreUnidad('caja', item.cantidadEntregada / factor)}`
+                      : `${item.cantidadEntregada} ${nombreUnidad(item.unidad, item.cantidadEntregada)}`}</>}
+                    {' '}· <strong>faltan {esCaja
+                      ? `${item.pendiente / factor} ${nombreUnidad('caja', item.pendiente / factor)}`
+                      : `${item.pendiente} ${nombreUnidad(item.unidad, item.pendiente)}`}</strong>
                     {!item.itemId && ' · no está en bodega'}
                   </div>
+                  {esCaja && <div className="text-sm text-warning">Comprueba que las cajas estén completas antes de confirmar.</div>}
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="form-label" htmlFor={`entrega-${item.id}`}>
@@ -118,14 +140,15 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                   </label>
                   <input
                     id={`entrega-${item.id}`}
-                    type="number" min="0" max={item.pendiente} step="0.01"
+                    type="number" min="0" max={esCaja ? item.pendiente / factor : item.pendiente}
+                    step={esCaja || (item.itemId && !permiteFracciones(item.unidad)) ? '1' : '0.01'}
                     className="form-input"
                     style={{ width: '110px', minHeight: '42px' }}
                     value={cantidades[item.id] ?? ''}
                     onChange={e => setCantidades(prev => ({ ...prev, [item.id]: e.target.value }))}
                     disabled={entregar.isPending}
  />
-                  <span className="text-sm text-secondary">{item.unidad}</span>
+                  <span className="text-sm text-secondary">{esCaja ? 'cajas' : nombreUnidad(item.unidad, Number(cantidades[item.id]) || 0)}</span>
                 </div>
               </div>
             );
