@@ -13,7 +13,7 @@ import {
   ETIQUETA_MOVIMIENTO, InventarioService, NuevoProducto,
 } from '../../services/inventarioService';
 import { EstadoStock, ProductoInventario, TipoMovimiento } from '../../types';
-import { descripcionCaja, nombreUnidad, permiteFracciones } from '../../utils/presentaciones';
+import { descripcionCaja, nombreUnidad, permiteFracciones, salidaUnidadesEmpaque } from '../../utils/presentaciones';
 
 const ESTILO_ESTADO: Record<EstadoStock, { clase: string; itemClase: string; texto: string }> = {
   agotado: { clase: 'badge-danger', itemClase: 'inventory-item-agotado', texto: 'Agotado' },
@@ -86,10 +86,11 @@ export default function InventarioModule() {
   const [formProducto, setFormProducto] = useState<typeof FORM_VACIO | null>(null);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [moviendo, setMoviendo] = useState<ProductoInventario | null>(null);
+  const [contandoEmpaque, setContandoEmpaque] = useState<ProductoInventario | null>(null);
   const [viendoHistorial, setViendoHistorial] = useState<ProductoInventario | null>(null);
   const [errorForm, setErrorForm] = useState('');
 
-  const { data: productos = [], isLoading } = useQuery({
+  const { data: productos = [], isLoading, isError, error: errorProductos, refetch } = useQuery({
     queryKey: ['inventario', sede.id],
     queryFn: () => InventarioService.getProductos(sede.id),
   });
@@ -171,6 +172,8 @@ export default function InventarioModule() {
     () => productos.filter(p => p.compartido).length,
     [productos]
   );
+  const cajasAbiertas = productos.filter(p => p.empaqueVerificado && (p.unidadesCajaAbierta ?? 0) > 0).length;
+  const empaquesPendientes = productos.filter(p => p.unidadesPorCaja && !p.empaqueVerificado).length;
 
   function abrirNuevo() {
     setErrorForm('');
@@ -202,6 +205,14 @@ export default function InventarioModule() {
 
   if (isLoading) {
     return <div className="page-container"><div className="skeleton" style={{ height: 420 }} /></div>;
+  }
+
+  if (isError) {
+    return <div className="page-container"><div className="card p-6" role="alert">
+      <h1 className="page-title">No se pudo cargar la bodega</h1>
+      <p className="text-muted mb-4">{errorProductos instanceof Error ? errorProductos.message : 'Comprueba tu conexión e inténtalo otra vez.'}</p>
+      <button className="btn btn-gold" onClick={() => void refetch()}><RefreshCw size={16} /> Reintentar</button>
+    </div></div>;
   }
 
   return (
@@ -252,7 +263,19 @@ export default function InventarioModule() {
           <strong className="inventory-summary-value">{faltantes.length}</strong>
           <span className="inventory-summary-caption">{faltantes.length ? 'Requieren atención' : 'Todo al día'}</span>
         </div>
+        <div className="inventory-summary-stat inventory-summary-open">
+          <span className="inventory-summary-label">Cajas abiertas</span>
+          <strong className="inventory-summary-value">{cajasAbiertas}</strong>
+          <span className="inventory-summary-caption">Productos con una caja en uso</span>
+        </div>
       </section>
+
+      {empaquesPendientes > 0 && puedeMover && (
+        <div className="inventory-presentation-notice" role="status">
+          <Box size={18} aria-hidden="true" />
+          <span><strong>{empaquesPendientes} producto{empaquesPendientes === 1 ? '' : 's'}</strong> necesitan confirmar cuántas cajas siguen cerradas. El stock total no cambia al hacerlo.</span>
+        </div>
+      )}
 
       {faltantes.length> 0 && (
         <section className="inventory-alert" aria-label="Aviso de reposición">
@@ -347,6 +370,17 @@ export default function InventarioModule() {
                     )}
                     {p.ubicacion && <span><MapPin size={13} /> {p.ubicacion}</span>}
                   </div>
+                  {p.unidadesPorCaja && (
+                    <div className={`inventory-presentation ${p.empaqueVerificado ? '' : 'inventory-presentation-pending'}`}>
+                      {p.empaqueVerificado ? (
+                        <>
+                          <span><strong>{p.cajasCerradas}</strong> caja{p.cajasCerradas === 1 ? '' : 's'} cerrada{p.cajasCerradas === 1 ? '' : 's'}</span>
+                          <span><strong>{p.unidadesCajaAbierta}</strong> {nombreUnidad(p.unidad, p.unidadesCajaAbierta ?? 0)} en caja abierta</span>
+                          <span><strong>{p.unidadesSueltas}</strong> {nombreUnidad(p.unidad, p.unidadesSueltas ?? 0)} sueltos</span>
+                        </>
+                      ) : <span>Presentación por confirmar · no se infiere del stock total</span>}
+                    </div>
+                  )}
                 </div>
                 <div className="inventory-item-stock">
                   <span className={`badge ${estado.clase}`}>{estado.texto}</span>
@@ -365,6 +399,11 @@ export default function InventarioModule() {
                   {puedeMover && (
                     <button className="btn btn-gold btn-sm" onClick={() => setMoviendo(p)}>
                       <Box size={15} /> Entrada / salida
+                    </button>
+                  )}
+                  {puedeMover && p.unidadesPorCaja && (
+                    <button className="btn btn-outline btn-sm" onClick={() => setContandoEmpaque(p)}>
+                      <Boxes size={15} /> {p.empaqueVerificado ? 'Contar cajas' : 'Confirmar cajas'}
                     </button>
                   )}
                   <button className="btn btn-ghost btn-sm" onClick={() => setViendoHistorial(p)} title="Ver historial">
@@ -402,6 +441,14 @@ export default function InventarioModule() {
           onClose={() => setMoviendo(null)}
           onHecho={() => { setMoviendo(null); refrescar(); }}
  />
+      )}
+
+      {contandoEmpaque && (
+        <FormularioConteoEmpaque
+          producto={contandoEmpaque}
+          onClose={() => setContandoEmpaque(null)}
+          onHecho={() => { setContandoEmpaque(null); refrescar(); }}
+        />
       )}
 
       {viendoHistorial && (
@@ -601,6 +648,7 @@ function FormularioMovimiento({
       }
       return InventarioService.registrarMovimiento({
         itemId: producto.id, tipo, cantidad: magnitud, motivo,
+        cantidadCajas: presentacion === 'caja' ? cantidadIngresada : 0,
         observaciones: presentacion === 'caja' && producto.unidadesPorCaja
           ? descripcionCaja(Number(cantidad), producto.unidadesPorCaja, producto.unidad)
           : null,
@@ -617,12 +665,33 @@ function FormularioMovimiento({
     ? Number(contado) || 0
     : producto.stockActual + (resta ? -magnitud : magnitud);
   const insuficiente = resultante < 0;
+  const sinConteoDeCajas = modo === 'movimiento' && resta && presentacion === 'caja'
+    && !producto.empaqueVerificado;
+  const faltanCajasCerradas = modo === 'movimiento' && resta && presentacion === 'caja'
+    && producto.empaqueVerificado && cantidadIngresada > (producto.cajasCerradas ?? 0);
+  const salidaSuelta = modo === 'movimiento' && resta && presentacion === 'unidad'
+    && producto.unidadesPorCaja && producto.empaqueVerificado
+    && Number.isInteger(magnitud) && magnitud > 0 && !insuficiente
+    ? salidaUnidadesEmpaque({
+      cajasCerradas: producto.cajasCerradas ?? 0,
+      unidadesCajaAbierta: producto.unidadesCajaAbierta ?? 0,
+      unidadesSueltas: producto.unidadesSueltas ?? 0,
+    }, producto.unidadesPorCaja, magnitud)
+    : null;
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
     if (modo === 'movimiento' && presentacion === 'caja' && !Number.isInteger(cantidadIngresada)) {
       setError('La cantidad de cajas debe ser un número entero.');
+      return;
+    }
+    if (sinConteoDeCajas) {
+      setError('Confirma primero las cajas cerradas con «Contar cajas» en este producto.');
+      return;
+    }
+    if (faltanCajasCerradas) {
+      setError(`Solo hay ${producto.cajasCerradas} cajas cerradas. Las unidades de una caja abierta se entregan como sueltas.`);
       return;
     }
     if (insuficiente) {
@@ -697,6 +766,17 @@ function FormularioMovimiento({
               {presentacion === 'caja' && cantidadIngresada > 0 && (
                 <p className="text-sm text-secondary">Equivale a {magnitud} {nombreUnidad(producto.unidad, magnitud)}.</p>
               )}
+              {resta && presentacion === 'caja' && producto.empaqueVerificado && (
+                <p className="text-sm text-secondary">Cajas cerradas disponibles: {producto.cajasCerradas}.</p>
+              )}
+              {sinConteoDeCajas && <p className="text-sm text-warning">Confirma las cajas cerradas con «Contar cajas» antes de registrar esta salida.</p>}
+              {salidaSuelta && (
+                <p className="inventory-movement-preview">
+                  Después: {salidaSuelta.cajasCerradas} caja{salidaSuelta.cajasCerradas === 1 ? '' : 's'} cerrada{salidaSuelta.cajasCerradas === 1 ? '' : 's'}
+                  {' · '}{salidaSuelta.unidadesCajaAbierta} {nombreUnidad(producto.unidad, salidaSuelta.unidadesCajaAbierta)} en caja abierta
+                  {' · '}{salidaSuelta.unidadesSueltas} sueltos.
+                </p>
+              )}
             </div>
           </>
         ) : (
@@ -753,8 +833,83 @@ function FormularioMovimiento({
           <button type="button" className="btn btn-outline" onClick={onClose} disabled={registrar.isPending}>
             Cancelar
           </button>
-          <button type="submit" className="btn btn-gold" disabled={registrar.isPending || insuficiente}>
+          <button type="submit" className="btn btn-gold" disabled={registrar.isPending || insuficiente || sinConteoDeCajas || faltanCajasCerradas}>
             {registrar.isPending ? 'Registrando…' : 'Registrar'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function FormularioConteoEmpaque({ producto, onClose, onHecho }: {
+  producto: ProductoInventario;
+  onClose: () => void;
+  onHecho: () => void;
+}) {
+  const { addToast } = useToast();
+  const [cerradas, setCerradas] = useState(producto.empaqueVerificado ? String(producto.cajasCerradas) : '');
+  const [abierta, setAbierta] = useState(producto.empaqueVerificado ? String(producto.unidadesCajaAbierta) : '');
+  const [sueltas, setSueltas] = useState(producto.empaqueVerificado ? String(producto.unidadesSueltas) : '');
+  const [error, setError] = useState('');
+  const factor = producto.unidadesPorCaja ?? 1;
+  const total = Number(cerradas) * factor + Number(abierta) + Number(sueltas);
+  const valido = [cerradas, abierta, sueltas].every(v => v.trim() !== '' && Number.isInteger(Number(v)) && Number(v) >= 0)
+    && Number(abierta) < factor && total === producto.stockActual;
+
+  const guardar = useMutation({
+    mutationFn: () => InventarioService.conciliarEmpaque(
+      producto.id, Number(cerradas), Number(abierta), Number(sueltas),
+      'Conteo físico de cajas y unidades'
+    ),
+    onSuccess: () => { addToast('Presentación física confirmada', 'success'); onHecho(); },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    if (!valido) {
+      setError(`El desglose debe sumar exactamente ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)}. Cada caja abierta admite menos de ${factor}.`);
+      return;
+    }
+    guardar.mutate();
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title={`Contar cajas · ${producto.nombre}`} size="md">
+      <form onSubmit={submit}>
+        {error && <div className="login-error mb-4" role="alert">{error}</div>}
+        <p className="text-secondary mb-4">
+          Cuenta lo que ves físicamente. Una caja cerrada contiene {factor} {nombreUnidad(producto.unidad, factor)}.
+          Usa primero la caja abierta antes de abrir otra.
+        </p>
+        <div className="inventory-count-fields">
+          <div className="form-group">
+            <label className="form-label" htmlFor="conteo-cerradas">Cajas cerradas</label>
+            <input id="conteo-cerradas" type="number" min="0" step="1" required className="form-input"
+              value={cerradas} onChange={e => setCerradas(e.target.value)} disabled={guardar.isPending} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="conteo-abierta">Unidades en la caja abierta</label>
+            <input id="conteo-abierta" type="number" min="0" max={factor - 1} step="1" required className="form-input"
+              value={abierta} onChange={e => setAbierta(e.target.value)} disabled={guardar.isPending} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="conteo-sueltas">Unidades sueltas fuera de caja</label>
+            <input id="conteo-sueltas" type="number" min="0" step="1" required className="form-input"
+              value={sueltas} onChange={e => setSueltas(e.target.value)} disabled={guardar.isPending} />
+          </div>
+        </div>
+        <div className={`inventory-count-result ${valido ? 'inventory-count-result-ok' : ''}`} aria-live="polite">
+          <span>Desglose contado: <strong>{Number.isFinite(total) ? total : '—'}</strong></span>
+          <span>Stock registrado: <strong>{producto.stockActual}</strong></span>
+        </div>
+        {!valido && <p className="text-muted text-sm mt-2">Si el total físico es distinto, usa primero «Entrada / salida → Corregir por conteo».</p>}
+        <div className="modal-footer-sticky">
+          <button type="button" className="btn btn-outline" onClick={onClose} disabled={guardar.isPending}>Cancelar</button>
+          <button type="submit" className="btn btn-gold" disabled={!valido || guardar.isPending}>
+            <Check size={17} /> {guardar.isPending ? 'Guardando…' : 'Confirmar conteo'}
           </button>
         </div>
       </form>
@@ -806,6 +961,7 @@ function HistorialProducto({ producto, onClose }: { producto: ProductoInventario
                     {ETIQUETA_MOVIMIENTO[m.tipo]}
                     {m.motivo && <span className="font-medium text-secondary"> — {m.motivo}</span>}
                   </div>
+                  {m.cantidadCajas > 0 && <div className="text-xs text-secondary">{m.cantidadCajas} caja{m.cantidadCajas === 1 ? '' : 's'} cerrada{m.cantidadCajas === 1 ? '' : 's'}</div>}
                   {m.observaciones && <div className="text-xs text-secondary">{m.observaciones}</div>}
                   <div className="text-xs text-muted">
                     {new Date(m.createdAt).toLocaleString('es-CL', {

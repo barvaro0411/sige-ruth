@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descripcionCaja, lineasPedido, nombreUnidad, unidadesBase, validarCantidadEntrega } from './presentaciones';
+import { descripcionCaja, lineasPedido, nombreUnidad, salidaUnidadesEmpaque, unidadesBase, validarCantidadEntrega } from './presentaciones';
 
 describe('presentaciones de bodega', () => {
   it('descuenta una caja de 12 y cinco sueltos como 17 lápices', () => {
@@ -42,5 +42,20 @@ describe('presentaciones de bodega', () => {
     expect(validarCantidadEntrega('0.001', 2, 'litro', null)).toContain('dos decimales');
     expect(validarCantidadEntrega('0.29', 2, 'litro', null)).toBeNull();
     expect(validarCantidadEntrega('', 12, 'lapiz', null)).toBeNull();
+  });
+
+  it('al sacar 4 lápices de una caja sellada de 10 deja una caja abierta con 6', () => {
+    expect(salidaUnidadesEmpaque(
+      { cajasCerradas: 1, unidadesCajaAbierta: 0, unidadesSueltas: 0 }, 10, 4
+    )).toEqual({ cajasCerradas: 0, unidadesCajaAbierta: 6, unidadesSueltas: 0 });
+  });
+
+  it('usa primero la caja abierta y luego los sueltos antes de abrir otra', () => {
+    const inicial = { cajasCerradas: 2, unidadesCajaAbierta: 6, unidadesSueltas: 3 };
+    expect(salidaUnidadesEmpaque(inicial, 10, 4))
+      .toEqual({ cajasCerradas: 2, unidadesCajaAbierta: 2, unidadesSueltas: 3 });
+    expect(salidaUnidadesEmpaque(inicial, 10, 11))
+      .toEqual({ cajasCerradas: 1, unidadesCajaAbierta: 8, unidadesSueltas: 0 });
+    expect(() => salidaUnidadesEmpaque(inicial, 10, 30)).toThrow('insuficiente');
   });
 });

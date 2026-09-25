@@ -373,6 +373,11 @@ export interface ProductoInventario {
   unidadNombre: string;
   /** Null si se entrega solo en la unidad base. */
   unidadesPorCaja: number | null;
+  /** Null hasta confirmar físicamente las presentaciones existentes. */
+  cajasCerradas: number | null;
+  unidadesCajaAbierta: number | null;
+  unidadesSueltas: number | null;
+  empaqueVerificado: boolean;
   stockActual: number;
   stockMinimo: number;
   ubicacion: string | null;
@@ -387,6 +392,7 @@ export interface MovimientoInventario {
   itemId: number;
   tipo: TipoMovimiento;
   cantidad: number;
+  cantidadCajas: number;
   motivo: string | null;
   observaciones: string | null;
   solicitudId: number | null;

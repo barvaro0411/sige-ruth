@@ -39,6 +39,10 @@ function mapProducto(d: any): ProductoInventario {
     unidad: d.unidad,
     unidadNombre: d.unidad_nombre,
     unidadesPorCaja: d.unidades_por_caja == null ? null : Number(d.unidades_por_caja),
+    cajasCerradas: d.cajas_cerradas == null ? null : Number(d.cajas_cerradas),
+    unidadesCajaAbierta: d.unidades_caja_abierta == null ? null : Number(d.unidades_caja_abierta),
+    unidadesSueltas: d.unidades_sueltas == null ? null : Number(d.unidades_sueltas),
+    empaqueVerificado: d.empaque_verificado === true,
     stockActual: Number(d.stock_actual),
     stockMinimo: Number(d.stock_minimo),
     ubicacion: d.ubicacion,
@@ -54,6 +58,7 @@ function mapMovimiento(d: any): MovimientoInventario {
     itemId: d.item_id,
     tipo: d.tipo,
     cantidad: Number(d.cantidad),
+    cantidadCajas: Number(d.cantidad_cajas ?? 0),
     motivo: d.motivo,
     observaciones: d.observaciones,
     solicitudId: d.solicitud_id,
@@ -78,6 +83,7 @@ export interface NuevoMovimiento {
   tipo: TipoMovimiento;
   /** Siempre positiva: el signo lo pone el tipo. */
   cantidad: number;
+  cantidadCajas?: number;
   motivo: string;
   observaciones?: string | null;
 }
@@ -217,6 +223,7 @@ export const InventarioService = {
       item_id: input.itemId,
       tipo: input.tipo,
       cantidad,
+      cantidad_cajas: input.cantidadCajas ?? 0,
       motivo: input.motivo.trim() || null,
       observaciones: input.observaciones?.trim() || null,
     });
@@ -242,6 +249,21 @@ export const InventarioService = {
     if (error) throw error;
   },
 
+  /** Confirma la composición física sin cambiar el stock total. */
+  async conciliarEmpaque(
+    itemId: number, cajasCerradas: number, unidadesCajaAbierta: number,
+    unidadesSueltas: number, motivo: string
+  ): Promise<void> {
+    const { error } = await supabase.rpc('conciliar_empaque_inventario', {
+      p_item_id: itemId,
+      p_cajas_cerradas: cajasCerradas,
+      p_unidades_caja_abierta: unidadesCajaAbierta,
+      p_unidades_sueltas: unidadesSueltas,
+      p_motivo: motivo.trim() || 'Conteo físico de presentaciones',
+    });
+    if (error) throw error;
+  },
+
   /**
    * Lo que esta persona pide habitualmente, por su rol o por su nombre.
    * La vista resuelve el alcance en la base: acá no se arma ningún filtro.
@@ -256,7 +278,12 @@ export const InventarioService = {
       .order('nombre');
 
     if (error) throw error;
-    return (data ?? []).map(mapProducto);
+    const vistos = new Set<number>();
+    return (data ?? []).map(mapProducto).filter(p => {
+      if (vistos.has(p.id)) return false;
+      vistos.add(p.id);
+      return true;
+    });
   },
 
   /** Qué roles tienen marcado este producto como frecuente. */

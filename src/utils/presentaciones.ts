@@ -52,6 +52,40 @@ export function validarCantidadEntrega(
   return null;
 }
 
+/** Vista previa de una salida suelta; la base ejecuta la misma regla bajo bloqueo. */
+export function salidaUnidadesEmpaque(
+  estado: { cajasCerradas: number; unidadesCajaAbierta: number; unidadesSueltas: number },
+  unidadesPorCaja: number,
+  cantidad: number
+) {
+  if (!Number.isInteger(cantidad) || cantidad < 0 || !Number.isInteger(unidadesPorCaja) || unidadesPorCaja < 2) {
+    throw new Error('Cantidad o equivalencia inválida');
+  }
+  if (![estado.cajasCerradas, estado.unidadesCajaAbierta, estado.unidadesSueltas]
+    .every(valor => Number.isInteger(valor) && valor >= 0)
+    || estado.unidadesCajaAbierta >= unidadesPorCaja) {
+    throw new Error('Desglose de cajas inválido');
+  }
+  let cajasCerradas = estado.cajasCerradas;
+  let unidadesCajaAbierta = estado.unidadesCajaAbierta;
+  let unidadesSueltas = estado.unidadesSueltas;
+  let pendiente = cantidad;
+  const deAbierta = Math.min(pendiente, unidadesCajaAbierta);
+  unidadesCajaAbierta -= deAbierta;
+  pendiente -= deAbierta;
+  const deSueltas = Math.min(pendiente, unidadesSueltas);
+  unidadesSueltas -= deSueltas;
+  pendiente -= deSueltas;
+  while (pendiente > 0 && cajasCerradas > 0) {
+    cajasCerradas -= 1;
+    const deCaja = Math.min(pendiente, unidadesPorCaja);
+    unidadesCajaAbierta = unidadesPorCaja - deCaja;
+    pendiente -= deCaja;
+  }
+  if (pendiente > 0) throw new Error('Stock insuficiente');
+  return { cajasCerradas, unidadesCajaAbierta, unidadesSueltas };
+}
+
 /** Dos presentaciones del mismo producto se guardan como dos líneas auditables. */
 export function lineasPedido(
   productos: { id: number; nombre: string; unidad: string; unidadesPorCaja: number | null }[],

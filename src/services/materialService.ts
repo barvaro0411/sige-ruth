@@ -56,6 +56,27 @@ export interface NuevoItem {
 }
 
 export const MaterialService = {
+  /** Crea y envía el pedido simple en una transacción; nunca deja borradores parciales. */
+  async crearPedidoInsumos(input: {
+    sedeId: string;
+    titulo: string;
+    nota: string;
+    items: NuevoItem[];
+  }): Promise<number> {
+    const { data, error } = await supabase.rpc('crear_pedido_insumos', {
+      p_sede_id: input.sedeId,
+      p_titulo: input.titulo,
+      p_nota: input.nota,
+      p_items: input.items.map(i => ({
+        item_id: i.itemId,
+        cantidad: i.cantidad,
+        cantidad_cajas: i.cantidadCajas ?? 0,
+      })),
+    });
+    if (error) throw error;
+    return Number(data);
+  },
+
   async getMisSolicitudes(perfilId: string): Promise<SolicitudMaterial[]> {
     const { data, error } = await supabase
       .from('solicitudes_materiales')

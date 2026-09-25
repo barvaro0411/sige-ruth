@@ -74,6 +74,9 @@ export default function PedirInsumos() {
     () => [...base, ...agregados].filter(p => (cantidades[p.id] ?? 0) > 0 || (cajas[p.id] ?? 0) > 0),
     [base, agregados, cantidades, cajas]
   );
+  const lineasSeleccionadas = pedido.reduce(
+    (total, p) => total + Number((cantidades[p.id] ?? 0) > 0) + Number((cajas[p.id] ?? 0) > 0), 0
+  );
 
   function ajustar(
     setValores: Dispatch<SetStateAction<Record<number, number>>>,
@@ -97,20 +100,12 @@ export default function PedirInsumos() {
       });
       const quien = user?.rol ? ROLE_LABELS[user.rol] : 'Personal';
 
-      const id = await MaterialService.crearBorrador({
-        solicitanteId: user!.id,
+      await MaterialService.crearPedidoInsumos({
         sedeId: sede.id,
         titulo: `${quien} — pedido del ${hoy}`,
-        justificacion: nota,
-        cursoId: null,
-        area: null,
-        prioridad: 'normal',
-        fechaNecesidad: null,
+        nota,
+        items: lineasPedido(pedido, cantidades, cajas),
       });
-
-      await MaterialService.agregarItems(id, lineasPedido(pedido, cantidades, cajas));
-
-      await MaterialService.enviar(id);
     },
     onSuccess: () => {
       addToast('Pedido enviado. Bodega ya lo tiene.', 'success');
@@ -243,7 +238,7 @@ export default function PedirInsumos() {
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>
-                {pedido.length} producto{pedido.length === 1 ? '' : 's'} seleccionado{pedido.length === 1 ? '' : 's'}
+                {lineasSeleccionadas} {lineasSeleccionadas === 1 ? 'línea' : 'líneas'} de pedido
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {pedido.map(p => {
@@ -299,7 +294,10 @@ function FilaProducto({
             : `Stock: ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)}`}
         </div>
         {producto.unidadesPorCaja && (
-          <div className="insumo-equivalencia">1 caja = {producto.unidadesPorCaja} {nombreUnidad(producto.unidad, producto.unidadesPorCaja)}</div>
+          <div className="insumo-equivalencia">
+            1 caja = {producto.unidadesPorCaja} {nombreUnidad(producto.unidad, producto.unidadesPorCaja)}
+            {producto.empaqueVerificado && <> · {producto.cajasCerradas} cerrada{producto.cajasCerradas === 1 ? '' : 's'} disponibles</>}
+          </div>
         )}
         {elegido && <div className="insumo-total">Pedido total: {total} {nombreUnidad(producto.unidad, total)}</div>}
       </div>

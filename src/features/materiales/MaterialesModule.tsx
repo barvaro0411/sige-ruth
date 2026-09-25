@@ -25,7 +25,9 @@ export default function MaterialesModule() {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
 
-  const puedeGestionar = can(PERMISSIONS.REVIEW_MATERIALS) || can(PERMISSIONS.MANAGE_PURCHASES);
+  const puedeGestionar = can(PERMISSIONS.REVIEW_MATERIALS)
+    || can(PERMISSIONS.MANAGE_PURCHASES)
+    || can(PERMISSIONS.MANAGE_INVENTORY);
 
   const [tab, setTab] = useState<'mias' | 'bandeja'>('mias');
   const [filtroEstado, setFiltroEstado] = useState<EstadoMaterial | ''>('');
@@ -218,7 +220,7 @@ export default function MaterialesModule() {
                   )}
                 </div>
                 <div className="text-sm text-secondary font-semibold mt-1">
-                  {s.items.length} {s.items.length === 1 ? 'material' : 'materiales'}
+                  {s.items.length} {s.items.length === 1 ? 'línea de pedido' : 'líneas de pedido'}
                   {' · '}{formatCLP(s.costoEstimadoTotal)}
                   {s.fechaNecesidad && ` · para el ${formatDate(s.fechaNecesidad)}`}
                 </div>

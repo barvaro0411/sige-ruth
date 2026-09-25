@@ -22,7 +22,9 @@ sign_in_sign_ups = 10
 token_verifications = 10
 
 [auth.email]
-enable_signup = false
+# El alta sigue bloqueada por [auth].enable_signup; esto permite iniciar sesión
+# con las cuentas sintéticas del seed durante las pruebas locales.
+enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
 secure_password_change = true

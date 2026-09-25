@@ -21,6 +21,23 @@ values
    '{"provider":"email","providers":["email"]}', '{"nombre":"Bodega Local"}', now(), now())
 on conflict (id) do nothing;
 
+-- GoTrue actual espera cadenas vacías, no NULL, en estos tokens al iniciar
+-- sesión. Los usuarios sintéticos anteriores a ese cambio se normalizan aquí.
+update auth.users
+set confirmation_token = coalesce(confirmation_token, ''),
+    recovery_token = coalesce(recovery_token, ''),
+    email_change_token_new = coalesce(email_change_token_new, ''),
+    email_change_token_current = coalesce(email_change_token_current, ''),
+    email_change = coalesce(email_change, ''),
+    phone_change = coalesce(phone_change, ''),
+    reauthentication_token = coalesce(reauthentication_token, ''),
+    phone_change_token = coalesce(phone_change_token, '')
+where id in (
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+  '33333333-3333-4333-8333-333333333333'
+);
+
 update public.perfiles
 set rol = 'director', activo = true, sede_id = null
 where id = '11111111-1111-4111-8111-111111111111';

@@ -56,15 +56,18 @@ sale con código distinto de cero. Eso es lo que hace que sirva en CI.
 | `04_alta_de_usuario.sql` | 7 | El rol y la sede que manda el cliente al registrarse se ignoran; toda cuenta nueva nace inactiva y no lee nada. |
 | `05_correcciones_auditoria.sql` | 11 | Roles operativos fuera de estudiantes, metadata y Storage; contraseña temporal bloqueada; días y costos no manipulables. |
 | `06_integridad_operativa.sql` | 6 | Actores de inventario, preventivas y préstamos no falsificables; préstamos inmutables; inventario aislado por sede; rate limit atómico. |
+| `07_candado_de_sesion_y_lectura_clinica.sql` | 7 | Toda tabla RLS lleva candado de sesión; la lectura clínica queda auditada. |
+| `08_cajas_abiertas_y_pedidos.sql` | Escenarios integrales | Cajas selladas, caja abierta tras salida parcial, rechazo de caja sin conteo, pedido atómico sin borrador huérfano y entrega mixta con stock exacto. |
 
-**65 comprobaciones en total.**
+**72 comprobaciones tabuladas y los escenarios integrales de cajas y pedidos.**
 
-Además hay 69 pruebas unitarias del código (`npm test`), sobre el mapa de
-permisos, el validador de RUT, el formateo de fechas y los mappers.
+Además hay 130 pruebas unitarias del código, que se ejecutan con
+`npx vitest run --maxWorkers=1`, sobre permisos, validadores, fechas,
+presentaciones y mappers.
 
 ## Los actores se eligen solos
 
-Ninguna prueba trae UUID escritos a mano. Cada archivo busca en la base a quien
+Las pruebas 01–07 no traen UUID escritos a mano. Cada archivo busca en la base a quien
 necesita —alguien de dirección, alguien del personal operativo, una sede— para
 que funcione igual con el seed sintético local o en una rama aislada de
 Supabase.
@@ -73,6 +76,9 @@ Para el aislamiento entre sedes se elige a propósito a la persona con **menos**
 sedes asignadas: es la única con la que el escenario tiene sentido. Con alguien
 que trabaja en las dos sedes, «ver la otra sede» es el comportamiento correcto y
 la prueba no probaría nada.
+
+La 08 usa las tres cuentas sintéticas de `seed.sql` y el catálogo importado;
+por eso debe ejecutarse contra la base local sembrada por Supabase.
 
 Si la base no tiene los actores mínimos, las pruebas fallan con un mensaje
 explícito en vez de pasar en falso.

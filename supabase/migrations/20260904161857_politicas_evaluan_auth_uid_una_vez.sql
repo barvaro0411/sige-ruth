@@ -138,6 +138,14 @@ create policy permisos_select_propio_o_jefatura on public.solicitudes_permiso
   as permissive for select to authenticated
   using (((solicitante_id = (select auth.uid())) OR (can_access_sede(sede_id) AND has_role(ARRAY['director'::text, 'sostenedor'::text]))));
 
+-- Esta política también usa auth.uid() por fila. Sin ella, la comprobación
+-- final bloquea la instalación limpia de la base local.
+drop policy if exists permisos_insert_propio on public.solicitudes_permiso;
+create policy permisos_insert_propio on public.solicitudes_permiso
+  as permissive for insert to authenticated
+  with check ((solicitante_id = (select auth.uid()))
+              and can_access_sede(sede_id) and estado = 'pendiente');
+
 drop policy if exists permisos_update_propio_o_jefatura on public.solicitudes_permiso;
 create policy permisos_update_propio_o_jefatura on public.solicitudes_permiso
   as permissive for update to authenticated

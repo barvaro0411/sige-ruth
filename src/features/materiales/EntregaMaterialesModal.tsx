@@ -1,9 +1,10 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PackageCheck, AlertTriangle, Boxes } from 'lucide-react';
 import Modal from '../../components/Modal';
 import { useToast } from '../../components/Toast';
 import { EntregaItem, MaterialService } from '../../services/materialService';
+import { InventarioService } from '../../services/inventarioService';
 import { SolicitudMaterial } from '../../types';
 import { descripcionCaja, nombreUnidad, permiteFracciones, validarCantidadEntrega } from '../../utils/presentaciones';
 
@@ -25,6 +26,14 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
+  const inventario = useQuery({
+    queryKey: ['inventario', solicitud.sedeId],
+    queryFn: () => InventarioService.getProductos(solicitud.sedeId),
+  });
+  const productosPorId = useMemo(
+    () => new Map((inventario.data ?? []).map(p => [p.id, p])),
+    [inventario.data]
+  );
 
   const pendientes = useMemo(
     () => solicitud.items.filter(i => i.pendiente> 0),
@@ -78,6 +87,21 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
       setError(`${invalida.nombre}: ${invalida.motivo}`);
       return;
     }
+    const cajaSinContar = pendientes.find(i => i.cantidadCajas > 0 && cantidadBase(i) > 0
+      && productosPorId.get(i.itemId ?? -1)?.empaqueVerificado === false);
+    if (cajaSinContar) {
+      setError(`${cajaSinContar.nombre}: confirma primero las cajas cerradas en Bodega y stock.`);
+      return;
+    }
+    const cajaInsuficiente = pendientes.find(i => {
+      const producto = productosPorId.get(i.itemId ?? -1);
+      return i.cantidadCajas > 0 && cantidadBase(i) > 0 && producto?.empaqueVerificado
+        && cantidadBase(i) / (i.unidadesPorCajaSolicitada ?? 1) > (producto.cajasCerradas ?? 0);
+    });
+    if (cajaInsuficiente) {
+      setError(`${cajaInsuficiente.nombre}: no hay suficientes cajas cerradas. Puedes entregar menos y dejar el resto pendiente.`);
+      return;
+    }
     if (seleccionadas.length === 0) {
       setError('Indica cuánto entregas de al menos un material.');
       return;
@@ -95,9 +119,13 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
           el stock automáticamente. Si no alcanza para alguno, no se entrega nada y
           nada queda descontado.
         </p>
+        {inventario.isError && <div className="alerta alerta-warning mb-4" role="status">
+          No se pudo consultar el desglose actual de cajas. La base igualmente comprobará el stock al confirmar.
+        </div>}
 
         <div className="flex flex-col gap-2">
           {pendientes.map(item => {
+            const producto = item.itemId ? productosPorId.get(item.itemId) : null;
             const esCaja = item.cantidadCajas > 0 && !!item.unidadesPorCajaSolicitada;
             const valor = cantidadBase(item);
             const excede = valor > item.pendiente;
@@ -131,7 +159,21 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                       : `${item.pendiente} ${nombreUnidad(item.unidad, item.pendiente)}`}</strong>
                     {!item.itemId && ' · no está en bodega'}
                   </div>
-                  {esCaja && <div className="text-sm text-warning">Comprueba que las cajas estén completas antes de confirmar.</div>}
+                  {esCaja && <div className="text-sm text-warning">
+                    {producto && !producto.empaqueVerificado
+                      ? 'Confirma primero las cajas cerradas en Bodega y stock.'
+                      : producto?.empaqueVerificado && Number(cantidades[item.id]) > (producto.cajasCerradas ?? 0)
+                        ? `Solo hay ${producto.cajasCerradas} cajas cerradas. Entrega menos o espera reposición.`
+                        : 'Comprueba que las cajas estén completas antes de confirmar.'}
+                  </div>}
+                  {producto?.unidadesPorCaja && (
+                    <div className="delivery-stock-breakdown">
+                      Stock total: {producto.stockActual} {nombreUnidad(producto.unidad, producto.stockActual)}
+                      {producto.empaqueVerificado
+                        ? ` · ${producto.cajasCerradas} cajas cerradas · ${producto.unidadesCajaAbierta} en caja abierta · ${producto.unidadesSueltas} sueltos`
+                        : ' · Presentación física por confirmar en Bodega'}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="form-label" htmlFor={`entrega-${item.id}`}>
