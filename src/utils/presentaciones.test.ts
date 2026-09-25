@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descripcionCaja, lineasPedido, nombreUnidad, unidadesBase } from './presentaciones';
+import { descripcionCaja, lineasPedido, nombreUnidad, unidadesBase, validarCantidadEntrega } from './presentaciones';
 
 describe('presentaciones de bodega', () => {
   it('descuenta una caja de 12 y cinco sueltos como 17 lápices', () => {
@@ -26,5 +26,21 @@ describe('presentaciones de bodega', () => {
     expect(() => unidadesBase(1, 0, null)).toThrow();
     expect(() => unidadesBase(0.5, 0, 12)).toThrow();
     expect(() => unidadesBase(0, -1, 12)).toThrow();
+  });
+
+  it('valida entregas parciales en cajas completas y unidades sueltas', () => {
+    expect(validarCantidadEntrega('1', 24, 'lapiz', 12)).toBeNull();
+    expect(validarCantidadEntrega('0.5', 24, 'lapiz', 12)).toContain('completas');
+    expect(validarCantidadEntrega('3', 24, 'lapiz', 12)).toContain('Solo faltan');
+    expect(validarCantidadEntrega('5', 5, 'lapiz', null)).toBeNull();
+    expect(validarCantidadEntrega('5.5', 12, 'lapiz', null)).toContain('unidades completas');
+  });
+
+  it('no permite valores negativos, infinitos ni más de dos decimales', () => {
+    expect(validarCantidadEntrega('-1', 12, 'lapiz', null)).toContain('válida');
+    expect(validarCantidadEntrega('Infinity', 12, 'lapiz', null)).toContain('válida');
+    expect(validarCantidadEntrega('0.001', 2, 'litro', null)).toContain('dos decimales');
+    expect(validarCantidadEntrega('0.29', 2, 'litro', null)).toBeNull();
+    expect(validarCantidadEntrega('', 12, 'lapiz', null)).toBeNull();
   });
 });

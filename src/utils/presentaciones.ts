@@ -28,6 +28,30 @@ export function descripcionCaja(cajas: number, unidadesPorCaja: number, unidad: 
   return `${cajas} ${cajas === 1 ? 'caja' : 'cajas'} de ${unidadesPorCaja} ${nombreUnidad(unidad, unidadesPorCaja)}`;
 }
 
+/** Valida la cantidad escrita antes de enviar una entrega a bodega. */
+export function validarCantidadEntrega(
+  valor: string,
+  pendiente: number,
+  unidad: string,
+  unidadesPorCaja: number | null
+): string | null {
+  if (valor.trim() === '') return null;
+  const cantidad = Number(valor);
+  if (!Number.isFinite(cantidad) || cantidad < 0) return 'Escribe una cantidad válida, igual o mayor que cero.';
+  if (unidadesPorCaja !== null && (!Number.isInteger(cantidad) || unidadesPorCaja < 2)) {
+    return 'Las cajas se entregan completas.';
+  }
+  if (unidadesPorCaja === null && !permiteFracciones(unidad) && !Number.isInteger(cantidad)) {
+    return `${nombreUnidad(unidad, 2)} se entregan en unidades completas.`;
+  }
+  if (permiteFracciones(unidad) && Math.abs(cantidad * 100 - Math.round(cantidad * 100)) > 1e-8) {
+    return 'Usa como máximo dos decimales.';
+  }
+  const unidades = cantidad * (unidadesPorCaja ?? 1);
+  if (unidades > pendiente) return `Solo faltan ${pendiente} ${nombreUnidad(unidad, pendiente)}.`;
+  return null;
+}
+
 /** Dos presentaciones del mismo producto se guardan como dos líneas auditables. */
 export function lineasPedido(
   productos: { id: number; nombre: string; unidad: string; unidadesPorCaja: number | null }[],

@@ -137,14 +137,28 @@ export default function PedirInsumos() {
         </div>
       </header>
 
-      {base.length === 0 ? (
+      {(frecuentes.isError || todos.isError) && (
+        <div className="alerta alerta-danger alerta-bloque mb-4" role="alert">
+          <span>No se pudo cargar parte del catálogo. Puedes pedir los productos visibles o reintentar.</span>
+          <button type="button" className="btn btn-outline" onClick={() => {
+            void frecuentes.refetch();
+            void todos.refetch();
+          }}>Reintentar</button>
+        </div>
+      )}
+
+      {base.length === 0 && !(frecuentes.isError || todos.isError) ? (
         <div className="card py-12 px-6 text-center">
           <PackageCheck size={44} style={{ color: 'var(--text-muted)', marginBottom: '14px' }} />
           <h3 className="mb-1">Todavía no hay productos cargados</h3>
           <p className="text-muted">Pídele a bodega que cargue los materiales de la sede.</p>
         </div>
-      ) : (
+      ) : base.length > 0 ? (
         <>
+          <p className="insumos-ayuda mb-4">
+            <Info size={17} aria-hidden="true" />
+            Puedes pedir cajas y unidades sueltas del mismo producto. Bodega verá cada cantidad por separado.
+          </p>
           {!hayFrecuentes && (
             <>
               <p className="text-muted flex gap-2 items-center text-sm mb-4">
@@ -186,6 +200,7 @@ export default function PedirInsumos() {
                 <Search size={18} className="search-icon" />
                 <input
                   className="search-input" autoFocus
+                  aria-label="Buscar otro producto"
                   placeholder="Escribe qué necesitas"
                   value={busqueda}
                   onChange={e => setBusqueda(e.target.value)}
@@ -220,7 +235,7 @@ export default function PedirInsumos() {
  />
           </div>
         </>
-      )}
+      ) : null}
 
       {/* Barra de envío: se queda a la vista mientras haya algo elegido */}
       {pedido.length > 0 && (
@@ -273,14 +288,20 @@ function FilaProducto({
 
   return (
     <div className={`insumo-producto ${elegido ? 'insumo-producto-elegido' : ''}`}>
-      <div className="flex-1">
-        <div className="font-bold text-md">{producto.nombre}</div>
-        <div style={{ fontSize: '12px', color: sinStock ? 'var(--color-warning-dark)' : 'var(--text-muted)' }}>
+      <div className="insumo-producto-info">
+        <div className="insumo-producto-titulo">
+          <span>{producto.nombre}</span>
+          {elegido && <span className="insumo-elegido-badge">En el pedido</span>}
+        </div>
+        <div className={`insumo-stock ${sinStock ? 'insumo-stock-agotado' : ''}`}>
           {sinStock
             ? 'No queda en bodega — se pedirá igual'
-            : `Hay ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)}`}
+            : `Stock: ${producto.stockActual} ${nombreUnidad(producto.unidad, producto.stockActual)}`}
         </div>
-        {elegido && <div className="insumo-total">Pedido: {total} {nombreUnidad(producto.unidad, total)}</div>}
+        {producto.unidadesPorCaja && (
+          <div className="insumo-equivalencia">1 caja = {producto.unidadesPorCaja} {nombreUnidad(producto.unidad, producto.unidadesPorCaja)}</div>
+        )}
+        {elegido && <div className="insumo-total">Pedido total: {total} {nombreUnidad(producto.unidad, total)}</div>}
       </div>
       <div className="insumo-controles">
         {producto.unidadesPorCaja && (

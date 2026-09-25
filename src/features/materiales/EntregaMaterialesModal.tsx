@@ -5,7 +5,7 @@ import Modal from '../../components/Modal';
 import { useToast } from '../../components/Toast';
 import { EntregaItem, MaterialService } from '../../services/materialService';
 import { SolicitudMaterial } from '../../types';
-import { descripcionCaja, nombreUnidad, permiteFracciones } from '../../utils/presentaciones';
+import { descripcionCaja, nombreUnidad, permiteFracciones, validarCantidadEntrega } from '../../utils/presentaciones';
 
 interface Props {
   solicitud: SolicitudMaterial;
@@ -68,19 +68,18 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
     e.preventDefault();
     setError('');
 
+    const invalida = pendientes
+      .map(i => ({ nombre: i.nombre, motivo: validarCantidadEntrega(
+        cantidades[i.id] ?? '', i.pendiente, i.unidad,
+        i.cantidadCajas > 0 ? i.unidadesPorCajaSolicitada : null
+      ) }))
+      .find(resultado => resultado.motivo);
+    if (invalida) {
+      setError(`${invalida.nombre}: ${invalida.motivo}`);
+      return;
+    }
     if (seleccionadas.length === 0) {
       setError('Indica cuánto entregas de al menos un material.');
-      return;
-    }
-    const cajaFraccionada = pendientes.find(i => i.cantidadCajas > 0
-      && !Number.isInteger(Number(cantidades[i.id]) || 0));
-    if (cajaFraccionada) {
-      setError(`Las cajas de "${cajaFraccionada.nombre}" se entregan completas.`);
-      return;
-    }
-    const excedida = pendientes.find(i => cantidadBase(i) > i.pendiente);
-    if (excedida) {
-      setError(`De "${excedida.nombre}" solo faltan ${excedida.pendiente} ${nombreUnidad(excedida.unidad, excedida.pendiente)}.`);
       return;
     }
     entregar.mutate(seleccionadas);
@@ -141,7 +140,7 @@ export default function EntregaMaterialesModal({ solicitud, onClose, onEntregado
                   <input
                     id={`entrega-${item.id}`}
                     type="number" min="0" max={esCaja ? item.pendiente / factor : item.pendiente}
-                    step={esCaja || (item.itemId && !permiteFracciones(item.unidad)) ? '1' : '0.01'}
+                    step={esCaja || !permiteFracciones(item.unidad) ? '1' : '0.01'}
                     className="form-input"
                     style={{ width: '110px', minHeight: '42px' }}
                     value={cantidades[item.id] ?? ''}
